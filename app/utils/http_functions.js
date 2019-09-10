@@ -1,0 +1,89 @@
+/* eslint camelcase: 0 */
+
+import axios from 'axios';
+
+const tokenConfig = (token) => ({
+    headers: {
+        'Authorization': token, // eslint-disable-line quote-props
+    },
+});
+
+export function validate_token(token) {
+    return axios.post('http://localhost:5000/api/is_token_valid', {
+        token,
+    });
+}
+
+export function get_github_access() {
+    window.open(
+        '/github-login',
+        '_blank' // <- This is what makes it open in a new window.
+    );
+}
+
+export function create_user(email, password) {
+    return axios.post('http://localhost:5000/api/create_user', {
+        email,
+        password,
+    });
+}
+
+export function get_token(email, password) {
+    return axios.post('http://localhost:5000/api/get_token', {
+        email,
+        password,
+    });
+}
+
+export function has_github_token(token) {
+    return axios.get('http://localhost:5000/api/has_github_token', tokenConfig(token));
+}
+
+export function data_about_user(token) {
+    return axios.get('http://localhost:5000/api/user', tokenConfig(token));
+}
+
+export function search_user(token, email) {
+  return axios.post('http://localhost:5000/api/search_user', {
+    token,
+    email
+  });
+}
+
+export function update_eth_account(token, email, eth_account) {
+  return axios.post('http://localhost:5000/api/update_ethaccount', {
+    token,
+    email,
+    eth_account,
+  });
+}
+
+export function add_chain(token, chain_id, email) {
+  return axios.post('http://localhost:5000/api/add_chain', {
+    token,
+    chain_id,
+    email
+  });
+}
+
+export function get_chain_by_user(token, email) {
+  return axios.post('http://localhost:5000/api/get_chain_by_user', {
+    token,
+    email
+  });
+}
+
+export function get_user_by_chain(token, chain_id) {
+  return axios.post('http://localhost:5000/api/get_user_by_chain', {
+    token,
+    chain_id
+  });
+}
+export function upload_file(token, file, email) {
+  return axios.post('http://localhost:5000/api/upload_image', {
+    token,
+    file,
+    email
+  });
+}
+
