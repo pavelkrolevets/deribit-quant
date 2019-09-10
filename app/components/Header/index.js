@@ -241,12 +241,6 @@ class Header extends Component {
                 <MenuItem onClick={() => this.props.history.push('/options')}>
                   Options
                 </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/smartlib')}>
-                  Smart Contracts
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/blockchain')}>
-                  Blockchain Setup
-                </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/')}>
                   Home
                 </MenuItem>
@@ -263,7 +257,7 @@ class Header extends Component {
               <MenuIcon />
             </IconButton>
             <Typography className={classes.title} variant="h6" color="inherit" noWrap>
-              BlockRunner
+              Optio
             </Typography>
             <div className={classes.search}>
               <div className={classes.searchIcon}>

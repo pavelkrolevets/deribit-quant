@@ -29,8 +29,8 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import { fade } from '@material-ui/core/styles/colorManipulator';
+import { compute_bsm } from '../../utils/http_functions';
 import {XYPlot, XAxis, YAxis, HorizontalGridLines, LineSeries} from 'react-vis';
-import {blackScholes} from '../../utils/finance'
 
 const styles = theme => ({
   root: {
@@ -55,11 +55,14 @@ const styles = theme => ({
 });
 
 
-type Props = {};
 
-class Deribit extends Component<Props> {
-  props: Props;
 
+class Deribit extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+    };
+  }
   // async componentWillMount(){
   //   this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
   //   this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -72,20 +75,13 @@ class Deribit extends Component<Props> {
   //   });
   // }
 
-  computeBSM (){
-    let strikes = [];
-    let values  = [];
-
-    for (let i=0;i<=200;i+10){
-      strikes.push(i)
+  async computeBSM (){
+    let data = [];
+    for (let i=0; i<200; i+10){
+      data.push(JSON.stringify({S0: i, K:120, T:0.3, r: 0.03, sigma: 0.7}))
     }
-    console.log("Strikes", values);
-
-    for (let strike in strikes){
-      values.push(blackScholes("c", 100, strike, 0.2, 0.02, 0.8))
-    }
-
-    console.log("BSM call value", values)
+    await compute_bsm(this.props.user.token, 'call', data)
+      .then(response=> console.log(response))
   }
 
   render() {

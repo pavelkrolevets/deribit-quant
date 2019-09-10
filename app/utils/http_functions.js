@@ -87,3 +87,10 @@ export function upload_file(token, file, email) {
   });
 }
 
+export function compute_bsm(token,option_type, data) {
+  return axios.post('http://localhost:5000/api/compute_bsm', {
+    token,
+    option_type,
+    data
+  });
+}
