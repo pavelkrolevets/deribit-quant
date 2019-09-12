@@ -5,7 +5,8 @@ import HomePage from './containers/HomePage';
 import Wallet from './containers/Wallet'
 import GenMnem from './containers/Mnemonic'
 import Profile from './containers/Profile'
-import Deribit from './containers/Deribit'
+import DeribitOptionPos from './containers/DeribitOptionPos'
+import DeribitDeltaHedger from './containers/DeribitDeltaHedger'
 import LoginView from './components/Login'
 import RegisterView from './components/Register'
 import ProtectedView from './components/Main';
@@ -19,7 +20,8 @@ export default () => (
     <Switch>
       <Route path="/login" component={requireNoAuthentication(LoginView)} />
       <Route path="/register" component={requireNoAuthentication(RegisterView)} />
-      <Route path="/options" component={requireAuthentication(Deribit)} />
+      <Route path="/deltahedger" component={requireAuthentication(DeribitDeltaHedger)} />
+      <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
       <Route path="/profile" component={requireAuthentication(Profile)} />
       <Route path="/wallet" component={requireAuthentication(Wallet)} />
       <Route path="/mnemonic" component={requireAuthentication(GenMnem)} />

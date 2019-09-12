@@ -58,27 +58,6 @@ export function update_eth_account(token, email, eth_account) {
   });
 }
 
-export function add_chain(token, chain_id, email) {
-  return axios.post('http://localhost:5000/api/add_chain', {
-    token,
-    chain_id,
-    email
-  });
-}
-
-export function get_chain_by_user(token, email) {
-  return axios.post('http://localhost:5000/api/get_chain_by_user', {
-    token,
-    email
-  });
-}
-
-export function get_user_by_chain(token, chain_id) {
-  return axios.post('http://localhost:5000/api/get_user_by_chain', {
-    token,
-    chain_id
-  });
-}
 export function upload_file(token, file, email) {
   return axios.post('http://localhost:5000/api/upload_image', {
     token,
@@ -92,5 +71,12 @@ export function compute_bsm(token,option_type, data) {
     token,
     option_type,
     data
+  });
+}
+
+export function start_delta_hedger(token, email) {
+  return axios.post('http://localhost:5000/api/start_delta_hedger', {
+    token,
+    email
   });
 }

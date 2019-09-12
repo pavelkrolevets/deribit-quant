@@ -40,7 +40,7 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm } from '../../utils/http_functions';
+import { compute_bsm } from '../../../utils/http_functions';
 import {curveCatmullRom} from 'd3-shape';
 
 
@@ -67,7 +67,7 @@ const styles = theme => ({
 });
 
 
-class Deribit extends Component {
+class DeribitOptionPos extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -79,22 +79,25 @@ class Deribit extends Component {
       yDomain: [-20, 20]
     };
   }
-  // async componentWillMount(){
-  //   this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-  //   this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-  //   this.web3.eth.getAccounts(function (error, res) {
-  //     if (!error) {
-  //       console.log(res);
-  //     } else {
-  //       console.log(error);
-  //     }
-  //   });
-  // }
+  async componentWillMount(){
+
+    this.plot()
+
+    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
+    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
+    // this.web3.eth.getAccounts(function (error, res) {
+    //   if (!error) {
+    //     console.log(res);
+    //   } else {
+    //     console.log(error);
+    //   }
+    // });
+  }
 
   async plot(){
     await this.computeBSM(10, 0.3)
       .then(result=>this.setState({chart_data_current: result}));
-    await this.computeBSM(10, 0.001)
+    await this.computeBSM(10, 0.00001)
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
 
@@ -142,7 +145,7 @@ class Deribit extends Component {
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions</h4>
 
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <XYPlot width={600} height={300} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
+          <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
             <HorizontalGridLines />
             <VerticalGridLines />
             <XAxis on0={true}/>
@@ -192,8 +195,8 @@ class Deribit extends Component {
 }
 
 
-Deribit.propTypes = {
+DeribitOptionPos.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Deribit);
+export default withStyles(styles)(DeribitOptionPos);
