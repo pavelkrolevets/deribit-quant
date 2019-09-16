@@ -30,7 +30,7 @@ import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import { fade } from '@material-ui/core/styles/colorManipulator';
 
-import { compute_bsm, start_delta_hedger } from '../../../utils/http_functions';
+import { start_delta_hedger, get_tasks} from '../../../utils/http_functions';
 
 
 
@@ -64,10 +64,11 @@ class DeribitDeltaHedger extends Component {
       min_delta:'',
       max_delta:'',
       time_interval:'',
+      tasks:[],
     };
   }
   async componentWillMount(){
-
+    this.get_delta_hedger_tasks()
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
     // this.web3.eth.getAccounts(function (error, res) {
@@ -87,6 +88,13 @@ class DeribitDeltaHedger extends Component {
     console.log(this.props.user.token, this.props.email);
     start_delta_hedger(this.props.user.token, this.props.email)
       .then(result=> console.log(result))
+  }
+  async get_delta_hedger_tasks(){
+    get_tasks(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({tasks: result.data})
+      });
+    this.forceUpdate()
   }
 
   render() {
@@ -140,6 +148,38 @@ class DeribitDeltaHedger extends Component {
             // color="primary"
           >Stop</Button>
         </div>
+        <div>
+          <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>List of running tasks</h4>
+        </div>
+        {/*Create a table to show account list*/}
+        <Paper>
+          <div>
+            <Table className={classes.table}>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="left">Id</TableCell>
+                  <TableCell align="left">PID</TableCell>
+                  <TableCell align="left">Timestamp</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.state.tasks.map(row => (
+                  <TableRow key={row.id}>
+                    <TableCell align="left">
+                      {row.id}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.pid}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.timestamp}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Paper>
       </div>
     );
   }

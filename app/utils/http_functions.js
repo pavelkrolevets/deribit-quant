@@ -80,3 +80,10 @@ export function start_delta_hedger(token, email) {
     email
   });
 }
+
+export function get_tasks(token, email) {
+  return axios.post('http://localhost:5000/api/get_tasks', {
+    token,
+    email
+  });
+}
