@@ -29,8 +29,10 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import { fade } from '@material-ui/core/styles/colorManipulator';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
-import { start_delta_hedger, get_tasks} from '../../../utils/http_functions';
+import { start_delta_hedger, get_tasks, kill_task} from '../../../utils/http_functions';
 
 
 
@@ -65,6 +67,9 @@ class DeribitDeltaHedger extends Component {
       max_delta:'',
       time_interval:'',
       tasks:[],
+      selected:[],
+      setSelected:[]
+
     };
   }
   async componentWillMount(){
@@ -87,14 +92,24 @@ class DeribitDeltaHedger extends Component {
   async start_hedger(){
     console.log(this.props.user.token, this.props.email);
     start_delta_hedger(this.props.user.token, this.props.email)
-      .then(result=> console.log(result))
+      .then(result=> {console.log(result);
+      this.get_delta_hedger_tasks()})
   }
   async get_delta_hedger_tasks(){
     get_tasks(this.props.user.token, this.props.email)
       .then(result=> {console.log(result);
-        this.setState({tasks: result.data})
+        this.setState({tasks: result.data});
+        this.forceUpdate();
       });
-    this.forceUpdate()
+
+  }
+
+  async handleClick(event, name) {
+    console.log(name);
+    await kill_task(this.props.user.token, this.props.email, name)
+      .then(result=> {console.log(result);
+        this.get_delta_hedger_tasks();
+        this.forceUpdate();});
   }
 
   render() {
@@ -154,24 +169,30 @@ class DeribitDeltaHedger extends Component {
         {/*Create a table to show account list*/}
         <Paper>
           <div>
-            <Table className={classes.table}>
+            <Table className={classes.table} size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell align="left">Id</TableCell>
-                  <TableCell align="left">PID</TableCell>
-                  <TableCell align="left">Timestamp</TableCell>
+                  <TableCell align="center">Edit</TableCell>
+                  <TableCell align="center">PID</TableCell>
+                  <TableCell align="center">Timestamp</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {this.state.tasks.map(row => (
-                  <TableRow key={row.id}>
-                    <TableCell align="left">
-                      {row.id}
+                  <TableRow key={row.id}
+                            // onClick={event => this.handleClick(event, row.pid)}
+                            selected
+                            hover
+                            >
+                    <TableCell align="center">
+                      <IconButton onClick={()=>this.handleClick(event, row.pid)}>
+                        <DeleteIcon color="secondary" />
+                      </IconButton>
                     </TableCell>
-                    <TableCell align="left">
+                    <TableCell align="center">
                       {row.pid}
                     </TableCell>
-                    <TableCell align="left">
+                    <TableCell align="center">
                       {row.timestamp}
                     </TableCell>
                   </TableRow>

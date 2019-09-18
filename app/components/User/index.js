@@ -31,116 +31,29 @@ const styles = theme => ({
 });
 
 
-const clienrNodeUrl = 'http://localhost:8545';
-
 class Profile extends Component { // eslint-disable-line react/prefer-stateless-function
 
   constructor(props) {
     super(props);
-    this.handleSubmit=this.handleSubmit.bind(this);
-    this.captureFile=this.captureFile.bind(this);
   }
 
   state = {
-    URL: 'Cat in the Hat',
-    Price: '',
-    Description: '',
-    AssetsCount: '',
-    AssetList: [],
-    crudContractAddress:'0x7c276dcaab99bd16163c1bcce671cad6a1ec0945',
-    ethAddr:'',
-    ethPrivKey:'',
-    balance:'',
-    account:'',
-    file:''
-
+    api_pub_key:'',
+    api_secret:''
   };
 
   async componentWillMount() {
-    this.web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
-    const store = new Store();
-    console.log(store.get('ethAddr'));
-    console.log(store.get('ethPrivKey'));
-    await this.setState({ethAddr: store.get('ethAddr')});
-    await this.setState({ethPrivKey: store.get('ethPrivKey')});
-    this.web3.eth.getBalance(store.get('ethAddr')).then(balance => {
-      this.setState({balance: this.web3.utils.fromWei(balance, 'ether')});
-    });
+
   }
 
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
   };
 
-  updateEthAccount(){
-    const schema = {
-      token:
-        {
-          type: 'string',
-        },
-    };
-    const store = new Store({schema});
-    let token = store.get('token');
-    let email = this.props.email;
-    console.log(token, email);
-    update_eth_account(token, email, this.state.account)
-      .then(parseJSON)
-      .then(response => {console.log(response)});
-  }
-
-  uploadAvatar(){
+  updateUserKeys(){
 
   }
 
-  handleSubmit = (e) => {
-    e.preventDefault();
-    this.fileUpload(this.state.file).then((response)=>{
-      console.log(response.data);
-    })
-  };
-
-
-  fileUpload(file){
-    // var fs = require('fs');
-    // var request = require('request');
-    //
-    // var req = request.post('http://localhost:5000/api/upload_image', function (err, resp, body) {
-    //   if (err) {
-    //     console.log('Error!');
-    //   } else {
-    //     console.log('URL: ' + body);
-    //   }
-    // });
-    // var form = req.form();
-    // form.append('file', fs.createReadStream('/Users/pavelkrolevets/Downloads/WechatIMG1.jpeg'), {
-    //   filename: "WechatIMG1.jpg",
-    //   contentType: 'image/jpeg',
-    // });
-    // form.set('token', this.props.auth.token);
-    // form.set('email', this.props.email);
-
-    console.log(file);
-    const formData = new FormData();
-    formData.append('file', file);
-    return  fetch('http://localhost:5000/api/upload_image', {
-      method: 'POST',
-      headers: {
-        'content-type': 'multipart/form-data'
-      },
-      body: file
-    }).then(
-      response => response.json()
-    ).then(
-      success => console.log(success) // Handle the success response object
-    ).catch(
-      error => console.log(error) // Handle the error response object
-    );
-  }
-
-  captureFile  = (e) => {
-    this.setState({file:e.target.files[0]});
-
-  };
 
   render() {
     const { classes } = this.props;
@@ -149,33 +62,31 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
         <h1 style={{color: "#152880"}}>Profile</h1>
 
-          <Avatar alt="Remy Sharp" src='./assets/images/Avatar/index.jpg' className={classes.bigAvatar}/>
+          <Typography variant="body1" gutterBottom color='textPrimary'>
+            Account: {this.props.email} </Typography>
+        <h4 style={{color: "#152880"}}>Api keys</h4>
+          <Typography variant="body1" gutterBottom color='textPrimary'>
+            Pub: {this.state.ethPrivKey} </Typography>
+          <Typography variant="body1" gutterBottom color='textPrimary'>
+            Secret: {this.state.balance}</Typography>
         <div>
-          <form id="captureMedia" onSubmit={this.handleSubmit}>
-            <input type="file" onChange={this.captureFile} />
-            <br/>
-            <button type="submit">Upload</button>
-          </form>
-        </div>
-
-          <Typography variant="body1" gutterBottom color='textPrimary'>
-            Account: {this.state.ethAddr} </Typography>
-          <Typography variant="body1" gutterBottom color='textPrimary'>
-            Private key: {this.state.ethPrivKey} </Typography>
-          <Typography variant="body1" gutterBottom color='textPrimary'>
-            Balance: {this.state.balance}</Typography>
-        <div>
-          <Button
-            className={classes.button}
-            onClick={()=>this.props.history.push('/wallet')}
-            variant="outlined"
-            // color="primary"
-          >Create</Button>
           <TextField
-            id="input-account"
-            label="ETH address"
-            className="input-account"
-            onChange={this.handleChange('account')}
+            id="input-api_pub_key"
+            label="Api key"
+            className="input-key"
+            onChange={this.handleChange('api_pub_key')}
+            margin="normal"
+            variant="outlined"
+            fullWidth
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            id="input-api_priv_key"
+            label="Api seceret"
+            className="input-key"
+            onChange={this.handleChange('api_secret')}
             margin="normal"
             variant="outlined"
             fullWidth
@@ -185,7 +96,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
           />
           <Button
             className={classes.button}
-            onClick={()=>this.updateEthAccount()}
+            onClick={()=>this.updateUserKeys()}
             variant="outlined"
             // color="primary"
           >Update</Button>

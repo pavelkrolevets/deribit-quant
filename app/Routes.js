@@ -2,8 +2,6 @@ import React from 'react';
 import { Switch, Route } from 'react-router';
 import App from './containers/App';
 import HomePage from './containers/HomePage';
-import Wallet from './containers/Wallet'
-import GenMnem from './containers/Mnemonic'
 import Profile from './containers/Profile'
 import DeribitOptionPos from './containers/DeribitOptionPos'
 import DeribitDeltaHedger from './containers/DeribitDeltaHedger'
@@ -23,8 +21,6 @@ export default () => (
       <Route path="/deltahedger" component={requireAuthentication(DeribitDeltaHedger)} />
       <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
       <Route path="/profile" component={requireAuthentication(Profile)} />
-      <Route path="/wallet" component={requireAuthentication(Wallet)} />
-      <Route path="/mnemonic" component={requireAuthentication(GenMnem)} />
       <Route path="/main" component={requireAuthentication(ProtectedView)} />
       <Route path="/" component={requireNoAuthentication(HomePage)} />
     </Switch>

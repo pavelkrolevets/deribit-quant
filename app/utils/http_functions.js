@@ -87,3 +87,11 @@ export function get_tasks(token, email) {
     email
   });
 }
+
+export function kill_task(token, email, pid) {
+  return axios.post('http://localhost:5000/api/kill_task', {
+    token,
+    email,
+    pid
+  });
+}
