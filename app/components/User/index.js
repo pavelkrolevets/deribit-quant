@@ -8,10 +8,11 @@ import Typography from '@material-ui/core/Typography';
 import Avatar from '@material-ui/core/Avatar';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import {update_eth_account, upload_file} from '../../utils/http_functions';
+import { get_tasks, update_eth_account, upload_file } from '../../utils/http_functions';
 import { parseJSON } from '../../utils/misc';
 import axios from 'axios';
 import FormData from 'form-data'
+import { get_api_keys, update_api_keys} from '../../utils/http_functions';
 
 const styles = theme => ({
   root: {
@@ -38,20 +39,32 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
   }
 
   state = {
-    api_pub_key:'',
-    api_secret:''
+    api_pubkey:'',
+    api_privkey:'',
+    data:''
   };
 
   async componentWillMount() {
-
+    get_api_keys(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({data: result.data});
+        this.forceUpdate();
+      });
   }
 
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
   };
 
-  updateUserKeys(){
-
+  async updateUserKeys(){
+    await update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey)
+      .then(result=> {console.log(result);
+      });
+    get_api_keys(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({data: result.data});
+        this.forceUpdate();
+      });
   }
 
 
@@ -66,15 +79,15 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             Account: {this.props.email} </Typography>
         <h4 style={{color: "#152880"}}>Api keys</h4>
           <Typography variant="body1" gutterBottom color='textPrimary'>
-            Pub: {this.state.ethPrivKey} </Typography>
+            Pub: {this.state.data.api_pubkey} </Typography>
           <Typography variant="body1" gutterBottom color='textPrimary'>
-            Secret: {this.state.balance}</Typography>
+            Secret: {this.state.data.api_privkey}</Typography>
         <div>
           <TextField
             id="input-api_pub_key"
             label="Api key"
             className="input-key"
-            onChange={this.handleChange('api_pub_key')}
+            onChange={this.handleChange('api_pubkey')}
             margin="normal"
             variant="outlined"
             fullWidth
@@ -86,7 +99,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             id="input-api_priv_key"
             label="Api seceret"
             className="input-key"
-            onChange={this.handleChange('api_secret')}
+            onChange={this.handleChange('api_privkey')}
             margin="normal"
             variant="outlined"
             fullWidth

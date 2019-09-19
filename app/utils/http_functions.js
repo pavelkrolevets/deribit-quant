@@ -74,10 +74,13 @@ export function compute_bsm(token,option_type, data) {
   });
 }
 
-export function start_delta_hedger(token, email) {
+export function start_delta_hedger(token, email, interval_min, interval_max, time_period) {
   return axios.post('http://localhost:5000/api/start_delta_hedger', {
     token,
-    email
+    email,
+    interval_min,
+    interval_max,
+    time_period
   });
 }
 
@@ -93,5 +96,21 @@ export function kill_task(token, email, pid) {
     token,
     email,
     pid
+  });
+}
+
+export function update_api_keys(token, email, api_pubkey, api_privkey) {
+  return axios.post('http://localhost:5000/api/update_api_keys', {
+    token,
+    email,
+    api_pubkey,
+    api_privkey
+  });
+}
+
+export function get_api_keys(token, email) {
+  return axios.post('http://localhost:5000/api/get_api_keys', {
+    token,
+    email
   });
 }
