@@ -114,3 +114,11 @@ export function get_api_keys(token, email) {
     email
   });
 }
+
+export function get_task_state(token, email, pid) {
+  return axios.post('http://localhost:5000/api/get_task_state', {
+    token,
+    email,
+    pid
+  });
+}

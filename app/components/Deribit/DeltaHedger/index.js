@@ -12,8 +12,9 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import QuestionIcon from '@material-ui/icons/QueryBuilder';
 
-import { start_delta_hedger, get_tasks, kill_task} from '../../../utils/http_functions';
+import { start_delta_hedger, get_tasks, kill_task, get_task_state} from '../../../utils/http_functions';
 
 
 
@@ -93,6 +94,11 @@ class DeribitDeltaHedger extends Component {
         this.forceUpdate();});
   }
 
+  async getTaskState(event, name){
+    await get_task_state(this.props.user.token, this.props.email, name)
+      .then(result=> {console.log(result);})
+  }
+
   render() {
     const {classes} = this.props;
     return (
@@ -137,12 +143,6 @@ class DeribitDeltaHedger extends Component {
           variant="outlined"
           // color="primary"
         >Start</Button>
-          <Button
-            className={classes.button}
-            onClick={()=>console.log("hello")}
-            variant="outlined"
-            // color="primary"
-          >Stop</Button>
         </div>
         <div>
           <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>List of running tasks</h4>
@@ -168,6 +168,9 @@ class DeribitDeltaHedger extends Component {
                     <TableCell align="center">
                       <IconButton onClick={()=>this.handleClick(event, row.pid)}>
                         <DeleteIcon color="secondary" />
+                      </IconButton>
+                      <IconButton onClick={()=>this.getTaskState(event, row.pid)}>
+                        <QuestionIcon color="primary" />
                       </IconButton>
                     </TableCell>
                     <TableCell align="center">
