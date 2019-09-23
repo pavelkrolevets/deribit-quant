@@ -242,7 +242,7 @@ class Header extends Component {
                   DeltaHedger
                 </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/options')}>
-                  Options
+                  Position
                 </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/')}>
                   Home

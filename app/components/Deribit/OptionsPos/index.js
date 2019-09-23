@@ -3,32 +3,14 @@ import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles/index';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
 import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Input from '@material-ui/core/Input';
-import OutlinedInput from '@material-ui/core/OutlinedInput';
-import FilledInput from '@material-ui/core/FilledInput';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import Select from '@material-ui/core/Select';
-import Typography from '@material-ui/core/Typography';
-import { fade } from '@material-ui/core/styles/colorManipulator';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 import {
   XYPlot,
   XAxis,
@@ -40,8 +22,8 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm } from '../../../utils/http_functions';
-import {curveCatmullRom} from 'd3-shape';
+import { compute_bsm, get_api_keys } from '../../../utils/http_functions';
+
 
 
 const styles = theme => ({
@@ -72,16 +54,48 @@ class DeribitOptionPos extends Component {
     super(props);
     this.state = {
       option_values: [],
-      chart_data_current:[],
+      chart_data_current: [],
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-20, 20]
+      yDomain: [-20, 20],
+      keys: {},
+      positions: [],
+      index: 0,
+      account: [],
+      time: Date.now()
     };
-  }
-  async componentWillMount(){
 
-    this.plot()
+  }
+
+
+  async componentWillMount(){
+    await get_api_keys(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({keys: result.data});
+        this.forceUpdate();
+      });
+
+    let RestClient = await require("deribit-api").RestClient;
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
+
+    await this.restClient.positions((result) => {
+      console.log("Positions: ", result.result);
+      this.setState({positions: result.result});
+    });
+
+    await this.restClient.index((result) => {
+      console.log("Index: ", result);
+      this.setState({index: result.result.btc})
+    });
+
+    await this.restClient.account((result) => {
+      console.log("Account: ", result.result);
+      this.setState({account: [result.result]});
+    });
+
+    await this.plot();
+
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -92,6 +106,11 @@ class DeribitOptionPos extends Component {
     //     console.log(error);
     //   }
     // });
+    clearInterval(this.interval);
+  }
+
+  componentDidMount() {
+    this.interval = setInterval(() => console.log(Date.now()), 1000);
   }
 
   async plot(){
@@ -134,6 +153,20 @@ class DeribitOptionPos extends Component {
     this.setState({crosshairValues: [this.state.chart_data_current[index]]});
   };
 
+  async get_open_positions(){
+
+
+
+    function calculate(item, index, arr) {
+      console.log(item);
+      console.log(index);
+    }
+
+    this.state.positions.forEach(calculate)
+
+  }
+
+
   render() {
     const {classes} = this.props;
     const {useCanvas} = this.state;
@@ -141,10 +174,34 @@ class DeribitOptionPos extends Component {
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
     return (
-      <div data-tid="container">
+      <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions</h4>
+        <div>
+          <Table className={classes.table} size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">Equity</TableCell>
+                <TableCell align="center">Global delta</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {this.state.account.map((row, i) => (
+                <TableRow key={i}
+                >
+                  <TableCell align="center">
+                    {row.equity}
+                  </TableCell>
+                  <TableCell align="center">
+                    {row.deltaTotal}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+            {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
             <HorizontalGridLines />
             <VerticalGridLines />
@@ -181,10 +238,57 @@ class DeribitOptionPos extends Component {
             />
           </XYPlot>
           </div>
+        <div>
+          {/*Table with parameters*/}
+          <Paper>
+            <div>
+              <Table className={classes.table} size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">Instrument</TableCell>
+                    <TableCell align="center">Amount</TableCell>
+                    <TableCell align="center">Direction</TableCell>
+                    <TableCell align="center">Delta</TableCell>
+                    <TableCell align="center">Average price</TableCell>
+                    <TableCell align="center">Average price USD</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {this.state.positions.map((row, i) => (
+                    <TableRow key={i}
+                      // onClick={event => this.handleClick(event, row.pid)}
+                              selected
+                              hover
+                    >
+                      <TableCell align="center">
+                        {row.instrument}
+                      </TableCell>
+                      <TableCell align="center">
+                        {row.amount}
+                      </TableCell>
+                      <TableCell align="center">
+                        {row.direction}
+                      </TableCell>
+                      <TableCell align="center">
+                        {row.delta}
+                      </TableCell>
+                      <TableCell align="center">
+                        {row.averagePrice}
+                      </TableCell>
+                      <TableCell align="center">
+                        {row.averageUsdPrice}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Paper>
+        </div>
 
         <Button
           className={classes.button}
-          onClick={()=>this.plot()}
+          onClick={()=>this.get_open_positions()}
           variant="outlined"
           // color="primary"
         >Compute</Button>
