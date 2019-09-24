@@ -66,11 +66,13 @@ export function upload_file(token, file, email) {
   });
 }
 
-export function compute_bsm(token,option_type, data) {
+export function compute_bsm(token, option_type, data, direction, trade_price) {
   return axios.post('http://localhost:5000/api/compute_bsm', {
     token,
     option_type,
-    data
+    data,
+    direction,
+    trade_price
   });
 }
 

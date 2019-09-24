@@ -58,23 +58,39 @@ class DeribitOptionPos extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-20, 20],
+      yDomain: [-10000, 10000],
       keys: {},
       positions: [],
       index: 0,
       account: [],
-      time: Date.now()
+      time: new Date().toLocaleTimeString()
     };
 
   }
 
 
   async componentWillMount(){
+
     await get_api_keys(this.props.user.token, this.props.email)
       .then(result=> {console.log(result);
         this.setState({keys: result.data});
-        this.forceUpdate();
       });
+
+    await this.updateData();
+
+    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
+    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
+    // this.web3.eth.getAccounts(function (error, res) {
+    //   if (!error) {
+    //     console.log(res);
+    //   } else {
+    //     console.log(error);
+    //   }
+    // });
+  }
+
+
+  async updateData(){
 
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
@@ -82,6 +98,9 @@ class DeribitOptionPos extends Component {
     await this.restClient.positions((result) => {
       console.log("Positions: ", result.result);
       this.setState({positions: result.result});
+      let strike = this.getStrike(this.state.positions[0].instrument)
+      console.log(strike)
+      this.plot();
     });
 
     await this.restClient.index((result) => {
@@ -94,53 +113,66 @@ class DeribitOptionPos extends Component {
       this.setState({account: [result.result]});
     });
 
-    await this.plot();
-
-
-    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-    // this.web3.eth.getAccounts(function (error, res) {
-    //   if (!error) {
-    //     console.log(res);
-    //   } else {
-    //     console.log(error);
-    //   }
-    // });
-    clearInterval(this.interval);
+    await this.restClient.getsummary("BTC-27SEP19-12500-C", (result) => {
+      console.log("Instrument summary: ", result.result);
+    });
   }
 
-  componentDidMount() {
-    this.interval = setInterval(() => console.log(Date.now()), 1000);
+  async componentDidMount() {
+
+    // this.interval()
+
+    // setInterval(() => {
+    //   this.plot();
+    //   this.updateData();
+    //   this.setState({time: new Date().toLocaleTimeString()})
+    // }, 30000);
+  }
+
+  getStrike(instrument){
+      let parsed_string = instrument.split('-');
+    return parsed_string[2]
+  }
+
+  getType(instrument){
+    let parsed_string = instrument.split('-');
+    return parsed_string[3]
+  }
+  getExpiration(instrument){
+    let parsed_string = instrument.split('-');
+    return parsed_string[1]
   }
 
   async plot(){
-    await this.computeBSM(10, 0.3)
+    let pos = this.state.positions[0];
+
+    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
       .then(result=>this.setState({chart_data_current: result}));
-    await this.computeBSM(10, 0.00001)
+    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
 
-  async computeBSM (trade_price, T) {
+  async computeBSM (trade_price, T, strike, vola, type, direction) {
     let data = [];
     let S0 = [];
     let chart_data=[];
 
-    for (let i=0; i < 200; i += 10){
-      data.push(JSON.stringify({S0: i, K:120, T:T, r: 0.03, sigma: 0.7}));
+    for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
+      data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
       S0.push(i)
     }
     console.log(data);
-    await compute_bsm(this.props.user.token, 'call', data)
+    await compute_bsm(this.props.user.token, type, data, direction, trade_price)
       .then(response=> {console.log(response);
       this.setState({option_values: response.data.option_values });
       });
 
     let y_range = [];
     for (let i=0; i<S0.length; i++) {
-      chart_data.push({x: S0[i], y: (this.state.option_values[i]-trade_price)});
+      chart_data.push({x: S0[i], y: (this.state.option_values[i])});
       y_range.push((this.state.option_values[i]-trade_price))
     }
-    this.setState({yDomain: [Math.min(...y_range)-20, Math.max(...y_range)+20]});
+    this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
 
     return chart_data;
   }
@@ -175,7 +207,8 @@ class DeribitOptionPos extends Component {
     let {yDomain} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions</h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
+        <h6 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Time {this.state.time}</h6>
         <div>
           <Table className={classes.table} size="small">
             <TableHead>
@@ -236,6 +269,10 @@ class DeribitOptionPos extends Component {
               values={this.state.crosshairValues}
               className={'test-class-name'}
             />
+            <Crosshair
+              values={[{x: parseInt(this.state.index), y:0}]}
+              className={'market-class-name'}
+            />
           </XYPlot>
           </div>
         <div>
@@ -286,12 +323,12 @@ class DeribitOptionPos extends Component {
           </Paper>
         </div>
 
-        <Button
-          className={classes.button}
-          onClick={()=>this.get_open_positions()}
-          variant="outlined"
-          // color="primary"
-        >Compute</Button>
+        {/*<Button*/}
+          {/*className={classes.button}*/}
+          {/*onClick={()=>this.get_open_positions()}*/}
+          {/*variant="outlined"*/}
+          {/*// color="primary"*/}
+        {/*>Compute</Button>*/}
 
       </div>
     );
