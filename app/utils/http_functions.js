@@ -124,3 +124,10 @@ export function get_task_state(token, email, pid) {
     pid
   });
 }
+
+export function compute_pnl(token, email) {
+  return axios.post('http://localhost:5000/api/compute_pnl', {
+    token,
+    email
+  });
+}

@@ -22,7 +22,7 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm, get_api_keys } from '../../../utils/http_functions';
+import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
 
 
 
@@ -58,7 +58,7 @@ class DeribitOptionPos extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-10000, 10000],
+      yDomain: [-5000, 5000],
       keys: {},
       positions: [],
       index: 0,
@@ -98,9 +98,9 @@ class DeribitOptionPos extends Component {
     await this.restClient.positions((result) => {
       console.log("Positions: ", result.result);
       this.setState({positions: result.result});
-      let strike = this.getStrike(this.state.positions[0].instrument)
-      console.log(strike)
-      this.plot();
+      let strike = this.getStrike(this.state.positions[0].instrument);
+      console.log(strike);
+      this.computePnL();
     });
 
     await this.restClient.index((result) => {
@@ -152,7 +152,7 @@ class DeribitOptionPos extends Component {
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
 
-  async computeBSM (trade_price, T, strike, vola, type, direction) {
+  async computeBSM (trade_price, T, strike, vola, option_type, direction) {
     let data = [];
     let S0 = [];
     let chart_data=[];
@@ -162,7 +162,7 @@ class DeribitOptionPos extends Component {
       S0.push(i)
     }
     console.log(data);
-    await compute_bsm(this.props.user.token, type, data, direction, trade_price)
+    await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
       .then(response=> {console.log(response);
       this.setState({option_values: response.data.option_values });
       });
@@ -187,8 +187,6 @@ class DeribitOptionPos extends Component {
 
   async get_open_positions(){
 
-
-
     function calculate(item, index, arr) {
       console.log(item);
       console.log(index);
@@ -198,6 +196,11 @@ class DeribitOptionPos extends Component {
 
   }
 
+  async computePnL(){
+      compute_pnl(this.props.user.token,this.props.email)
+        .then(result => this.setState({chart_data_current: result.data.pnl,
+          chart_data_at_zero: result.data.pnl_at_exp}))
+  }
 
   render() {
     const {classes} = this.props;
@@ -208,13 +211,14 @@ class DeribitOptionPos extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
-        <h6 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Time {this.state.time}</h6>
         <div>
           <Table className={classes.table} size="small">
             <TableHead>
               <TableRow>
                 <TableCell align="center">Equity</TableCell>
                 <TableCell align="center">Global delta</TableCell>
+                <TableCell align="center">Index</TableCell>
+                <TableCell align="center">Time</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -226,6 +230,12 @@ class DeribitOptionPos extends Component {
                   </TableCell>
                   <TableCell align="center">
                     {row.deltaTotal}
+                  </TableCell>
+                  <TableCell align="center">
+                    {this.state.index}
+                  </TableCell>
+                  <TableCell align="center">
+                    {this.state.time}
                   </TableCell>
                 </TableRow>
               ))}
@@ -269,10 +279,10 @@ class DeribitOptionPos extends Component {
               values={this.state.crosshairValues}
               className={'test-class-name'}
             />
-            <Crosshair
-              values={[{x: parseInt(this.state.index), y:0}]}
-              className={'market-class-name'}
-            />
+            {/*<Crosshair*/}
+              {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
+              {/*className={'market-class-name'}*/}
+            {/*/>*/}
           </XYPlot>
           </div>
         <div>
@@ -325,11 +335,11 @@ class DeribitOptionPos extends Component {
 
         {/*<Button*/}
           {/*className={classes.button}*/}
-          {/*onClick={()=>this.get_open_positions()}*/}
+          {/*onClick={()=>this.computePnL()}*/}
           {/*variant="outlined"*/}
           {/*// color="primary"*/}
         {/*>Compute</Button>*/}
-
+      <br/>
       </div>
     );
   }
