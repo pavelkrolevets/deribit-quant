@@ -25,7 +25,7 @@ export default class Home extends Component<Props> {
   render() {
     return (
       <div className={styles.container} data-tid="container">
-        <h1 style={{color:"#152880"}}>Welcome to Blockrunner!</h1>
+        <h1 style={{color:"#152880"}}>Welcome to Optio!</h1>
       </div>
     );
   }
