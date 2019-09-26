@@ -6,6 +6,7 @@ import * as actionCreators from '../actions/auth';
 import PropTypes from 'prop-types';
 const Store = require('electron-store');
 const store = new Store();
+import { validate_token } from '../../utils/http_functions';
 
 function mapStateToProps(state) {
     return {
@@ -42,15 +43,7 @@ export function requireNoAuthentication(Component) {
             } else {
                 const token = store.get('token');
                 if (token) {
-                    fetch('http://localhost:5000/api/is_token_valid', {
-                        method: 'post',
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json', // eslint-disable-line quote-props
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ token }),
-                    })
+                  validate_token(token)
                         .then(res => {
                             if (res.status === 200) {
                                 this.props.loginUserSuccess(token);
