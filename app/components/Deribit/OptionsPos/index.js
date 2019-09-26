@@ -198,8 +198,9 @@ class DeribitOptionPos extends Component {
 
   async computePnL(){
       compute_pnl(this.props.user.token,this.props.email)
-        .then(result => this.setState({chart_data_current: result.data.pnl,
-          chart_data_at_zero: result.data.pnl_at_exp}))
+        .then(result => {console.log(result.data.pnl);
+          this.setState({chart_data_current: result.data.pnl,
+          chart_data_at_zero: result.data.pnl_at_exp})})
   }
 
   render() {
@@ -226,10 +227,10 @@ class DeribitOptionPos extends Component {
                 <TableRow key={i}
                 >
                   <TableCell align="center">
-                    {row.equity}
+                    {parseFloat(row.equity).toFixed(2)}
                   </TableCell>
                   <TableCell align="center">
-                    {row.deltaTotal}
+                    {parseFloat(row.deltaTotal).toFixed(2)}
                   </TableCell>
                   <TableCell align="center">
                     {this.state.index}
@@ -298,6 +299,7 @@ class DeribitOptionPos extends Component {
                     <TableCell align="center">Delta</TableCell>
                     <TableCell align="center">Average price</TableCell>
                     <TableCell align="center">Average price USD</TableCell>
+                    <TableCell align="center">PnL</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -311,7 +313,7 @@ class DeribitOptionPos extends Component {
                         {row.instrument}
                       </TableCell>
                       <TableCell align="center">
-                        {row.amount}
+                        {parseFloat(row.amount).toFixed(2)}
                       </TableCell>
                       <TableCell align="center">
                         {row.direction}
@@ -320,10 +322,13 @@ class DeribitOptionPos extends Component {
                         {row.delta}
                       </TableCell>
                       <TableCell align="center">
-                        {row.averagePrice}
+                        {parseFloat(row.averagePrice).toFixed(2)}
                       </TableCell>
                       <TableCell align="center">
-                        {row.averageUsdPrice}
+                        {parseFloat(row.averageUsdPrice).toFixed(2)}
+                      </TableCell>
+                      <TableCell align="center">
+                        {parseFloat(row.profitLoss).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
