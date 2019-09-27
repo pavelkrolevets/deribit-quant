@@ -49,7 +49,7 @@ const styles = theme => ({
 });
 
 
-class DeribitOptionPos extends Component {
+class Vola extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -100,27 +100,6 @@ class DeribitOptionPos extends Component {
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
 
-    await this.restClient.positions((result) => {
-      console.log("Positions: ", result.result);
-      this.setState({positions: result.result});
-      let strike = this.getStrike(this.state.positions[0].instrument);
-      console.log(strike);
-      this.computePnL();
-    });
-
-    await this.restClient.index((result) => {
-      console.log("Index: ", result);
-      this.setState({index: result.result.btc})
-    });
-
-    await this.restClient.account((result) => {
-      console.log("Account: ", result.result);
-      this.setState({account: [result.result]});
-    });
-
-    await this.restClient.getsummary("BTC-27SEP19-12500-C", (result) => {
-      console.log("Instrument summary: ", result.result);
-    });
   }
 
   async componentDidMount() {
@@ -135,7 +114,7 @@ class DeribitOptionPos extends Component {
   }
 
   getStrike(instrument){
-      let parsed_string = instrument.split('-');
+    let parsed_string = instrument.split('-');
     return parsed_string[2]
   }
 
@@ -169,7 +148,7 @@ class DeribitOptionPos extends Component {
     console.log(data);
     await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
       .then(response=> {console.log(response);
-      this.setState({option_values: response.data.option_values });
+        this.setState({option_values: response.data.option_values });
       });
 
     let y_range = [];
@@ -221,41 +200,10 @@ class DeribitOptionPos extends Component {
     let {yDomain} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
-        <div>
-          <Table className={classes.table} size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center">Equity</TableCell>
-                <TableCell align="center">Global delta</TableCell>
-                <TableCell align="center">Index</TableCell>
-                <TableCell align="center">Time</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {this.state.account.map((row, i) => (
-                <TableRow key={i}
-                >
-                  <TableCell align="center">
-                    {parseFloat(row.equity).toFixed(2)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {parseFloat(row.deltaTotal).toFixed(2)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {this.state.index}
-                  </TableCell>
-                  <TableCell align="center">
-                    {this.state.time}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Volatility index</h4>
 
-          <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-            {/*Main graph*/}
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
             <HorizontalGridLines />
             <VerticalGridLines />
@@ -291,78 +239,30 @@ class DeribitOptionPos extends Component {
               className={'test-class-name'}
             />
             {/*<Crosshair*/}
-              {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
-              {/*className={'market-class-name'}*/}
+            {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
+            {/*className={'market-class-name'}*/}
             {/*/>*/}
           </XYPlot>
-          </div>
+        </div>
         <div>
-          {/*Table with parameters*/}
-          <Paper>
-            <div>
-              <Table className={classes.table} size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Instrument</TableCell>
-                    <TableCell align="center">Amount</TableCell>
-                    <TableCell align="center">Direction</TableCell>
-                    <TableCell align="center">Delta</TableCell>
-                    <TableCell align="center">Average price</TableCell>
-                    <TableCell align="center">Average price USD</TableCell>
-                    <TableCell align="center">PnL</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {this.state.positions.map((row, i) => (
-                    <TableRow key={i}
-                      // onClick={event => this.handleClick(event, row.pid)}
-                              selected
-                              hover
-                    >
-                      <TableCell align="center">
-                        {row.instrument}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.amount).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {row.direction}
-                      </TableCell>
-                      <TableCell align="center">
-                        {row.delta}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.averagePrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.averageUsdPrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.profitLoss).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </Paper>
+
         </div>
 
         {/*<Button*/}
-          {/*className={classes.button}*/}
-          {/*onClick={()=>this.computePnL()}*/}
-          {/*variant="outlined"*/}
-          {/*// color="primary"*/}
+        {/*className={classes.button}*/}
+        {/*onClick={()=>this.computePnL()}*/}
+        {/*variant="outlined"*/}
+        {/*// color="primary"*/}
         {/*>Compute</Button>*/}
-      <br/>
+        <br/>
       </div>
     );
   }
 }
 
 
-DeribitOptionPos.propTypes = {
+Vola.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(DeribitOptionPos);
+export default withStyles(styles)(Vola);

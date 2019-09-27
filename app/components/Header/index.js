@@ -244,6 +244,9 @@ class Header extends Component {
                 <MenuItem onClick={() => this.props.history.push('/options')}>
                   Position
                 </MenuItem>
+                <MenuItem onClick={() => this.props.history.push('/vola')}>
+                  Vola
+                </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/')}>
                   Home
                 </MenuItem>

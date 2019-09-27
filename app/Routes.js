@@ -5,6 +5,7 @@ import HomePage from './containers/HomePage';
 import Profile from './containers/Profile'
 import DeribitOptionPos from './containers/DeribitOptionPos'
 import DeribitDeltaHedger from './containers/DeribitDeltaHedger'
+import Vola from './containers/Vola'
 import LoginView from './components/Login'
 import RegisterView from './components/Register'
 import ProtectedView from './components/Main';
@@ -20,6 +21,7 @@ export default () => (
       <Route path="/register" component={requireNoAuthentication(RegisterView)} />
       <Route path="/deltahedger" component={requireAuthentication(DeribitDeltaHedger)} />
       <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
+      <Route path="/vola" component={requireAuthentication(Vola)} />
       <Route path="/profile" component={requireAuthentication(Profile)} />
       <Route path="/main" component={requireAuthentication(ProtectedView)} />
       <Route path="/" component={requireNoAuthentication(HomePage)} />

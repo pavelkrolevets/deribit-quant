@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 let backend = 'http://localhost:5002';
-// let backend = 'http://52.231.49.218:5002';
+// let backend = 'http://52.231.49.218:5000';
 
 export function validate_token(token) {
   return axios.post(backend+'/api/is_token_valid', {
@@ -129,9 +129,14 @@ export function get_task_state(token, email, pid) {
   });
 }
 
-export function compute_pnl(token, email) {
+export function compute_pnl(token, email, range_min, range_max, step, risk_free, vola) {
   return axios.post(backend+'/api/compute_pnl', {
     token,
-    email
+    email,
+    range_min,
+    range_max,
+    step,
+    risk_free,
+    vola
   });
 }
