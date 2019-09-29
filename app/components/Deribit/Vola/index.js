@@ -22,7 +22,7 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
+import { compute_bsm, get_api_keys, compute_pnl, get_hist_vola } from '../../../utils/http_functions';
 
 
 
@@ -58,7 +58,7 @@ class Vola extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-7000, 7000],
+      yDomain: [0, 2],
       keys: {},
       positions: [],
       index: 0,
@@ -68,7 +68,8 @@ class Vola extends Component {
       range_max:'',
       step:'',
       risk_free:'',
-      vola:''
+      vola:'',
+      hist_vola: []
     };
 
   }
@@ -81,8 +82,12 @@ class Vola extends Component {
         this.setState({keys: result.data});
       });
 
-    await this.updateData();
 
+    await get_hist_vola(this.props.user.token, this.props.email)
+      .then(result=>{
+        console.log(result);
+        this.setState({hist_vola: result.data.hist_vola})
+      })
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
     // this.web3.eth.getAccounts(function (error, res) {
@@ -94,13 +99,6 @@ class Vola extends Component {
     // });
   }
 
-
-  async updateData(){
-
-    let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
-
-  }
 
   async componentDidMount() {
 
@@ -136,37 +134,13 @@ class Vola extends Component {
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
 
-  async computeBSM (trade_price, T, strike, vola, option_type, direction) {
-    let data = [];
-    let S0 = [];
-    let chart_data=[];
-
-    for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
-      data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
-      S0.push(i)
-    }
-    console.log(data);
-    await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
-      .then(response=> {console.log(response);
-        this.setState({option_values: response.data.option_values });
-      });
-
-    let y_range = [];
-    for (let i=0; i<S0.length; i++) {
-      chart_data.push({x: S0[i], y: (this.state.option_values[i])});
-      y_range.push((this.state.option_values[i]-trade_price))
-    }
-    this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
-
-    return chart_data;
-  }
 
   _onMouseLeave = () => {
     this.setState({crosshairValues: []});
   };
 
   _onNearestX = (value, {index}) => {
-    this.setState({crosshairValues: [this.state.chart_data_current[index]]});
+    this.setState({crosshairValues: [this.state.hist_vola[index]]});
   };
 
   async get_open_positions(){
@@ -210,7 +184,7 @@ class Vola extends Component {
             <XAxis on0={true}/>
             <YAxis on0={true}/>
             <ChartLabel
-              text="Price"
+              text="Time"
               className="alt-x-label"
               includeMargin={false}
               xPercent={0.025}
@@ -218,7 +192,7 @@ class Vola extends Component {
             />
 
             <ChartLabel
-              text="Profit"
+              text="Volatility"
               className="alt-y-label"
               includeMargin={false}
               xPercent={0.06}
@@ -231,9 +205,9 @@ class Vola extends Component {
             <LineSeries
               className="first-series"
               onNearestX={this._onNearestX}
-              data={this.state.chart_data_current}
+              data={this.state.hist_vola}
             />
-            <LineSeries data={this.state.chart_data_at_zero} />
+            {/*<LineSeries data={this.state.chart_data_at_zero} />*/}
             <Crosshair
               values={this.state.crosshairValues}
               className={'test-class-name'}

@@ -140,3 +140,10 @@ export function compute_pnl(token, email, range_min, range_max, step, risk_free,
     vola
   });
 }
+
+export function get_hist_vola(token, email) {
+  return axios.post(backend+'/api/get_hist_vola', {
+    token,
+    email
+  });
+}
