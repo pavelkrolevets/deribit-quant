@@ -329,7 +329,7 @@ class DeribitOptionPos extends Component {
                         {row.direction}
                       </TableCell>
                       <TableCell align="center">
-                        {row.delta}
+                        {parseFloat(row.delta).toFixed(2)}
                       </TableCell>
                       <TableCell align="center">
                         {parseFloat(row.averagePrice).toFixed(2)}
