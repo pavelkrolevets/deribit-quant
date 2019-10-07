@@ -122,62 +122,11 @@ class Analize extends Component {
   }
 
   async componentDidMount() {
-
-    // this.interval()
-
-    // setInterval(() => {
-    //   this.plot();
-    //   this.updateData();
-    //   this.setState({time: new Date().toLocaleTimeString()})
-    // }, 30000);
   }
 
   getStrike(instrument){
     let parsed_string = instrument.split('-');
     return parsed_string[2]
-  }
-
-  getType(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[3]
-  }
-  getExpiration(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[1]
-  }
-
-  async plot(){
-    let pos = this.state.positions[0];
-
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_current: result}));
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_at_zero: result}));
-  }
-
-  async computeBSM (trade_price, T, strike, vola, option_type, direction) {
-    let data = [];
-    let S0 = [];
-    let chart_data=[];
-
-    for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
-      data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
-      S0.push(i)
-    }
-    console.log(data);
-    await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
-      .then(response=> {console.log(response);
-        this.setState({option_values: response.data.option_values });
-      });
-
-    let y_range = [];
-    for (let i=0; i<S0.length; i++) {
-      chart_data.push({x: S0[i], y: (this.state.option_values[i])});
-      y_range.push((this.state.option_values[i]-trade_price))
-    }
-    this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
-
-    return chart_data;
   }
 
   _onMouseLeave = () => {
@@ -187,17 +136,6 @@ class Analize extends Component {
   _onNearestX = (value, {index}) => {
     this.setState({crosshairValues: [this.state.chart_data_current[index]]});
   };
-
-  async get_open_positions(){
-
-    function calculate(item, index, arr) {
-      console.log(item);
-      console.log(index);
-    }
-
-    this.state.positions.forEach(calculate)
-
-  }
 
   async computePnL(){
     let range_min = parseInt(this.state.index)-2000;
@@ -220,37 +158,6 @@ class Analize extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
-        <div>
-          <Table className={classes.table} size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center">Equity</TableCell>
-                <TableCell align="center">Global delta</TableCell>
-                <TableCell align="center">Index</TableCell>
-                <TableCell align="center">Time</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {this.state.account.map((row, i) => (
-                <TableRow key={i}
-                >
-                  <TableCell align="center">
-                    {parseFloat(row.equity).toFixed(2)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {parseFloat(row.deltaTotal).toFixed(2)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {this.state.index}
-                  </TableCell>
-                  <TableCell align="center">
-                    {this.state.time}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
@@ -293,57 +200,6 @@ class Analize extends Component {
             {/*className={'market-class-name'}*/}
             {/*/>*/}
           </XYPlot>
-        </div>
-        <div>
-          {/*Table with parameters*/}
-          <Paper>
-            <div>
-              <Table className={classes.table} size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Instrument</TableCell>
-                    <TableCell align="center">Amount</TableCell>
-                    <TableCell align="center">Direction</TableCell>
-                    <TableCell align="center">Delta</TableCell>
-                    <TableCell align="center">Average price</TableCell>
-                    <TableCell align="center">Average price USD</TableCell>
-                    <TableCell align="center">PnL</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {this.state.positions.map((row, i) => (
-                    <TableRow key={i}
-                      // onClick={event => this.handleClick(event, row.pid)}
-                              selected
-                              hover
-                    >
-                      <TableCell align="center">
-                        {row.instrument}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.amount).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {row.direction}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.delta).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.averagePrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.averageUsdPrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {parseFloat(row.profitLoss).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </Paper>
         </div>
 
         {/*<Button*/}
