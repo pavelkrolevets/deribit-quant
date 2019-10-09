@@ -20,7 +20,7 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
+import { compute_bsm, get_api_keys, compute_pnl, analaize_positions } from '../../../utils/http_functions';
 
 
 
@@ -66,7 +66,8 @@ class Analize extends Component {
       range_max:'',
       step:'',
       risk_free:'',
-      vola:''
+      vola:'',
+      postions: []
     };
 
   }
@@ -143,7 +144,7 @@ class Analize extends Component {
     let step = 100;
     let risk_free = 0.03;
     let vola = 0.8;
-    compute_pnl(this.props.user.token,this.props.email, range_min, range_max, step, risk_free, vola)
+    analaize_positions(this.props.user.token,this.props.email, this.props.positions, range_min, range_max, step, risk_free, vola)
       .then(result => {console.log(result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
@@ -157,7 +158,7 @@ class Analize extends Component {
     let {yDomain} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Add postions to analize </h4>
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}

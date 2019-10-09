@@ -149,3 +149,16 @@ export function get_hist_vola(token, email, window, timeframe) {
     timeframe
   });
 }
+
+export function analaize_positions(token, email, positions, range_min, range_max, step, risk_free, vola) {
+  return axios.post(backend+'/api/analaize_positions', {
+    token,
+    email,
+    positions,
+    range_min,
+    range_max,
+    step,
+    risk_free,
+    vola
+  });
+}
