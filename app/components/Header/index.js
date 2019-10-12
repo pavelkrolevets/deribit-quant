@@ -97,6 +97,14 @@ const styles = theme => ({
       display: 'none',
     },
   },
+
+  gradientAppBar: {
+    background: 'linear-gradient(45deg, #4A4A4A 30%, #7C7C7C 90%)',
+    borderRadius: 3,
+    border: 0,
+    color: 'white',
+    padding: '0 30px',
+  },
 });
 function mapStateToProps(state) {
   return {
@@ -260,7 +268,7 @@ class Header extends Component {
           }
 
         </Drawer>
-        <AppBar position="static">
+        <AppBar position="static" className={ classes.gradientAppBar}>
           <Toolbar>
             <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer" onClick={()=>this.handleDrawerOpen()}>
               <MenuIcon />

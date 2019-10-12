@@ -2,12 +2,8 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles/index';
 import PropTypes from 'prop-types';
-import Paper from '@material-ui/core/Paper';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
 
 import {
   XYPlot,
@@ -65,8 +61,8 @@ class Analize extends Component {
       range_min:'',
       range_max:'',
       step:'',
-      risk_free:'',
-      vola:'',
+      risk_free:'0.03',
+      vola:'0.8',
       postions: []
     };
 
@@ -75,12 +71,6 @@ class Analize extends Component {
 
   async componentWillMount(){
 
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      });
-
-    await this.updateData();
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -99,35 +89,20 @@ class Analize extends Component {
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
 
-    await this.restClient.positions((result) => {
-      console.log("Positions: ", result.result);
-      this.setState({positions: result.result});
-      let strike = this.getStrike(this.state.positions[0].instrument);
-      console.log(strike);
-      this.computePnL();
-    });
-
     await this.restClient.index((result) => {
       console.log("Index: ", result);
-      this.setState({index: result.result.btc})
-    });
-
-    await this.restClient.account((result) => {
-      console.log("Account: ", result.result);
-      this.setState({account: [result.result]});
-    });
-
-    await this.restClient.getsummary("BTC-27SEP19-12500-C", (result) => {
-      console.log("Instrument summary: ", result.result);
+      this.setState({index: result.result.btc});
+      this.computePnL(result.result.btc);
     });
   }
 
   async componentDidMount() {
-  }
+    await get_api_keys(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({keys: result.data});
+      });
 
-  getStrike(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[2]
+    await this.updateData();
   }
 
   _onMouseLeave = () => {
@@ -138,17 +113,20 @@ class Analize extends Component {
     this.setState({crosshairValues: [this.state.chart_data_current[index]]});
   };
 
-  async computePnL(){
-    let range_min = parseInt(this.state.index)-2000;
-    let range_max = parseInt(this.state.index)+2000;
+  async computePnL(index){
+    let positions = [{'instrument': 'BTC-25OCT19-7500-C', 'kind': 'option', 'averagePrice': 0.0835, 'averageUsdPrice': 667.309455, 'direction': 'buy', 'size': 3.0, 'amount': 3.0, 'floatingPl': 8.113e-06, 'floatingUsdPl': 1402.597407614, 'realizedPl': 0.0, 'markPrice': 0.023936969131174195, 'indexPrice': 8345.96, 'maintenanceMargin': 0.296810907, 'initialMargin': 0.371810907, 'settlementPrice': 0.023939673376509495, 'delta': 0.69037, 'openOrderMargin': 0.0, 'profitLoss': 0.178689093}];
+    let range_min = parseInt(index)-2000;
+    let range_max = parseInt(index)+2000;
     let step = 100;
-    let risk_free = 0.03;
-    let vola = 0.8;
-    analaize_positions(this.props.user.token,this.props.email, this.props.positions, range_min, range_max, step, risk_free, vola)
+    analaize_positions(this.props.user.token,this.props.email, positions, range_min, range_max, step, this.state.risk_free, this.state.vola)
       .then(result => {console.log(result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
   }
+
+  handleChange = name => event => {
+    this.setState({ [name]: event.target.value });
+  };
 
   render() {
     const {classes} = this.props;
@@ -158,7 +136,9 @@ class Analize extends Component {
     let {yDomain} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Add postions to analize </h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analize</h4>
+
+
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
@@ -210,6 +190,31 @@ class Analize extends Component {
         {/*// color="primary"*/}
         {/*>Compute</Button>*/}
         <br/>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+
+          <TextField
+            id="outlined-name"
+            label="Vola"
+            className={classes.textField}
+            onChange={this.handleChange('vola')}
+            margin="normal"
+            variant="outlined"
+          />
+          <TextField
+            id="outlined-name"
+            label="Risk free"
+            className={classes.textField}
+            onChange={this.handleChange('risk_free')}
+            margin="normal"
+            variant="outlined"
+          />
+        </div>
+        <Button
+          className={classes.button}
+          onClick={()=>this.computePnL(this.state.index)}
+          variant="outlined"
+          // color="primary"
+        >Recalculate</Button>
       </div>
     );
   }

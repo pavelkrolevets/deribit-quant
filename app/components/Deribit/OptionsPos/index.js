@@ -100,26 +100,21 @@ class DeribitOptionPos extends Component {
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
 
-    await this.restClient.positions((result) => {
-      console.log("Positions: ", result.result);
-      this.setState({positions: result.result});
-      let strike = this.getStrike(this.state.positions[0].instrument);
-      console.log(strike);
-      this.computePnL();
-    });
-
     await this.restClient.index((result) => {
       console.log("Index: ", result);
-      this.setState({index: result.result.btc})
+      this.setState({index: result.result.btc});
+      this.restClient.positions((result) => {
+          console.log("Positions: ", result.result);
+          this.setState({positions: result.result});
+          let strike = this.getStrike(this.state.positions[0].instrument);
+          console.log(strike);
+          this.computePnL();
+        })
     });
 
     await this.restClient.account((result) => {
       console.log("Account: ", result.result);
       this.setState({account: [result.result]});
-    });
-
-    await this.restClient.getsummary("BTC-27SEP19-12500-C", (result) => {
-      console.log("Instrument summary: ", result.result);
     });
   }
 
