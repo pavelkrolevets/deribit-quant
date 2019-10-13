@@ -189,7 +189,7 @@ class Header extends Component {
         onClose={this.handleMenuClose}
       >
         <MenuItem onClick={this.handleMenuClose}>Profile</MenuItem>
-        <MenuItem onClick={this.handleMenuClose}>My account</MenuItem>
+        {/*<MenuItem onClick={this.handleMenuClose}>My account</MenuItem>*/}
       </Menu>
     );
 
@@ -290,16 +290,16 @@ class Header extends Component {
             </div>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
-              <IconButton color="inherit">
-                <Badge badgeContent={4} color="secondary">
-                  <MailIcon />
-                </Badge>
-              </IconButton>
-              <IconButton color="inherit">
-                <Badge badgeContent={17} color="secondary">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
+              {/*<IconButton color="inherit">*/}
+                {/*<Badge badgeContent={4} color="secondary">*/}
+                  {/*<MailIcon />*/}
+                {/*</Badge>*/}
+              {/*</IconButton>*/}
+              {/*<IconButton color="inherit">*/}
+                {/*<Badge badgeContent={17} color="secondary">*/}
+                  {/*<NotificationsIcon />*/}
+                {/*</Badge>*/}
+              {/*</IconButton>*/}
               <IconButton
                 aria-owns={isMenuOpen ? 'material-appbar' : undefined}
                 aria-haspopup="true"

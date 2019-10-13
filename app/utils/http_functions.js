@@ -80,13 +80,14 @@ export function compute_bsm(token, option_type, data, direction, trade_price) {
   });
 }
 
-export function start_delta_hedger(token, email, interval_min, interval_max, time_period) {
+export function start_delta_hedger(token, email, interval_min, interval_max, time_period, instrument) {
   return axios.post(backend+'/api/start_delta_hedger', {
     token,
     email,
     interval_min,
     interval_max,
-    time_period
+    time_period,
+    instrument
   });
 }
 

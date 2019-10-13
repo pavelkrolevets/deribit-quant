@@ -159,7 +159,7 @@ class Vola extends Component {
     let {yDomain} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Volatility index</h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Historical volatility</h4>
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}

@@ -100,14 +100,14 @@
       "output": "release"
     },
     "publish": {
-      "provider": "God",
+      "provider": "github",
       "owner": "Pavel Krolevets",
       "repo": "private",
-      "private": false
+      "private": true
     }
   },
   "repository": {
-    "type": "git",
+    "type": "github",
     "url": "private"
   },
   "author": {

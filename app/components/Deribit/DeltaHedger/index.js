@@ -13,6 +13,11 @@ import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import QuestionIcon from '@material-ui/icons/QueryBuilder';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+
 
 import { start_delta_hedger, get_tasks, kill_task, get_task_state} from '../../../utils/http_functions';
 
@@ -36,8 +41,10 @@ const styles = theme => ({
     },
   },
   chart:{
-
-  }
+  },
+  formControl: {
+    margin: theme.spacing(3),
+  },
 });
 
 
@@ -50,7 +57,8 @@ class DeribitDeltaHedger extends Component {
       time_interval:'',
       tasks:[],
       selected:[],
-      setSelected:[]
+      setSelected:[],
+      instrument:"BTC"
 
     };
   }
@@ -73,7 +81,7 @@ class DeribitDeltaHedger extends Component {
 
   async start_hedger(){
     console.log(this.props.user.token, this.props.email);
-    start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval)
+    start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.instrument)
       .then(result=> {console.log(result);
       this.get_delta_hedger_tasks()})
   }
@@ -104,7 +112,24 @@ class DeribitDeltaHedger extends Component {
     return (
       <div data-tid="container">
         <h1 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Delta Hedger</h1>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
+            <Select
+              value={this.state.instrument}
+              onChange={this.handleChange("instrument")}
+              inputProps={{
+                name: 'instrument',
+                id: 'instruemnt-simple',
+              }}
+            >
+              <MenuItem value={"BTC"}>BTC</MenuItem>
+              <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
         <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Select delta bands</h4>
+
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
 
           <TextField
@@ -156,6 +181,10 @@ class DeribitDeltaHedger extends Component {
                   <TableCell align="center">Edit</TableCell>
                   <TableCell align="center">PID</TableCell>
                   <TableCell align="center">Timestamp</TableCell>
+                  <TableCell align="center">Interval</TableCell>
+                  <TableCell align="center">Dmin</TableCell>
+                  <TableCell align="center">Dmax</TableCell>
+                  <TableCell align="center">Instrument</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -178,6 +207,18 @@ class DeribitDeltaHedger extends Component {
                     </TableCell>
                     <TableCell align="center">
                       {row.timestamp}
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.timeinterval}
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.delta_min}
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.delta_max}
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.instrument}
                     </TableCell>
                   </TableRow>
                 ))}
