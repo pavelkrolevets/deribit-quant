@@ -87,7 +87,8 @@ class Vola extends Component {
       vola:'',
       hist_vola: [],
       window: 24*7,
-      timeframe: '1h'
+      timeframe: '1h',
+      instrument: "BTC"
     };
 
   }
@@ -101,7 +102,7 @@ class Vola extends Component {
       });
 
 
-    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe)
+    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe, this.state.instrument)
       .then(result=>{
         console.log(result);
         this.setState({hist_vola: result.data.hist_vola})
@@ -130,7 +131,7 @@ class Vola extends Component {
   }
 
   async updateVola(){
-    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe)
+    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe, this.state.instrument)
       .then(result=>{
         console.log(result);
         this.setState({hist_vola: result.data.hist_vola})
@@ -160,7 +161,22 @@ class Vola extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Historical volatility</h4>
-
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
+            <Select
+              value={this.state.instrument}
+              onChange={this.handleChange("instrument")}
+              inputProps={{
+                name: 'instrument',
+                id: 'instruemnt-simple',
+              }}
+            >
+              <MenuItem value={"BTC"}>BTC</MenuItem>
+              <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>

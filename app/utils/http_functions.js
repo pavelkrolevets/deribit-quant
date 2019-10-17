@@ -142,12 +142,13 @@ export function compute_pnl(token, email, range_min, range_max, step, risk_free,
   });
 }
 
-export function get_hist_vola(token, email, window, timeframe) {
+export function get_hist_vola(token, email, window, timeframe, instrument) {
   return axios.post(backend+'/api/get_hist_vola', {
     token,
     email,
     window,
-    timeframe
+    timeframe,
+    instrument
   });
 }
 

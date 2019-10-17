@@ -4,6 +4,11 @@ import { withStyles } from '@material-ui/core/styles/index';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import GroupedTable from "./instrumentTable";
 
 import {
   XYPlot,
@@ -18,7 +23,28 @@ import {
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl, analaize_positions } from '../../../utils/http_functions';
 
-
+const columns = [
+  { dataKey: "name", title: "Name" },
+  { dataKey: "sex", title: "Sex" },
+  { dataKey: "city", title: "City" },
+  { dataKey: "car", title: "Car" }
+];
+let rows = [
+  { sex: "Female", name: "Sandra", city: "Las Vegas", car: "Audi A4" },
+  { sex: "Male", name: "Paul", city: "Paris", car: "Nissan Altima" },
+  { sex: "Male", name: "Mark", city: "Paris", car: "Honda Accord" },
+  { sex: "Male", name: "Paul", city: "Paris", car: "Nissan Altima" },
+  { sex: "Female", name: "Linda", city: "Austin", car: "Toyota Corolla" },
+  { sex: "Male", name: "Robert", city: "Las Vegas", car: "Chevrolet Cruze" },
+  { sex: "Female", name: "Lisa", city: "London", car: "BMW 750" },
+  { sex: "Male", name: "Mark", city: "Chicago", car: "Toyota Corolla" },
+  { sex: "Male", name: "Thomas", city: "Rio de Janeiro", car: "Honda Accord" },
+  { sex: "Male", name: "Robert", city: "Las Vegas", car: "Honda Civic" },
+  { sex: "Female", name: "Betty", city: "Paris", car: "Honda Civic" },
+  { sex: "Male", name: "Robert", city: "Los Angeles", car: "Honda Accord" },
+  { sex: "Male", name: "William", city: "Los Angeles", car: "Honda Civic" },
+  { sex: "Male", name: "Mark", city: "Austin", car: "Nissan Altima" }
+];
 
 const styles = theme => ({
   root: {
@@ -63,14 +89,16 @@ class Analize extends Component {
       step:'',
       risk_free:'0.03',
       vola:'0.8',
-      postions: []
+      postions: [],
+      instrument: "BTC",
+      direction: "buy",
+      instruments: [],
     };
 
   }
 
 
   async componentWillMount(){
-
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -83,7 +111,6 @@ class Analize extends Component {
     // });
   }
 
-
   async updateData(){
 
     let RestClient = await require("deribit-api").RestClient;
@@ -93,6 +120,10 @@ class Analize extends Component {
       console.log("Index: ", result);
       this.setState({index: result.result.btc});
       this.computePnL(result.result.btc);
+    });
+    await this.restClient.getinstruments((result) => {
+      console.log("Instruments: ", result);
+      this.setState({index: result.result});
     });
   }
 
@@ -134,10 +165,40 @@ class Analize extends Component {
     const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
+
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analize</h4>
-
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="instrument-simple">Instrument</InputLabel>
+            <Select
+              value={this.state.instrument}
+              onChange={this.handleChange("instrument")}
+              inputProps={{
+                name: 'instrument',
+                id: 'instrument-simple',
+              }}
+            >
+              <MenuItem value={"BTC"}>BTC</MenuItem>
+              <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+          {/*<FormControl className={classes.formControl}>*/}
+            {/*<InputLabel htmlFor="direction-simple">Direction</InputLabel>*/}
+            {/*<Select*/}
+              {/*value={this.state.direction}*/}
+              {/*onChange={this.handleChange("direction")}*/}
+              {/*inputProps={{*/}
+                {/*name: 'direction',*/}
+                {/*id: 'direction-simple',*/}
+              {/*}}*/}
+            {/*>*/}
+              {/*<MenuItem value={"buy"}>Buy</MenuItem>*/}
+              {/*<MenuItem value={"sell"}>Sell</MenuItem>*/}
+            {/*</Select>*/}
+          {/*</FormControl>*/}
+        </div>
 
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
@@ -208,13 +269,17 @@ class Analize extends Component {
             margin="normal"
             variant="outlined"
           />
+          <Button
+            className={classes.button}
+            onClick={()=>this.computePnL(this.state.index)}
+            variant="outlined"
+            // color="primary"
+          >Recalculate</Button>
         </div>
-        <Button
-          className={classes.button}
-          onClick={()=>this.computePnL(this.state.index)}
-          variant="outlined"
-          // color="primary"
-        >Recalculate</Button>
+
+        <div>
+          <GroupedTable columns={columns} rows={rows} />
+        </div>
       </div>
     );
   }
