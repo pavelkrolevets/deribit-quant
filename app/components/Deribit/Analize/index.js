@@ -109,6 +109,12 @@ class Analize extends Component {
     //     console.log(error);
     //   }
     // });
+
+    await get_api_keys(this.props.user.token, this.props.email)
+      .then(result=> {console.log(result);
+        this.setState({keys: result.data});
+      })
+      .then(()=>this.updateData());
   }
 
   async updateData(){
@@ -116,24 +122,17 @@ class Analize extends Component {
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
 
-    await this.restClient.index((result) => {
-      console.log("Index: ", result);
-      this.setState({index: result.result.btc});
-      this.computePnL(result.result.btc);
-    });
-    await this.restClient.getinstruments((result) => {
-      console.log("Instruments: ", result);
-      this.setState({index: result.result});
-    });
-  }
-
-  async componentDidMount() {
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      });
-
-    await this.updateData();
+    await this.restClient.index()
+      .then((result) => {
+        console.log("Index: ", result);
+        this.setState({index: result.result.btc});
+        return result;
+      })
+      .then((result) => this.computePnL(result.result.btc))
+      .then(()=> this.restClient.getinstruments((result) => {
+        console.log("Instruments: ", result);
+        this.setState({index: result.result});
+      }));
   }
 
   _onMouseLeave = () => {
