@@ -24,7 +24,7 @@ export default () => (
       <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
       <Route path="/vola" component={requireAuthentication(Vola)} />
       <Route path="/profile" component={requireAuthentication(Profile)} />
-      <Route path="/analize" component={requireAuthentication(Analize)} />
+      <Route path="/analyze" component={requireAuthentication(Analize)} />
       <Route path="/main" component={requireAuthentication(ProtectedView)} />
       <Route path="/" component={requireNoAuthentication(HomePage)} />
     </Switch>
