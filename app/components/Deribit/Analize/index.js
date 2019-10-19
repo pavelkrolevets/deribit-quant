@@ -20,6 +20,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 import {
   XYPlot,
@@ -35,26 +37,21 @@ import {
 import { compute_bsm, get_api_keys, compute_pnl, analaize_positions } from '../../../utils/http_functions';
 
 const columns = [
-  { dataKey: "name", title: "Name" },
-  { dataKey: "sex", title: "Sex" },
-  { dataKey: "city", title: "City" },
-  { dataKey: "car", title: "Car" }
-];
-let rows = [
-  { sex: "Female", name: "Sandra", city: "Las Vegas", car: "Audi A4" },
-  { sex: "Male", name: "Paul", city: "Paris", car: "Nissan Altima" },
-  { sex: "Male", name: "Mark", city: "Paris", car: "Honda Accord" },
-  { sex: "Male", name: "Paul", city: "Paris", car: "Nissan Altima" },
-  { sex: "Female", name: "Linda", city: "Austin", car: "Toyota Corolla" },
-  { sex: "Male", name: "Robert", city: "Las Vegas", car: "Chevrolet Cruze" },
-  { sex: "Female", name: "Lisa", city: "London", car: "BMW 750" },
-  { sex: "Male", name: "Mark", city: "Chicago", car: "Toyota Corolla" },
-  { sex: "Male", name: "Thomas", city: "Rio de Janeiro", car: "Honda Accord" },
-  { sex: "Male", name: "Robert", city: "Las Vegas", car: "Honda Civic" },
-  { sex: "Female", name: "Betty", city: "Paris", car: "Honda Civic" },
-  { sex: "Male", name: "Robert", city: "Los Angeles", car: "Honda Accord" },
-  { sex: "Male", name: "William", city: "Los Angeles", car: "Honda Civic" },
-  { sex: "Male", name: "Mark", city: "Austin", car: "Nissan Altima" }
+  { dataKey: "baseCurrency", title: "BaseCurrency" },
+  // { dataKey: "created", title: "Created" },
+  // { dataKey: "currency", title: "Currency" },
+  { dataKey: "expiration", title: "Expiration" },
+  { dataKey: "instrumentName", title: "InstrumentName" },
+  // { dataKey: "isActive", title: "IsActive" },
+  { dataKey: "kind", title: "Kind" },
+  // { dataKey: "minTradeAmount", title: "MinTradeAmount" },
+  // { dataKey: "minTradeSize", title: "MinTradeSize" },
+  { dataKey: "optionType", title: "OptionType" },
+  // { dataKey: "pricePrecision", title: "PricePrecision" },
+  // { dataKey: "settlement", title: "Settlement" },
+  { dataKey: "strike", title: "Strike" },
+  // { dataKey: "tickSize", title: "TickSize" },
+
 ];
 
 const styles = theme => ({
@@ -103,12 +100,14 @@ class Analize extends Component {
       postions: [],
       instrument: "BTC",
       direction: "buy",
-      instruments: [{'instrumentName': 'BTC-25OCT19-7500-C', 'kind': 'option', 'direction': 'buy', 'size': 3.0, 'markPrice': 0.2}],
+      add_instruments: [],
       alert: false,
       expiration:"",
       strike: "",
-      type: "C",
-      size:""
+      type: "call",
+      size:"",
+      instruments:"",
+      buySellDialog: false
 
     };
 
@@ -131,12 +130,17 @@ class Analize extends Component {
       .then(result=> {console.log(result);
         this.setState({keys: result.data});
       })
-      .then(()=>this.updateData());
+      // .then(()=>this.updateData());
+  }
+
+  componentDidMount(){
+    this.updateData();
   }
 
   async updateData(){
+    // let that = this;
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
     await this.restClient.index()
       .then((result) => {
         console.log("Index: ", result);
@@ -144,10 +148,35 @@ class Analize extends Component {
         return result;
       })
       .then(() => this.computePnL())
-      // .then(()=> this.restClient.getinstruments((result) => {
-      //   console.log("Instruments: ", result);
-      // }));
+      .then(()=> this.restClient.getinstruments((result) => {
+        console.log("Instruments: ", result.result);
+        this.setState({instruments: result.result});
+      }))
+      // .then(()=> this.sortInstruments())
   }
+
+  // sortInstruments(){
+  //   for (let item in this.state.instrument_symbols){
+  //     console.log(item);
+  //     this.state.sorted_instruments.push({instrumentName: item.instrumentName, strike: this.getStrike(item.instrumentName),
+  //       expiration: this.getExpiration(item.instrumentName), type: this.getType(item.instrumentName), baseCurrency: item.baseCurrency,})
+  //   }
+  //
+  // }
+  //
+  // getStrike(instrument){
+  //   let parsed_string = instrument.split('-');
+  //   return parsed_string[2]
+  // }
+  //
+  // getType(instrument){
+  //   let parsed_string = instrument.split('-');
+  //   return parsed_string[3]
+  // }
+  // getExpiration(instrument){
+  //   let parsed_string = instrument.split('-');
+  //   return parsed_string[1]
+  // }
 
   _onMouseLeave = () => {
     this.setState({crosshairValues: []});
@@ -158,11 +187,10 @@ class Analize extends Component {
   };
 
   async computePnL(){
-    let positions = [{'instrumentName': 'BTC-25OCT19-7500-C', 'kind': 'option', 'direction': 'buy', 'amount': 3.0}];
     let range_min = parseInt(this.state.index)-2000;
     let range_max = parseInt(this.state.index)+2000;
     let step = 100;
-    analaize_positions(this.props.user.token,this.props.email, this.state.instruments, range_min, range_max, step, this.state.risk_free, this.state.vola)
+    analaize_positions(this.props.user.token,this.props.email, this.state.add_instruments, range_min, range_max, step, this.state.risk_free, this.state.vola)
       .then(result => {console.log(result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
@@ -172,11 +200,21 @@ class Analize extends Component {
     this.setState({ [name]: event.target.value });
   };
 
+  getInstrumentFromChild = (instrument) => {
+    console.log(instrument);
+    let that = this;
+    let promise = new Promise(function(resolve, reject) {
+      resolve(that.setState({instrument: instrument.instrumentName, kind: instrument.kind, type: instrument.optionType}));
+      return null
+    });
+    promise.then(()=>this.setState({buySellDialog: true}));
+  };
+
   async searchInstrument(){
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
-    let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
-    await this.restClient.getsummary(instrument)
+    // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
+    await this.restClient.getsummary(this.state.instrument)
       .then(response => {
         console.log(response);
         if (response.success === true) {
@@ -196,9 +234,10 @@ class Analize extends Component {
   }
 
   addInstrument(instrument){
-    let id = this.state.instruments.length;
-    if (this.state.type === "C" || this.state.type==="P") {
-      this.state.instruments.push({
+    console.log("Before adding state", this.state.type, this.state.size);
+    let id = this.state.add_instruments.length;
+    if (this.state.type === "call" || this.state.type==="put") {
+      this.state.add_instruments.push({
         id,
         instrumentName: instrument.instrumentName,
         markPrice: instrument.markPrice,
@@ -211,8 +250,8 @@ class Analize extends Component {
         kind:"option"
       });
     }
-    else if (this.state.type === "") {
-      this.state.instruments.push({
+    else if (this.state.type === "future") {
+      this.state.add_instruments.push({
         id,
         instrumentName: instrument.instrumentName,
         markPrice: instrument.markPrice,
@@ -228,18 +267,21 @@ class Analize extends Component {
     this.forceUpdate()
   }
   removeInstrument(){
-    var that = this;
+    let that = this;
     let promise = new Promise(function(resolve, reject) {
-      resolve(that.state.instruments.pop());
+      resolve(that.state.add_instruments.pop());
       return null
     });
     promise.then(()=>this.computePnL());
-    console.log(this.state.instruments);
+    console.log(this.state.add_instruments);
     this.forceUpdate()
   }
 
   closeAlert(){
     this.setState({alert: false})
+  }
+  closeBuySellDialog(){
+    this.setState({buySellDialog: false})
   }
 
   render() {
@@ -248,108 +290,72 @@ class Analize extends Component {
     const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
+    let {instruments} = this.state;
+    let searchInstrument = this.getInstrumentFromChild;
+    function instrumentTable() {
+      if (instruments.length!==0) {
+        return (
+          /* add gruped instruments table */
+          <div>
+            <GroupedTable columns={columns} rows={instruments} searchInstrument={searchInstrument}/>
+          </div>
+        )
+      }
+    }
 
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze</h4>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="instrument-simple">Instrument</InputLabel>
-            <Select
-              value={this.state.instrument}
-              onChange={this.handleChange("instrument")}
-              inputProps={{
-                name: 'instrument',
-                id: 'instrument-simple',
-              }}
-            >
-              <MenuItem value={"BTC"}>BTC</MenuItem>
-              <MenuItem value={"ETH"}>ETH</MenuItem>
-            </Select>
-          </FormControl>
 
-          <div style={{display: 'inline-flex', flexDirection: 'row'}}>
-            <TextField
-              id="input-search"
-              label="Expiration"
-              className="input-search"
-              onChange={this.handleChange('expiration')}
-              margin="normal"
-              variant="filled"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              style={{width: 100}}
-              placeholder="25OCT19"
-            />
 
-            <TextField
-              id="input-search"
-              label="Strike"
-              className="input-search"
-              onChange={this.handleChange('strike')}
-              margin="normal"
-              variant="filled"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              style={{width: 100}}
-              placeholder="8000"
-            />
 
-            <FormControl className={classes.formControl}>
-              <InputLabel >Type </InputLabel>
-              <Select
-                value={this.state.type}
-                onChange={this.handleChange("type")}
-                inputProps={{
-                  name: 'direction',
-                  id: 'direction-simple',
+          <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+            {/*Main graph*/}
+            <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis on0={true}/>
+              <YAxis on0={true}/>
+              <ChartLabel
+                text="Price"
+                className="alt-x-label"
+                includeMargin={false}
+                xPercent={0.025}
+                yPercent={1.01}
+              />
+
+              <ChartLabel
+                text="Profit"
+                className="alt-y-label"
+                includeMargin={false}
+                xPercent={0.06}
+                yPercent={0.06}
+                style={{
+                  transform: 'rotate(-90)',
+                  textAnchor: 'end'
                 }}
-              >
-                <MenuItem value={"C"}>Call</MenuItem>
-                <MenuItem value={"P"}>Put</MenuItem>
-                <MenuItem value={""}>Fut</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl className={classes.formControl}>
-              <InputLabel htmlFor="direction-simple">Direction</InputLabel>
-              <Select
-                value={this.state.direction}
-                onChange={this.handleChange("direction")}
-                inputProps={{
-                  name: 'direction',
-                  id: 'direction-simple',
-                }}
-              >
-                <MenuItem value={"buy"}>Buy</MenuItem>
-                <MenuItem value={"sell"}>Sell</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              id="input-search"
-              label="Amount"
-              className="input-search"
-              onChange={this.handleChange('size')}
-              margin="normal"
-              variant="filled"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              style={{width: 100}}
-              placeholder="1"
-            />
+              />
+              <LineSeries
+                className="first-series"
+                onNearestX={this._onNearestX}
+                data={this.state.chart_data_current}
+              />
+              <LineSeries data={this.state.chart_data_at_zero} />
+              <Crosshair
+                values={this.state.crosshairValues}
+                className={'test-class-name'}
+              />
+              {/*<Crosshair*/}
+              {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
+              {/*className={'market-class-name'}*/}
+              {/*/>*/}
+            </XYPlot>
           </div>
 
-          <div style={{display: 'inline-flex', flexDirection: 'row'}}>
-            <Button
-              className={classes.button}
-              onClick={()=>this.searchInstrument()}
-              variant="outlined"
-              // color="primary"
-            >Add</Button>
-          </div>
+
+        /*Show list of added instruments */
+
+        <Paper>
           <div style={{display: 'inline-flex', flexDirection: 'row'}}>
             <Button
               className={classes.button}
@@ -358,163 +364,163 @@ class Analize extends Component {
               // color="primary"
             >Remove</Button>
           </div>
-        </div>
+          <div>
+            <Table className={classes.table}>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="left">Instrument</TableCell>
+                  <TableCell align="left">MarkPrice</TableCell>
+                  <TableCell align="left">askPrice</TableCell>
+                  <TableCell align="left">bidPrice</TableCell>
+                  <TableCell align="left">Last</TableCell>
+                  <TableCell align="left">openInterest</TableCell>
+                  <TableCell align="left">Direction</TableCell>
+                  <TableCell align="left">Size</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.state.add_instruments.map(row => (
+                  <TableRow key={row.id}>
+                    <TableCell align="left">
+                      {row.instrumentName}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.markPrice}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.askPrice}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.bidPrice}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.last}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.openInterest}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.direction}
+                    </TableCell>
+                    <TableCell align="left">
+                      {row.size}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Paper>
 
-
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          {/*Main graph*/}
-          <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
-            <HorizontalGridLines />
-            <VerticalGridLines />
-            <XAxis on0={true}/>
-            <YAxis on0={true}/>
-            <ChartLabel
-              text="Price"
-              className="alt-x-label"
-              includeMargin={false}
-              xPercent={0.025}
-              yPercent={1.01}
-            />
-
-            <ChartLabel
-              text="Profit"
-              className="alt-y-label"
-              includeMargin={false}
-              xPercent={0.06}
-              yPercent={0.06}
-              style={{
-                transform: 'rotate(-90)',
-                textAnchor: 'end'
-              }}
-            />
-            <LineSeries
-              className="first-series"
-              onNearestX={this._onNearestX}
-              data={this.state.chart_data_current}
-            />
-            <LineSeries data={this.state.chart_data_at_zero} />
-            <Crosshair
-              values={this.state.crosshairValues}
-              className={'test-class-name'}
-            />
-            {/*<Crosshair*/}
-            {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
-            {/*className={'market-class-name'}*/}
-            {/*/>*/}
-          </XYPlot>
-        </div>
-
-        {/*<br/>*/}
-        {/*<div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>*/}
+          {/*<br/>*/}
+          {/*<div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>*/}
 
           {/*<TextField*/}
-            {/*id="outlined-name"*/}
-            {/*label="Vola"*/}
-            {/*className={classes.textField}*/}
-            {/*onChange={this.handleChange('vola')}*/}
-            {/*margin="normal"*/}
-            {/*variant="outlined"*/}
+          {/*id="outlined-name"*/}
+          {/*label="Vola"*/}
+          {/*className={classes.textField}*/}
+          {/*onChange={this.handleChange('vola')}*/}
+          {/*margin="normal"*/}
+          {/*variant="outlined"*/}
           {/*/>*/}
           {/*<TextField*/}
-            {/*id="outlined-name"*/}
-            {/*label="Risk free"*/}
-            {/*className={classes.textField}*/}
-            {/*onChange={this.handleChange('risk_free')}*/}
-            {/*margin="normal"*/}
-            {/*variant="outlined"*/}
+          {/*id="outlined-name"*/}
+          {/*label="Risk free"*/}
+          {/*className={classes.textField}*/}
+          {/*onChange={this.handleChange('risk_free')}*/}
+          {/*margin="normal"*/}
+          {/*variant="outlined"*/}
           {/*/>*/}
           {/*<Button*/}
-            {/*className={classes.button}*/}
-            {/*onClick={()=>this.computePnL(this.state.index)}*/}
-            {/*variant="outlined"*/}
-            {/*// color="primary"*/}
+          {/*className={classes.button}*/}
+          {/*onClick={()=>this.computePnL(this.state.index)}*/}
+          {/*variant="outlined"*/}
+          {/*// color="primary"*/}
           {/*>Recalculate</Button>*/}
-        {/*</div>*/}
-
-        /* add gruped instruments table */
-
-        {/*<div>*/}
-          {/*<GroupedTable columns={columns} rows={rows} />*/}
-        {/*</div>*/}
+          {/*</div>*/}
 
 
-
-          /*Show list of instruments */
-
-          <Paper>
-            <div>
-              <Table className={classes.table}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="left">Instrument</TableCell>
-                    <TableCell align="left">MarkPrice</TableCell>
-                    <TableCell align="left">askPrice</TableCell>
-                    <TableCell align="left">bidPrice</TableCell>
-                    <TableCell align="left">Last</TableCell>
-                    <TableCell align="left">openInterest</TableCell>
-                    <TableCell align="left">Direction</TableCell>
-                    <TableCell align="left">Size</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {this.state.instruments.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell align="left">
-                        {row.instrumentName}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.markPrice}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.askPrice}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.bidPrice}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.last}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.openInterest}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.direction}
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.size}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </Paper>
+          {/*Show avaliable instruments*/}
+          {instrumentTable()}
 
 
-        /*Dialogs*/
+          /*Dialogs*/
 
-        <Dialog
-          open={this.state.alert}
-          onClose={()=>this.closeAlert()}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">{"Use Google's location service?"}</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-             Cant find instrument. Try another.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={()=>this.closeAlert()} color="primary" autoFocus>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+          <Dialog
+            open={this.state.alert}
+            onClose={()=>this.closeAlert()}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">{"Error"}</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                Cant find instrument. Try another.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={()=>this.closeAlert()} color="primary" autoFocus>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
 
 
+          {/*Buy/Sell dialog*/}
+          /*Dialogs*/
 
-      </div>
+          <Dialog
+            open={this.state.buySellDialog}
+            onClose={()=>this.closeBuySellDialog()}
+          >
+            <DialogTitle id="buySell-dialog-title">{"Chose buy.sell.amount"}</DialogTitle>
+            <DialogContent>
+
+              <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+                <FormControl className={classes.formControl}>
+                  <InputLabel htmlFor="direction-simple">Direction</InputLabel>
+                  <Select
+                    value={this.state.direction}
+                    onChange={this.handleChange("direction")}
+                    inputProps={{
+                      name: 'direction',
+                      id: 'direction-simple',
+                    }}
+                  >
+                    <MenuItem value={"buy"}>Buy</MenuItem>
+                    <MenuItem value={"sell"}>Sell</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  id="input-search"
+                  label="Amount"
+                  className="input-search"
+                  onChange={this.handleChange('size')}
+                  margin="normal"
+                  variant="outlined"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  style={{width: 100}}
+                  placeholder="1"
+                />
+              </div>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                className={classes.button}
+                onClick={()=>this.searchInstrument()}
+                variant="outlined"
+                // color="primary"
+              >Add</Button>
+              <Button onClick={()=>this.closeBuySellDialog()} color="primary" autoFocus>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+
+        </div>
     );
   }
 }

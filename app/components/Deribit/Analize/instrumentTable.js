@@ -5,8 +5,8 @@ import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import TableSortLabel from "@material-ui/core/TableSortLabel";
-import IconButton from "@material-ui/core/IconButton";
-import Icon from "@material-ui/core/Icon";
+import IconButton from '@material-ui/core/IconButton';
+import AddIcon from '@material-ui/icons/Add';
 
 function getSorting(order, orderBy) {
   return order === "desc"
@@ -16,10 +16,10 @@ function getSorting(order, orderBy) {
 
 class GroupedTable extends React.Component {
   state = {
-    groupBy: "city",
+    groupBy: "expiration",
     sortBy: "",
     sortOrder: "asc",
-    expandedGroups: ["Las Vegas"]
+    expandedGroups: []
   };
 
   getColumnData = columns => {
@@ -27,6 +27,7 @@ class GroupedTable extends React.Component {
   };
 
   getGroupedData = rows => {
+    // console.log("Rows", rows);
     const groupedData = rows.reduce((acc, item) => {
       let key = item[this.state.groupBy];
       let groupData = acc[key] || [];
@@ -68,6 +69,10 @@ class GroupedTable extends React.Component {
       }
     }
     this.setState({ expandedGroups });
+  };
+
+  sendData = (item) => {
+    this.props.searchInstrument(item);
   };
 
   render() {
@@ -113,8 +118,15 @@ class GroupedTable extends React.Component {
                 {this.groups[key] &&
                 groupedData[key].map(item => (
                   <TableRow>
+                    <TableCell align="center">
+                      <IconButton onClick={()=>this.sendData(item)}>
+                        <AddIcon color="secondary" />
+                      </IconButton>
+                    </TableCell>
                     {columnData.map(col => (
-                      <TableCell>{item[col.dataKey]}</TableCell>
+                      <TableCell>
+                        {item[col.dataKey]}
+                        </TableCell>
                     ))}
                   </TableRow>
                 ))}

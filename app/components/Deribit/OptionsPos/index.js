@@ -98,7 +98,7 @@ class DeribitOptionPos extends Component {
   async updateData(){
 
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
 
     await this.restClient.index((result) => {
       console.log("Index: ", result);
