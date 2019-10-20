@@ -21,7 +21,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
+import ZoomIn from '@material-ui/icons/Add';
+import ZoomOut from '@material-ui/icons/Remove';
 
 import {
   XYPlot,
@@ -107,8 +108,8 @@ class Analize extends Component {
       type: "call",
       size:"",
       instruments:"",
-      buySellDialog: false
-
+      buySellDialog: false,
+      zoom: 0.2,
     };
 
   }
@@ -187,8 +188,10 @@ class Analize extends Component {
   };
 
   async computePnL(){
-    let range_min = parseInt(this.state.index)-2000;
-    let range_max = parseInt(this.state.index)+2000;
+    let range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
+    console.log("Range", range_min, range_max);
+
     let step = 100;
     analaize_positions(this.props.user.token,this.props.email, this.state.add_instruments, range_min, range_max, step, this.state.risk_free, this.state.vola)
       .then(result => {console.log(result.data.pnl);
@@ -212,7 +215,7 @@ class Analize extends Component {
 
   async searchInstrument(){
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://test.deribit.com");
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
     // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
     await this.restClient.getsummary(this.state.instrument)
       .then(response => {
@@ -284,6 +287,23 @@ class Analize extends Component {
     this.setState({buySellDialog: false})
   }
 
+  zoomIn(){
+    let that = this;
+    let promise = new Promise(function(resolve, reject) {
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.1})));
+      return null
+    });
+    promise.then(()=>this.computePnL());
+  }
+  zoomOut(){
+    let that = this;
+    let promise = new Promise(function(resolve, reject) {
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.1})));
+      return null
+    });
+    promise.then(()=>this.computePnL());
+  }
+
   render() {
     const {classes} = this.props;
     const {useCanvas} = this.state;
@@ -306,8 +326,17 @@ class Analize extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze</h4>
-
-
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <h6 style={{color:"#152880"}}>Range</h6>
+          <div style={{display: 'flex',  justifyContent:'left', alignItems:'left'}}>
+            <IconButton onClick={()=>this.zoomIn()}>
+              <ZoomIn color="secondary" />
+            </IconButton>
+            <IconButton onClick={()=>this.zoomOut()}>
+              <ZoomOut color="secondary" />
+            </IconButton>
+          </div>
+        </div>
 
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
             {/*Main graph*/}
