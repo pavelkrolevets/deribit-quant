@@ -158,7 +158,7 @@ class Analize extends Component {
       size:"",
       instruments:"",
       buySellDialog: false,
-      zoom: 1.2,
+      zoom: 0.8,
     };
 
   }

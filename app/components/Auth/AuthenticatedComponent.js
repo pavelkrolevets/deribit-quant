@@ -39,7 +39,7 @@ export function requireAuthentication(Component) {
                 const token = store.get('token');
                 console.log("User token", token);
                 if (!token) {
-                  this.props.history.push('/');
+                  this.props.history.push('/login');
                 } else {
                   validate_token(token)
                         .then(res => {
@@ -50,7 +50,7 @@ export function requireAuthentication(Component) {
                                 });
 
                             } else {
-                              this.props.history.push('/main');
+                              this.props.history.push('/analyze');
 
                             }
                         });

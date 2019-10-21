@@ -111,7 +111,7 @@ export default class LoginView extends React.Component {
         <Paper style={style}>
           <form role="form">
             <div className="text-center">
-              <h1>Login to view protected content!</h1>
+              <h1>Login to options trader!</h1>
               {
                 this.props.statusText &&
                 <div className="alert alert-info">

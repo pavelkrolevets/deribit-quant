@@ -11,6 +11,9 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ZoomIn from '@material-ui/icons/Add';
+import ZoomOut from '@material-ui/icons/Remove';
+
 import {
   XYPlot,
   XAxis,
@@ -68,7 +71,8 @@ class DeribitOptionPos extends Component {
       range_max:'',
       step:'',
       risk_free:'',
-      vola:''
+      vola:'',
+      zoom: 1.2,
     };
 
   }
@@ -197,8 +201,15 @@ class DeribitOptionPos extends Component {
   }
 
   async computePnL(){
-    let range_min = parseInt(this.state.index)-2000;
-    let range_max = parseInt(this.state.index)+2000;
+    let range_min = 0;
+    let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
+    if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
+      range_min = 0;
+    }
+    else {
+      range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    }
+
     let step = 100;
     let risk_free = 0.03;
     let vola = 0.8;
@@ -206,6 +217,23 @@ class DeribitOptionPos extends Component {
       .then(result => {console.log(result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
+  }
+
+  zoomIn(){
+    let that = this;
+    let promise = new Promise(function(resolve, reject) {
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.2})));
+      return null
+    });
+    promise.then(()=>this.computePnL());
+  }
+  zoomOut(){
+    let that = this;
+    let promise = new Promise(function(resolve, reject) {
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.2})));
+      return null
+    });
+    promise.then(()=>this.computePnL());
   }
 
   render() {
@@ -217,6 +245,17 @@ class DeribitOptionPos extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <h6 style={{color:"#152880"}}>Range</h6>
+          <div style={{display: 'flex',  justifyContent:'left', alignItems:'left'}}>
+            <IconButton onClick={()=>this.zoomIn()}>
+              <ZoomIn color="secondary" />
+            </IconButton>
+            <IconButton onClick={()=>this.zoomOut()}>
+              <ZoomOut color="secondary" />
+            </IconButton>
+          </div>
+        </div>
         <div>
           <Table className={classes.table} size="small">
             <TableHead>

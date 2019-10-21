@@ -91,7 +91,7 @@ export function loginUser(email, password, history) {
                 try {
                     dispatch(loginUserSuccess(response.token));
                     console.log('Login success!!');
-                    history.push('/main');
+                    history.push('/analyze');
                 } catch (e) {
                     alert(e);
                     dispatch(loginUserFailure({
