@@ -277,6 +277,7 @@
     "ipfs-api": "^26.1.2",
     "ipfs-http-client": "^33.1.0",
     "jwt-decode": "^2.2.0",
+    "material-table": "^1.52.0",
     "node-gyp": "^5.0.2",
     "prop-types": "^15.7.2",
     "react": "^16.10.2",

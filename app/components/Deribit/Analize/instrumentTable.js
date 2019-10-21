@@ -16,10 +16,11 @@ function getSorting(order, orderBy) {
 
 class GroupedTable extends React.Component {
   state = {
-    groupBy: "expiration",
+    groupBy: "baseCurrency",
     sortBy: "",
     sortOrder: "asc",
-    expandedGroups: []
+    expandedGroups: [],
+    secondGroupBy: "expiration",
   };
 
   getColumnData = columns => {
@@ -38,6 +39,7 @@ class GroupedTable extends React.Component {
     const expandedGroups = {};
     const { sortBy, sortOrder } = this.state;
     Object.keys(groupedData).forEach(item => {
+      console.log(item);
       expandedGroups[item] = this.state.expandedGroups.indexOf(item) !== -1;
       groupedData[item] = groupedData[item].sort(getSorting(sortOrder, sortBy));
     });
@@ -79,6 +81,7 @@ class GroupedTable extends React.Component {
     let { rows, columns } = this.props;
     let columnData = this.getColumnData(columns);
     let groupedData = this.getGroupedData(rows);
+    console.log(groupedData);
     let { sortBy, sortOrder } = this.state;
     return (
       <Table>
@@ -99,6 +102,7 @@ class GroupedTable extends React.Component {
         </TableHead>
         <TableBody>
           {Object.keys(groupedData).map(key => {
+            console.log(key);
             return (
               <React.Fragment>
                 <TableRow>

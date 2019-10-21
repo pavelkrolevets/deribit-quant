@@ -86,8 +86,8 @@ class Vola extends Component {
       risk_free:'',
       vola:'',
       hist_vola: [],
-      window: 24*7,
-      timeframe: '1h',
+      window: 7,
+      timeframe: '1d',
       instrument: "BTC"
     };
 

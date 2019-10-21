@@ -1,4 +1,5 @@
 // @flow
+import { forwardRef } from 'react';
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles/index';
 import PropTypes from 'prop-types';
@@ -23,6 +24,23 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import IconButton from '@material-ui/core/IconButton';
 import ZoomIn from '@material-ui/icons/Add';
 import ZoomOut from '@material-ui/icons/Remove';
+import MaterialTable from "material-table";
+import AddBox from '@material-ui/icons/AddBox';
+import ArrowUpward from '@material-ui/icons/ArrowUpward';
+import Check from '@material-ui/icons/Check';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import DeleteOutline from '@material-ui/icons/DeleteOutline';
+import Edit from '@material-ui/icons/Edit';
+import FilterList from '@material-ui/icons/FilterList';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import SaveAlt from '@material-ui/icons/SaveAlt';
+import Search from '@material-ui/icons/Search';
+import ViewColumn from '@material-ui/icons/ViewColumn';
+import AddIcon from '@material-ui/icons/Add';
 
 import {
   XYPlot,
@@ -37,23 +55,54 @@ import {
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl, analaize_positions } from '../../../utils/http_functions';
 
-const columns = [
-  { dataKey: "baseCurrency", title: "BaseCurrency" },
-  // { dataKey: "created", title: "Created" },
-  // { dataKey: "currency", title: "Currency" },
-  { dataKey: "expiration", title: "Expiration" },
-  { dataKey: "instrumentName", title: "InstrumentName" },
-  // { dataKey: "isActive", title: "IsActive" },
-  { dataKey: "kind", title: "Kind" },
-  // { dataKey: "minTradeAmount", title: "MinTradeAmount" },
-  // { dataKey: "minTradeSize", title: "MinTradeSize" },
-  { dataKey: "optionType", title: "OptionType" },
-  // { dataKey: "pricePrecision", title: "PricePrecision" },
-  // { dataKey: "settlement", title: "Settlement" },
-  { dataKey: "strike", title: "Strike" },
-  // { dataKey: "tickSize", title: "TickSize" },
+// const columns = [
+//   { dataKey: "baseCurrency", title: "BaseCurrency" },
+//   // { dataKey: "created", title: "Created" },
+//   // { dataKey: "currency", title: "Currency" },
+//   { dataKey: "expiration", title: "Expiration" },
+//   { dataKey: "instrumentName", title: "InstrumentName" },
+//   // { dataKey: "isActive", title: "IsActive" },
+//   { dataKey: "kind", title: "Kind" },
+//   // { dataKey: "minTradeAmount", title: "MinTradeAmount" },
+//   // { dataKey: "minTradeSize", title: "MinTradeSize" },
+//   { dataKey: "optionType", title: "OptionType" },
+//   // { dataKey: "pricePrecision", title: "PricePrecision" },
+//   // { dataKey: "settlement", title: "Settlement" },
+//   { dataKey: "strike", title: "Strike" },
+//   // { dataKey: "tickSize", title: "TickSize" },
+//
+// ];
+
+let columns = [
+  { title: "BaseCurrency", field: "baseCurrency", defaultGroupOrder: 1},
+  { title: "Expiration", field: "expiration",defaultGroupOrder: 2},
+  { title: "InstrumentName", field: "instrumentName"},
+  { title: "Kind", field: "kind", defaultGroupOrder: 0},
+  { title: "OptionType", field: "optionType", defaultGroupOrder: 3},
+  { title: "Strike", field: "strike" },
 
 ];
+
+const tableIcons = {
+  Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
+  Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
+  Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Delete: forwardRef((props, ref) => <DeleteOutline {...props} ref={ref} />),
+  DetailPanel: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  Edit: forwardRef((props, ref) => <Edit {...props} ref={ref} />),
+  Export: forwardRef((props, ref) => <SaveAlt {...props} ref={ref} />),
+  Filter: forwardRef((props, ref) => <FilterList {...props} ref={ref} />),
+  FirstPage: forwardRef((props, ref) => <FirstPage {...props} ref={ref} />),
+  LastPage: forwardRef((props, ref) => <LastPage {...props} ref={ref} />),
+  NextPage: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  PreviousPage: forwardRef((props, ref) => <ChevronLeft {...props} ref={ref} />),
+  ResetSearch: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Search: forwardRef((props, ref) => <Search {...props} ref={ref} />),
+  SortArrow: forwardRef((props, ref) => <ArrowUpward {...props} ref={ref} />),
+  ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
+  ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
+};
+
 
 const styles = theme => ({
   root: {
@@ -109,7 +158,7 @@ class Analize extends Component {
       size:"",
       instruments:"",
       buySellDialog: false,
-      zoom: 0.2,
+      zoom: 1.2,
     };
 
   }
@@ -188,9 +237,14 @@ class Analize extends Component {
   };
 
   async computePnL(){
-    let range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    let range_min = 0;
     let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    console.log("Range", range_min, range_max);
+    if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
+        range_min = 0;
+    }
+    else {
+      range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    }
 
     let step = 100;
     analaize_positions(this.props.user.token,this.props.email, this.state.add_instruments, range_min, range_max, step, this.state.risk_free, this.state.vola)
@@ -253,7 +307,7 @@ class Analize extends Component {
         kind:"option"
       });
     }
-    else if (this.state.type === "future") {
+    else if (this.state.kind === "future") {
       this.state.add_instruments.push({
         id,
         instrumentName: instrument.instrumentName,
@@ -290,7 +344,7 @@ class Analize extends Component {
   zoomIn(){
     let that = this;
     let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.1})));
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.2})));
       return null
     });
     promise.then(()=>this.computePnL());
@@ -298,7 +352,7 @@ class Analize extends Component {
   zoomOut(){
     let that = this;
     let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.1})));
+      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.2})));
       return null
     });
     promise.then(()=>this.computePnL());
@@ -316,8 +370,21 @@ class Analize extends Component {
       if (instruments.length!==0) {
         return (
           /* add gruped instruments table */
-          <div>
-            <GroupedTable columns={columns} rows={instruments} searchInstrument={searchInstrument}/>
+          <div style={{ maxWidth: "100%", width:900, height:500}}>
+            <MaterialTable
+              columns={columns}
+              data={instruments}
+              title="Available Instruments"
+              icons={tableIcons}
+              actions={[
+                {
+                  icon: ()=> (<AddIcon color="secondary" />),
+                  tooltip: 'Add instrument',
+                  onClick: (event, rowData) => searchInstrument(rowData),
+                }
+              ]}
+              options={{grouping: true, sorting: true }}
+            />
           </div>
         )
       }
@@ -394,7 +461,7 @@ class Analize extends Component {
             >Remove</Button>
           </div>
           <div>
-            <Table className={classes.table}>
+            <Table className={classes.table} style={{width: 900}}>
               <TableHead>
                 <TableRow>
                   <TableCell align="left">Instrument</TableCell>
@@ -469,7 +536,8 @@ class Analize extends Component {
           {/*</div>*/}
 
 
-          {/*Show avaliable instruments*/}
+          {/*/!*Show avaliable instruments*!/*/}
+          <br/>
           {instrumentTable()}
 
 
