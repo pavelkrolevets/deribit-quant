@@ -42,6 +42,7 @@ import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import AddIcon from '@material-ui/icons/Add';
 import InstrumentTable from "./instrumentTable"
+import TableSortLabel from '@material-ui/core/TableSortLabel';
 
 import {
   XYPlot,
@@ -127,6 +128,19 @@ const styles = theme => ({
   }
 });
 
+function groupBy(list, keyGetter) {
+  const map = new Map();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+    }
+  });
+  return map;
+}
 
 class Analize extends Component {
   constructor(props) {
@@ -162,7 +176,11 @@ class Analize extends Component {
       zoom: 0.8,
       width: 0,
       height: 0,
-      expirations: []
+      expirations: [],
+      puts: [],
+      calls:[],
+      futures: [],
+      options: []
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
@@ -238,30 +256,22 @@ class Analize extends Component {
   }
 
   getExpirations(instruments){
-    let expirations = [];
-    // console.log("Item in instruments", instruments);
-    for (let item of instruments){
-      expirations.push(item.expiration)
-    }
 
-    // for (let i=0; i<expirations.length-i; i++){
-    //   console.log("Exp", expirations[i]);
-    //   if (item.expiration === expirations[i]){
-    //   }
-    // }
-    // if (some_item !== 0){
-    //   expirations.push(item.expiration)
-    // }
-    let results = [];
-    for (let i = 0; i < expirations.length - 1; i++) {
-      if (expirations[i + 1] != expirations[i]) {
-        results.push(expirations[i]);
+    const unique = [...new Set(instruments.map(item => item.expiration))];
+    let result = [];
+    for (let item of unique ){
+      if (item !== "3000-01-01 08:00:00 GMT"){
+        // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+        result.push(item);
       }
     }
-    console.log("Expirations", results);
+    // result.sort((a,b)=>a.getTime()-b.getTime());
+    // console.log("Result:  ", result);
+    this.setState({expirations: result})
+  }
 
+  getCalls(){
 
-    this.setState({expirations: results})
   }
 
   // sortInstruments(){
@@ -417,6 +427,24 @@ class Analize extends Component {
     promise.then(()=>this.computePnL());
   }
 
+  getTables(date){
+    console.log(date);
+    const grouped = groupBy(this.state.instruments, item => item.expiration).get(date);
+    let groupedByCurrency = groupBy(grouped, item => item.baseCurrency).get("BTC");
+    let groupedByOption = groupBy(groupedByCurrency, item => item.kind).get("option");
+    let groupedByFuture = groupBy(groupedByCurrency, item => item.kind).get("future");
+    let groupedByCalls = groupBy(groupedByOption, item => item.optionType).get("call");
+    let groupedByPuts = groupBy(groupedByOption, item => item.optionType).get("put");
+
+    this.setState({calls: groupedByCalls});
+    this.setState({puts: groupedByPuts});
+    this.setState({options: groupedByOption});
+    this.setState({futures: groupedByPuts});
+
+  }
+
+
+
   render() {
     const {classes} = this.props;
     const {useCanvas} = this.state;
@@ -452,18 +480,16 @@ class Analize extends Component {
     function instrumentTable() {
       if (instruments.length!==0) {
         return (
-          <Paper>
-            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"row", width: state.width*0.7}}>
-              <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.1}}>
-                <h6>Something</h6>
-              </div>
-              <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.6}}>
-                <InstrumentTable columns={columns} rows={instruments}/>
-              </div>
-            </div>
-          </Paper>
+         <InstrumentTable columns={columns} rows={instruments}/>
         )
       }
+    }
+
+    function getPutCallBySrike(instruments, strike){
+      let instrument =  instruments.filter(function(item) {
+        return item.strike == strike;
+      });
+      return instrument[0].instrumentName
     }
 
     return (
@@ -613,12 +639,67 @@ class Analize extends Component {
 
 
           {/*/!*Show avaliable instruments*!/*/}
-          <br/>
-          {instrumentTable()}
+        <br/>
+        <Paper>
+          <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
+            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"row", width: state.width*0.8}}>
+                      {this.state.expirations.map(row => (
+                        <div key={row.id}>
 
-          /*Dialogs*/
+                            <Button
+                              className={classes.button}
+                              onClick={()=>this.getTables(row)}
+                              variant="outlined"
+                              // color="primary"
 
-          <Dialog
+                            >{row}</Button>
+
+                        </div>
+                      ))}
+
+            </div>
+
+            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
+
+                  <Table size="small" className={classes.table} style={{maxWidth: "100%"}}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell style={{textAlign: 'center'}}>Calls</TableCell>
+                        <TableCell style={{textAlign: 'center'}}>Strike</TableCell>
+                        <TableCell style={{textAlign: 'center'}}>Puts</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {this.state.options.map(row => (
+                        <TableRow key={row.id}>
+                          <TableCell style={{textAlign: 'center'}}>
+                            <IconButton onClick={()=>this.sendData(item)}>
+                              <AddIcon color="secondary" />
+                            </IconButton>
+                            {getPutCallBySrike(state.calls, row.strike)}
+                          </TableCell>
+                          <TableCell sortDirection="asc" style={{textAlign: 'center', width: 100}}>
+                            {row.strike}
+                          </TableCell>
+                          <TableCell style={{textAlign: 'center'}}>
+                            <IconButton onClick={()=>this.sendData(item)}>
+                              <AddIcon color="secondary" />
+                            </IconButton>
+                            {getPutCallBySrike(state.puts, row.strike)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+            </div>
+          </div>
+        </Paper>
+
+
+        /*Dialogs*/
+
+        <Dialog
             open={this.state.alert}
             onClose={()=>this.closeAlert()}
             aria-labelledby="alert-dialog-title"
