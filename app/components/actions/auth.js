@@ -149,7 +149,7 @@ export function registerUser(email, password, history) {
             .then(response => {
                 try {
                     dispatch(registerUserSuccess(response.token));
-                    history.push('/main');
+                    history.push('/analyze');
                 } catch (e) {
                     dispatch(registerUserFailure({
                         response: {

@@ -41,6 +41,7 @@ import SaveAlt from '@material-ui/icons/SaveAlt';
 import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import AddIcon from '@material-ui/icons/Add';
+import InstrumentTable from "./instrumentTable"
 
 import {
   XYPlot,
@@ -55,33 +56,33 @@ import {
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl, analaize_positions } from '../../../utils/http_functions';
 
-// const columns = [
-//   { dataKey: "baseCurrency", title: "BaseCurrency" },
-//   // { dataKey: "created", title: "Created" },
-//   // { dataKey: "currency", title: "Currency" },
-//   { dataKey: "expiration", title: "Expiration" },
-//   { dataKey: "instrumentName", title: "InstrumentName" },
-//   // { dataKey: "isActive", title: "IsActive" },
-//   { dataKey: "kind", title: "Kind" },
-//   // { dataKey: "minTradeAmount", title: "MinTradeAmount" },
-//   // { dataKey: "minTradeSize", title: "MinTradeSize" },
-//   { dataKey: "optionType", title: "OptionType" },
-//   // { dataKey: "pricePrecision", title: "PricePrecision" },
-//   // { dataKey: "settlement", title: "Settlement" },
-//   { dataKey: "strike", title: "Strike" },
-//   // { dataKey: "tickSize", title: "TickSize" },
-//
-// ];
-
-let columns = [
-  { title: "BaseCurrency", field: "baseCurrency", defaultGroupOrder: 1},
-  { title: "Expiration", field: "expiration",defaultGroupOrder: 2},
-  { title: "InstrumentName", field: "instrumentName"},
-  { title: "Kind", field: "kind", defaultGroupOrder: 0},
-  { title: "OptionType", field: "optionType", defaultGroupOrder: 3},
-  { title: "Strike", field: "strike" },
+const columns = [
+  { dataKey: "baseCurrency", title: "BaseCurrency" },
+  // { dataKey: "created", title: "Created" },
+  // { dataKey: "currency", title: "Currency" },
+  // { dataKey: "expiration", title: "Expiration" },
+  { dataKey: "instrumentName", title: "InstrumentName" },
+  // { dataKey: "isActive", title: "IsActive" },
+  { dataKey: "kind", title: "Kind" },
+  // { dataKey: "minTradeAmount", title: "MinTradeAmount" },
+  // { dataKey: "minTradeSize", title: "MinTradeSize" },
+  { dataKey: "optionType", title: "OptionType" },
+  // { dataKey: "pricePrecision", title: "PricePrecision" },
+  // { dataKey: "settlement", title: "Settlement" },
+  { dataKey: "strike", title: "Strike" },
+  // { dataKey: "tickSize", title: "TickSize" },
 
 ];
+
+// let columns = [
+//   { title: "BaseCurrency", field: "baseCurrency", defaultGroupOrder: 1},
+//   { title: "Expiration", field: "expiration",defaultGroupOrder: 2},
+//   { title: "InstrumentName", field: "instrumentName"},
+//   { title: "Kind", field: "kind", defaultGroupOrder: 0},
+//   { title: "OptionType", field: "optionType", defaultGroupOrder: 3},
+//   { title: "Strike", field: "strike" },
+//
+// ];
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -159,12 +160,20 @@ class Analize extends Component {
       instruments:"",
       buySellDialog: false,
       zoom: 0.8,
+      width: 0,
+      height: 0,
+      expirations: []
     };
-
+    this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
+  }
+  updateWindowDimensions() {
+    this.setState({ width: window.innerWidth, height: window.innerHeight });
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateWindowDimensions);
   }
 
-
-  async componentWillMount(){
+  componentWillMount(){
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -176,33 +185,83 @@ class Analize extends Component {
     //   }
     // });
 
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      })
-      // .then(()=>this.updateData());
+    window.removeEventListener('resize', this.updateWindowDimensions);
+    let token = this.props.user.token;
+    let email = this.props.email;
+    let that = this;
+    let promise = new Promise(function (resolve, reject) {
+      resolve(get_api_keys(token, email)
+        .then(result=> {console.log(result);
+          that.setState({keys: result.data});
+          return null;
+        }))
+    })
+      .then(function(result) {
+          return new Promise (function(resolve, reject) {
+            resolve(that.updateData())
+          })
+        }
+      )
   }
 
   componentDidMount(){
-    this.updateData();
+    this.updateWindowDimensions();
+    window.addEventListener('resize', this.updateWindowDimensions);
   }
 
   async updateData(){
-    // let that = this;
+    let that = this;
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
-    await this.restClient.index()
+    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
+
+    restClient.index()
       .then((result) => {
         console.log("Index: ", result);
-        this.setState({index: result.result.btc});
-        return result;
+        that.setState({ index: result.result.btc });
+        return result
       })
-      .then(() => this.computePnL())
-      .then(()=> this.restClient.getinstruments((result) => {
-        console.log("Instruments: ", result.result);
-        this.setState({instruments: result.result});
-      }))
-      // .then(()=> this.sortInstruments())
+      .then(()=> {
+        return that.computePnL()
+      })
+      .then(() => {
+        return new Promise(function (resolve,reject){
+          restClient.getinstruments((result) => {
+            console.log("Instruments: ", result.result);
+            that.setState({ instruments: result.result});
+            resolve(result)
+          });
+        })
+      })
+      .then((result) => {
+        that.getExpirations(result.result)}
+      )
+  }
+
+  getExpirations(instruments){
+    let expirations = [];
+    // console.log("Item in instruments", instruments);
+    for (let item of instruments){
+      expirations.push(item.expiration)
+    }
+
+    // for (let i=0; i<expirations.length-i; i++){
+    //   console.log("Exp", expirations[i]);
+    //   if (item.expiration === expirations[i]){
+    //   }
+    // }
+    // if (some_item !== 0){
+    //   expirations.push(item.expiration)
+    // }
+    let results = [];
+    for (let i = 0; i < expirations.length - 1; i++) {
+      if (expirations[i + 1] != expirations[i]) {
+        results.push(expirations[i]);
+      }
+    }
+    console.log("Expirations", results);
+
+
+    this.setState({expirations: results})
   }
 
   // sortInstruments(){
@@ -239,12 +298,12 @@ class Analize extends Component {
   async computePnL(){
     let range_min = 0;
     let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
-        range_min = 0;
-    }
-    else {
-      range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
-    }
+    // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
+    //     range_min = 0;
+    // }
+    // else {
+    //   range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    // }
 
     let step = 100;
     analaize_positions(this.props.user.token,this.props.email, this.state.add_instruments, range_min, range_max, step, this.state.risk_free, this.state.vola)
@@ -366,26 +425,43 @@ class Analize extends Component {
     let {yDomain} = this.state;
     let {instruments} = this.state;
     let searchInstrument = this.getInstrumentFromChild;
+    let state = this.state;
+    // function instrumentTable() {
+    //   if (instruments.length!==0) {
+    //     return (
+    //       /* add gruped instruments table */
+    //       <div style={{ maxWidth: "100%"}}>
+    //         <MaterialTable
+    //           columns={columns}
+    //           data={instruments}
+    //           title="Available Instruments"
+    //           icons={tableIcons}
+    //           actions={[
+    //             {
+    //               icon: ()=> (<AddIcon color="secondary" />),
+    //               tooltip: 'Add instrument',
+    //               onClick: (event, rowData) => searchInstrument(rowData),
+    //             }
+    //           ]}
+    //           options={{grouping: true, sorting: true }}
+    //         />
+    //       </div>
+    //     )
+    //   }
+    // }
     function instrumentTable() {
       if (instruments.length!==0) {
         return (
-          /* add gruped instruments table */
-          <div style={{ maxWidth: "100%", width:900, height:500}}>
-            <MaterialTable
-              columns={columns}
-              data={instruments}
-              title="Available Instruments"
-              icons={tableIcons}
-              actions={[
-                {
-                  icon: ()=> (<AddIcon color="secondary" />),
-                  tooltip: 'Add instrument',
-                  onClick: (event, rowData) => searchInstrument(rowData),
-                }
-              ]}
-              options={{grouping: true, sorting: true }}
-            />
-          </div>
+          <Paper>
+            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"row", width: state.width*0.7}}>
+              <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.1}}>
+                <h6>Something</h6>
+              </div>
+              <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.6}}>
+                <InstrumentTable columns={columns} rows={instruments}/>
+              </div>
+            </div>
+          </Paper>
         )
       }
     }
@@ -461,7 +537,7 @@ class Analize extends Component {
             >Remove</Button>
           </div>
           <div>
-            <Table className={classes.table} style={{width: 900}}>
+            <Table className={classes.table} style={{maxWidth: "100%"}}>
               <TableHead>
                 <TableRow>
                   <TableCell align="left">Instrument</TableCell>
@@ -539,7 +615,6 @@ class Analize extends Component {
           {/*/!*Show avaliable instruments*!/*/}
           <br/>
           {instrumentTable()}
-
 
           /*Dialogs*/
 
