@@ -242,7 +242,7 @@ class Analize extends Component {
         return that.computePnL()
       })
       .then(() => {
-        return new Promise(function (resolve,reject){
+        return new Promise(function (resolve, reject){
           restClient.getinstruments((result) => {
             console.log("Instruments: ", result.result);
             that.setState({ instruments: result.result});
@@ -337,6 +337,7 @@ class Analize extends Component {
   };
 
   async searchInstrument(){
+    console.log("Adding instrument: ", this.state.instrument);
     let RestClient = await require("deribit-api").RestClient;
     this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
     // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
@@ -345,14 +346,13 @@ class Analize extends Component {
         console.log(response);
         if (response.success === true) {
           console.log(response.result);
-          this.addInstrument(response.result);
+          return this.addInstrument(response.result);
         } else {
           console.log('Wrong instrument');
-          this.setState({alert:true});
+          return this.setState({alert:true});
         }
       })
-      .then(()=> this.computePnL())
-
+      .then(()=> {this.computePnL()})
     // .catch(error => {
     //   this.setState({alert:true});
     //   console.log(error.response)
@@ -440,7 +440,19 @@ class Analize extends Component {
     this.setState({puts: groupedByPuts});
     this.setState({options: groupedByOption});
     this.setState({futures: groupedByPuts});
+  }
 
+  addToPositions(instrument){
+    console.log("Adding instrument", instrument);
+    let that = this;
+    new Promise(function(resolve, reject) {
+      resolve(that.setState({instrument: instrument}));
+      return null
+    })
+      .then(()=> {
+        that.setState({buySellDialog: true});
+        return null
+      })
   }
 
 
@@ -673,7 +685,7 @@ class Analize extends Component {
                       {this.state.options.map(row => (
                         <TableRow key={row.id}>
                           <TableCell style={{textAlign: 'center'}}>
-                            <IconButton onClick={()=>this.sendData(item)}>
+                            <IconButton onClick={()=>this.addToPositions(getPutCallBySrike(state.calls, row.strike))}>
                               <AddIcon color="secondary" />
                             </IconButton>
                             {getPutCallBySrike(state.calls, row.strike)}
@@ -682,7 +694,7 @@ class Analize extends Component {
                             {row.strike}
                           </TableCell>
                           <TableCell style={{textAlign: 'center'}}>
-                            <IconButton onClick={()=>this.sendData(item)}>
+                            <IconButton onClick={()=>this.addToPositions(getPutCallBySrike(state.puts, row.strike))}>
                               <AddIcon color="secondary" />
                             </IconButton>
                             {getPutCallBySrike(state.puts, row.strike)}
