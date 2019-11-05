@@ -151,7 +151,7 @@ class Analize extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-7000, 7000],
+      yDomain: [-10000, 10000],
       keys: {},
       positions: [],
       index: 0,
@@ -173,7 +173,7 @@ class Analize extends Component {
       size:"",
       instruments:"",
       buySellDialog: false,
-      zoom: 0.8,
+      zoom: 1.2,
       width: 0,
       height: 0,
       expirations: [],
@@ -231,6 +231,40 @@ class Analize extends Component {
     let that = this;
     let RestClient = await require("deribit-api").RestClient;
     let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
+
+
+    const WebSocket = require('ws');
+    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
+
+    ws.on('open', function open() {
+      var args = {
+        "instrument": ["BTC-27DEC19"],
+        "event": ["order_book"]
+      };
+      var obj = {
+        "id": 5232,
+        "action": "/api/v1/private/subscribe",
+        "arguments": args,
+        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+      };
+      console.log('Request object', obj);
+      ws.send(JSON.stringify(obj));
+    });
+
+    ws.on('message', function incoming(data) {
+      console.log('on message');
+
+      if(data.length > 0)
+      {
+        var obj = JSON.parse(data);
+        console.log(obj);
+        if (obj.id == 5232) {
+          //
+        }
+      }
+
+    });
+
 
     restClient.index()
       .then((result) => {
@@ -306,7 +340,7 @@ class Analize extends Component {
   };
 
   async computePnL(){
-    let range_min = 0;
+    let range_min = 10;
     let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
     // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
     //     range_min = 0;
@@ -442,13 +476,31 @@ class Analize extends Component {
     this.setState({futures: groupedByPuts});
   }
 
-  addToPositions(instrument){
+  async addToPositions(instrument){
     console.log("Adding instrument", instrument);
     let that = this;
     new Promise(function(resolve, reject) {
       resolve(that.setState({instrument: instrument}));
       return null
     })
+      .then(()=> {
+        console.log("Adding instrument", that.state.instrument);
+        let RestClient = require("deribit-api").RestClient;
+        this.restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
+        // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
+        that.restClient.getsummary(that.state.instrument)
+          .then(response => {
+            console.log(response);
+            if (response.success === true) {
+              console.log(response.result);
+              return null
+            } else {
+              console.log('Wrong instrument');
+              return this.setState({alert:true});
+            }
+          })
+        }
+      )
       .then(()=> {
         that.setState({buySellDialog: true});
         return null
@@ -489,13 +541,13 @@ class Analize extends Component {
     //     )
     //   }
     // }
-    function instrumentTable() {
-      if (instruments.length!==0) {
-        return (
-         <InstrumentTable columns={columns} rows={instruments}/>
-        )
-      }
-    }
+    // function instrumentTable() {
+    //   if (instruments.length!==0) {
+    //     return (
+    //      <InstrumentTable columns={columns} rows={instruments}/>
+    //     )
+    //   }
+    // }
 
     function getPutCallBySrike(instruments, strike){
       let instrument =  instruments.filter(function(item) {
@@ -653,8 +705,8 @@ class Analize extends Component {
           {/*/!*Show avaliable instruments*!/*/}
         <br/>
         <Paper>
-          <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
-            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"row", width: state.width*0.8}}>
+          <div style={{ border: '0px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
+            <div style={{ border: '0px solid black', display: 'flex',  justifyContent:'flex-start', alignItems:'center', flexDirection:"row", width: state.width*0.8}}>
                       {this.state.expirations.map(row => (
                         <div key={row.id}>
 
@@ -671,7 +723,7 @@ class Analize extends Component {
 
             </div>
 
-            <div style={{ border: '1px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
+            <div style={{ border: '0px solid black', display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column", width: state.width*0.8}}>
 
                   <Table size="small" className={classes.table} style={{maxWidth: "100%"}}>
                     <TableHead>
