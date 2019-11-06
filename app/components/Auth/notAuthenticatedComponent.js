@@ -42,20 +42,31 @@ export function requireNoAuthentication(Component) {
 
             } else {
                 const token = store.get('token');
+                console.log("token", token);
                 if (token) {
                   validate_token(token)
                         .then(res => {
+                          console.log("Response", res);
                             if (res.status === 200) {
                                 this.props.loginUserSuccess(token);
                                 this.props.history.push('/main');
 
                             } else {
+                              this.props.history.push('/login');
                                 this.setState({
                                     loaded: true,
                                 });
                             }
+                        })
+                        .catch(error => {
+                          console.log(error.response);
+                          this.props.history.push('/login');
+                          this.setState({
+                            loaded: true,
+                          });
                         });
                 } else {
+                  this.props.history.push('/login');
                     this.setState({
                         loaded: true,
                     });

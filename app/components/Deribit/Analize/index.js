@@ -180,7 +180,8 @@ class Analize extends Component {
       puts: [],
       calls:[],
       futures: [],
-      options: []
+      options: [],
+      instrumentData:{}
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
@@ -232,40 +233,6 @@ class Analize extends Component {
     let RestClient = await require("deribit-api").RestClient;
     let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
 
-
-    const WebSocket = require('ws');
-    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
-
-    ws.on('open', function open() {
-      var args = {
-        "instrument": ["BTC-27DEC19"],
-        "event": ["order_book"]
-      };
-      var obj = {
-        "id": 5232,
-        "action": "/api/v1/private/subscribe",
-        "arguments": args,
-        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
-      };
-      console.log('Request object', obj);
-      ws.send(JSON.stringify(obj));
-    });
-
-    ws.on('message', function incoming(data) {
-      console.log('on message');
-
-      if(data.length > 0)
-      {
-        var obj = JSON.parse(data);
-        console.log(obj);
-        if (obj.id == 5232) {
-          //
-        }
-      }
-
-    });
-
-
     restClient.index()
       .then((result) => {
         console.log("Index: ", result);
@@ -290,7 +257,6 @@ class Analize extends Component {
   }
 
   getExpirations(instruments){
-
     const unique = [...new Set(instruments.map(item => item.expiration))];
     let result = [];
     for (let item of unique ){
@@ -480,34 +446,76 @@ class Analize extends Component {
     console.log("Adding instrument", instrument);
     let that = this;
     new Promise(function(resolve, reject) {
-      resolve(that.setState({instrument: instrument}));
-      return null
+      resolve(instrument);
+      return that.setState({instrument: instrument});
     })
-      .then(()=> {
-        console.log("Adding instrument", that.state.instrument);
-        let RestClient = require("deribit-api").RestClient;
-        this.restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
-        // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
-        that.restClient.getsummary(that.state.instrument)
-          .then(response => {
-            console.log(response);
-            if (response.success === true) {
-              console.log(response.result);
-              return null
-            } else {
-              console.log('Wrong instrument');
-              return this.setState({alert:true});
-            }
-          })
-        }
-      )
-      .then(()=> {
-        that.setState({buySellDialog: true});
-        return null
-      })
+      .then((instrument)=> that.getWebsocketsData(instrument))
+      // .then(()=> that.getInstrument())
+      .then(()=>{
+        console.log(that.state.instrumentData);
+        that.setState({buySellDialog: true})})
   }
 
 
+  async getInstrument(){
+    let that =this;
+    return new Promise(function(resolve, reject) {
+      let RestClient = require("deribit-api").RestClient;
+      that.restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
+        that.restClient.getsummary(that.state.instrument)
+        .then(response => {
+          if (response.success === true) {
+            console.log("Instrument", response.result);
+            resolve(response.result);
+          } else {
+            console.log('Wrong instrument');
+            resolve(that.setState({alert:true}));
+          }
+        });
+    })
+
+  }
+
+  getWebsocketsData(instrument){
+    console.log("Instrument", instrument);
+    let that=this;
+    return new Promise(function(resolve, reject) {
+    let RestClient = require("deribit-api").RestClient;
+    let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
+
+    const WebSocket = require('ws');
+    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
+
+    ws.on('open', function open() {
+      var args = {
+        "instrument": [instrument],
+        "event": ["order_book"]
+      };
+      var obj = {
+        "id": 5232,
+        "action": "/api/v1/private/subscribe",
+        "arguments": args,
+        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+      };
+      console.log('Request object', obj);
+      resolve(ws.send(JSON.stringify(obj)));
+    });
+
+    return ws.on('message', function incoming(data) {
+      console.log('on message');
+
+      if(data.length > 0)
+      {
+        var obj = JSON.parse(data);
+        console.log(obj.notifications);
+        that.setState({instrumentData: obj.notifications});
+        // if (obj.id == 5232) {
+        //   //
+        // }
+      }
+    });
+  })
+  }
 
   render() {
     const {classes} = this.props;

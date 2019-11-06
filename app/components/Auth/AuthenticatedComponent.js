@@ -47,12 +47,19 @@ export function requireAuthentication(Component) {
                                 this.props.loginUserSuccess(token);
                                 this.setState({
                                     loaded_if_needed: true,
-                                });
+                                })
+                                  .catch(error => {
+                                    console.log(error.response);
+                                    this.props.history.push('/login');
+                                    this.setState({
+                                      loaded: true,
+                                    });
+                                  });
 
                             } else {
-                              this.props.history.push('/analyze');
-
+                              this.props.history.push('/login');
                             }
+
                         });
 
                 }
