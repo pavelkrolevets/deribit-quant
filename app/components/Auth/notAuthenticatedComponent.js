@@ -60,7 +60,7 @@ export function requireNoAuthentication(Component) {
                         })
                         .catch(error => {
                           console.log(error.response);
-                          this.props.history.push('/login');
+                          // this.props.history.push('/');
                           this.setState({
                             loaded: true,
                           });

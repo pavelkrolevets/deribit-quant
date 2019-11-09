@@ -181,7 +181,9 @@ class Analize extends Component {
       calls:[],
       futures: [],
       options: [],
-      instrumentData:{}
+      instrumentData:[],
+      bids: [],
+      asks: []
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
@@ -452,7 +454,6 @@ class Analize extends Component {
       .then((instrument)=> that.getWebsocketsData(instrument))
       // .then(()=> that.getInstrument())
       .then(()=>{
-        console.log(that.state.instrumentData);
         that.setState({buySellDialog: true})})
   }
 
@@ -480,41 +481,44 @@ class Analize extends Component {
     console.log("Instrument", instrument);
     let that=this;
     return new Promise(function(resolve, reject) {
-    let RestClient = require("deribit-api").RestClient;
-    let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
+      let RestClient = require("deribit-api").RestClient;
+      let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, "https://deribit.com");
 
-    const WebSocket = require('ws');
-    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
+      const WebSocket = require('ws');
+      const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
 
-    ws.on('open', function open() {
-      var args = {
-        "instrument": [instrument],
-        "event": ["order_book"]
-      };
-      var obj = {
-        "id": 5232,
-        "action": "/api/v1/private/subscribe",
-        "arguments": args,
-        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
-      };
-      console.log('Request object', obj);
-      resolve(ws.send(JSON.stringify(obj)));
-    });
+      ws.on('open', function open() {
+        var args = {
+          "instrument": [instrument],
+          "event": ["order_book"]
+        };
+        var obj = {
+          "id": 5232,
+          "action": "/api/v1/private/subscribe",
+          "arguments": args,
+          sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+        };
+        console.log('Request object', obj);
+        resolve(ws.send(JSON.stringify(obj)));
+      });
 
-    return ws.on('message', function incoming(data) {
-      console.log('on message');
+      ws.on('message', function incoming(data) {
+        console.log('on message');
 
-      if(data.length > 0)
-      {
-        var obj = JSON.parse(data);
-        console.log(obj.notifications);
-        that.setState({instrumentData: obj.notifications});
-        // if (obj.id == 5232) {
-        //   //
-        // }
-      }
-    });
-  })
+        if(data.length > 0)
+        {
+          var obj = JSON.parse(data);
+          console.log(obj.notifications);
+          // let notifications = obj.notifications;
+          console.log(obj.notifications);
+          if (typeof obj.notifications !== 'undefined' && obj.notifications.length!==0){
+            that.setState({...that.state, instrumentData: obj.notifications});
+            that.setState({...that.state, bids: obj.notifications[0].result.bids});
+            that.setState({...that.state, asks: obj.notifications[0].result.asks});
+          }
+        }
+      });
+    })
   }
 
   render() {
@@ -563,6 +567,17 @@ class Analize extends Component {
       });
       return instrument[0].instrumentName
     }
+
+    // function getWsStream(state) {
+    //   let result = 0;
+    //   if (typeof state.instrumentData !== 'undefined' && state.instrumentData.length!==0){
+    //     result = state.instrumentData[0].result.bids;
+    //     return result
+    //   }
+    //   else return "no data"
+    // }
+
+
 
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
@@ -829,6 +844,64 @@ class Analize extends Component {
                   style={{width: 100}}
                   placeholder="1"
                 />
+
+              </div>
+              <div data-tid="container" style={{display: 'flex',  justifyContent:'space-evenly', alignItems:'center', flexDirection:"row"}}>
+                <h4>Bids</h4>
+                <h4>Asks</h4>
+              </div>
+              <div data-tid="container" style={{display: 'flex',  justifyContent:'space-evenly', alignItems:'top', flexDirection:"row"}}>
+
+                <Table className={classes.table} style={{maxWidth: "100%"}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="left">quantity</TableCell>
+                      <TableCell align="left">amount</TableCell>
+                      <TableCell align="left">price</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {state.bids.map(row => (
+                      <TableRow key={row.id}>
+                        <TableCell align="left">
+                          {row.quantity}
+                        </TableCell>
+                        <TableCell align="left">
+                          {row.amount}
+                        </TableCell>
+                        <TableCell align="left">
+                          {row.price}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <Table className={classes.table} style={{maxWidth: "100%"}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="left">quantity</TableCell>
+                      <TableCell align="left">amount</TableCell>
+                      <TableCell align="left">price</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {state.asks.map(row => (
+                      <TableRow key={row.id}>
+                        <TableCell align="left">
+                          {row.quantity}
+                        </TableCell>
+                        <TableCell align="left">
+                          {row.amount}
+                        </TableCell>
+                        <TableCell align="left">
+                          {row.price}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
               </div>
             </DialogContent>
             <DialogActions>
