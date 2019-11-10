@@ -183,7 +183,11 @@ class Analize extends Component {
       options: [],
       instrumentData:[],
       bids: [],
-      asks: []
+      asks: [],
+      instrumentAskIv: "",
+      instrumentBidIv: "",
+      instrumentDelta: "",
+
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
@@ -846,6 +850,31 @@ class Analize extends Component {
                 />
 
               </div>
+              <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+                <Table className={classes.table} style={{maxWidth: "100%"}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="left">askIv</TableCell>
+                      <TableCell align="left">bidIv</TableCell>
+                      <TableCell align="left">delta</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                      <TableRow>
+                        <TableCell align="left">
+                          {state.instrumentData[0].result.askIv}
+                        </TableCell>
+                        <TableCell align="left">
+                          {state.instrumentData[0].result.bidIv}
+                        </TableCell>
+                        <TableCell align="left">
+                          {state.instrumentData[0].result.delta}
+                        </TableCell>
+                      </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
               <div data-tid="container" style={{display: 'flex',  justifyContent:'space-evenly', alignItems:'center', flexDirection:"row"}}>
                 <h4>Bids</h4>
                 <h4>Asks</h4>
