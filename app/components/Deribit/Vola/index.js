@@ -150,6 +150,7 @@ class Vola extends Component {
   handleChange = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
+    this.updateVola();
   };
 
   render() {
@@ -166,7 +167,9 @@ class Vola extends Component {
             <InputLabel htmlFor="age-simple">Instrument</InputLabel>
             <Select
               value={this.state.instrument}
-              onChange={this.handleChange("instrument")}
+              onChange={
+                this.handleChange("instrument")
+              }
               inputProps={{
                 name: 'instrument',
                 id: 'instruemnt-simple',
