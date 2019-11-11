@@ -187,6 +187,7 @@ class Analize extends Component {
       instrumentAskIv: "",
       instrumentBidIv: "",
       instrumentDelta: "",
+      instrumentLastPrice: ""
 
     };
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
@@ -251,8 +252,9 @@ class Analize extends Component {
       .then(() => {
         return new Promise(function (resolve, reject){
           restClient.getinstruments((result) => {
-            console.log("Instruments: ", result.result);
-            that.setState({ instruments: result.result});
+            let instruments = result.result.sort((a,b) => a["strike"]>b["strike"]?1:-1);
+            console.log("Instruments: ", instruments);
+            that.setState({ instruments: instruments});
             resolve(result)
           });
         })
@@ -358,7 +360,10 @@ class Analize extends Component {
           return this.setState({alert:true});
         }
       })
-      .then(()=> {this.computePnL()})
+      .then(()=> {
+        this.setState({buySellDialog: false});
+        this.computePnL()
+      })
     // .catch(error => {
     //   this.setState({alert:true});
     //   console.log(error.response)
@@ -441,11 +446,10 @@ class Analize extends Component {
     let groupedByFuture = groupBy(groupedByCurrency, item => item.kind).get("future");
     let groupedByCalls = groupBy(groupedByOption, item => item.optionType).get("call");
     let groupedByPuts = groupBy(groupedByOption, item => item.optionType).get("put");
-
     this.setState({calls: groupedByCalls});
     this.setState({puts: groupedByPuts});
     this.setState({options: groupedByOption});
-    this.setState({futures: groupedByPuts});
+    this.setState({futures: groupedByFuture});
   }
 
   async addToPositions(instrument){
@@ -519,7 +523,11 @@ class Analize extends Component {
             that.setState({...that.state, instrumentData: obj.notifications});
             that.setState({...that.state, bids: obj.notifications[0].result.bids});
             that.setState({...that.state, asks: obj.notifications[0].result.asks});
-          }
+            that.setState({...that.state, instrumentAskIv: obj.notifications[0].result.askIv});
+            that.setState({...that.state, instrumentBidIv: obj.notifications[0].result.bidIv});
+            that.setState({...that.state, instrumentDelta: obj.notifications[0].result.delta});
+            that.setState({...that.state, instrumentLastPrice: obj.notifications[0].result.last})
+          };
         }
       });
     })
@@ -534,36 +542,6 @@ class Analize extends Component {
     let {instruments} = this.state;
     let searchInstrument = this.getInstrumentFromChild;
     let state = this.state;
-    // function instrumentTable() {
-    //   if (instruments.length!==0) {
-    //     return (
-    //       /* add gruped instruments table */
-    //       <div style={{ maxWidth: "100%"}}>
-    //         <MaterialTable
-    //           columns={columns}
-    //           data={instruments}
-    //           title="Available Instruments"
-    //           icons={tableIcons}
-    //           actions={[
-    //             {
-    //               icon: ()=> (<AddIcon color="secondary" />),
-    //               tooltip: 'Add instrument',
-    //               onClick: (event, rowData) => searchInstrument(rowData),
-    //             }
-    //           ]}
-    //           options={{grouping: true, sorting: true }}
-    //         />
-    //       </div>
-    //     )
-    //   }
-    // }
-    // function instrumentTable() {
-    //   if (instruments.length!==0) {
-    //     return (
-    //      <InstrumentTable columns={columns} rows={instruments}/>
-    //     )
-    //   }
-    // }
 
     function getPutCallBySrike(instruments, strike){
       let instrument =  instruments.filter(function(item) {
@@ -571,17 +549,6 @@ class Analize extends Component {
       });
       return instrument[0].instrumentName
     }
-
-    // function getWsStream(state) {
-    //   let result = 0;
-    //   if (typeof state.instrumentData !== 'undefined' && state.instrumentData.length!==0){
-    //     result = state.instrumentData[0].result.bids;
-    //     return result
-    //   }
-    //   else return "no data"
-    // }
-
-
 
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
@@ -701,34 +668,6 @@ class Analize extends Component {
           </div>
         </Paper>
 
-          {/*<br/>*/}
-          {/*<div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>*/}
-
-          {/*<TextField*/}
-          {/*id="outlined-name"*/}
-          {/*label="Vola"*/}
-          {/*className={classes.textField}*/}
-          {/*onChange={this.handleChange('vola')}*/}
-          {/*margin="normal"*/}
-          {/*variant="outlined"*/}
-          {/*/>*/}
-          {/*<TextField*/}
-          {/*id="outlined-name"*/}
-          {/*label="Risk free"*/}
-          {/*className={classes.textField}*/}
-          {/*onChange={this.handleChange('risk_free')}*/}
-          {/*margin="normal"*/}
-          {/*variant="outlined"*/}
-          {/*/>*/}
-          {/*<Button*/}
-          {/*className={classes.button}*/}
-          {/*onClick={()=>this.computePnL(this.state.index)}*/}
-          {/*variant="outlined"*/}
-          {/*// color="primary"*/}
-          {/*>Recalculate</Button>*/}
-          {/*</div>*/}
-
-
           {/*/!*Show avaliable instruments*!/*/}
         <br/>
         <Paper>
@@ -819,8 +758,12 @@ class Analize extends Component {
           >
             <DialogTitle id="buySell-dialog-title">{"Chose buy.sell.amount"}</DialogTitle>
             <DialogContent>
+              <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
+                <h4>Choose amount and direction.</h4>
+                <h6>Last price will be used for calculation.</h6>
+              </div>
 
-              <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+              <div style={{display: 'flex',  justifyContent:'space-evenly', alignItems:'center', flexDirection:"row"}}>
                 <FormControl className={classes.formControl}>
                   <InputLabel htmlFor="direction-simple">Direction</InputLabel>
                   <Select
@@ -849,26 +792,37 @@ class Analize extends Component {
                   placeholder="1"
                 />
 
+                <Button
+                  className={classes.button}
+                  onClick={()=>this.searchInstrument()}
+                  variant="outlined"
+                  // color="primary"
+                >Add</Button>
+
               </div>
               <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
                 <Table className={classes.table} style={{maxWidth: "100%"}}>
                   <TableHead>
                     <TableRow>
-                      <TableCell align="left">askIv</TableCell>
-                      <TableCell align="left">bidIv</TableCell>
-                      <TableCell align="left">delta</TableCell>
+                      <TableCell align="left">AskIv</TableCell>
+                      <TableCell align="left">BidIv</TableCell>
+                      <TableCell align="left">Delta</TableCell>
+                      <TableCell align="left">Last</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                       <TableRow>
                         <TableCell align="left">
-                          {state.instrumentData[0].result.askIv}
+                          {state.instrumentAskIv}
                         </TableCell>
                         <TableCell align="left">
-                          {state.instrumentData[0].result.bidIv}
+                          {state.instrumentBidIv}
                         </TableCell>
                         <TableCell align="left">
-                          {state.instrumentData[0].result.delta}
+                          {state.instrumentDelta}
+                        </TableCell>
+                        <TableCell align="left">
+                          {state.instrumentLastPrice}
                         </TableCell>
                       </TableRow>
                   </TableBody>
@@ -934,12 +888,6 @@ class Analize extends Component {
               </div>
             </DialogContent>
             <DialogActions>
-              <Button
-                className={classes.button}
-                onClick={()=>this.searchInstrument()}
-                variant="outlined"
-                // color="primary"
-              >Add</Button>
               <Button onClick={()=>this.closeBuySellDialog()} color="primary" autoFocus>
                 Close
               </Button>
