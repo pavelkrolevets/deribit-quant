@@ -362,12 +362,36 @@ class Analize extends Component {
       })
       .then(()=> {
         this.setState({buySellDialog: false});
-        this.computePnL()
+        this.computePnL();
+        this.unsubscribe(this.state.instrument)
       })
     // .catch(error => {
     //   this.setState({alert:true});
     //   console.log(error.response)
     // });
+  }
+
+  unsubscribe(instrument){
+    let RestClient = require("deribit-api").RestClient;
+    let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
+
+    const WebSocket = require('ws');
+    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
+
+    ws.on('open', function open() {
+      var args = {
+        "instrument": [instrument],
+        "event": ["order_book"]
+      };
+      var obj = {
+        "id": 5232,
+        "action": "/api/v1/private/unsubscribe",
+        "arguments": args,
+        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+      };
+      console.log('Request object', obj);
+      ws.send(JSON.stringify(obj));
+    });
   }
 
   addInstrument(instrument){
