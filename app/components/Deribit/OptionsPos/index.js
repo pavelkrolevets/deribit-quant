@@ -51,6 +51,7 @@ const styles = theme => ({
   }
 });
 
+const deribit_http = "https://test.deribit.com";
 
 class DeribitOptionPos extends Component {
   constructor(props) {
@@ -102,7 +103,7 @@ class DeribitOptionPos extends Component {
   async updateData(){
 
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     await this.restClient.index((result) => {
       console.log("Index: ", result);
