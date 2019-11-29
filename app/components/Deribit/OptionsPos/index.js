@@ -202,14 +202,14 @@ class DeribitOptionPos extends Component {
   }
 
   async computePnL(){
-    let range_min = 0;
+    let range_min = 10;
     let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
-      range_min = 0;
-    }
-    else {
-      range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
-    }
+    // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
+    //   range_min = 0;
+    // }
+    // else {
+    //   range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    // }
 
     let step = 100;
     let risk_free = 0.03;
