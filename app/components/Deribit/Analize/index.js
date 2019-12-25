@@ -105,7 +105,7 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const deribit_http = "https://test.deribit.com";
+const deribit_http = "https://www.deribit.com";
 
 const styles = theme => ({
   root: {
@@ -377,7 +377,7 @@ class Analize extends Component {
     let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     const WebSocket = require('ws');
-    const ws = new WebSocket('wss://test.deribit.com/ws/api/v1/');
+    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
 
     ws.on('open', function open() {
       var args = {
@@ -518,7 +518,7 @@ class Analize extends Component {
       let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
 
       const WebSocket = require('ws');
-      const ws = new WebSocket('wss://test.deribit.com/ws/api/v1/');
+      const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
 
       ws.on('open', function open() {
         var args = {

@@ -51,7 +51,7 @@ const styles = theme => ({
   }
 });
 
-const deribit_http = "https://test.deribit.com";
+const deribit_http = "https://www.deribit.com";
 
 class DeribitOptionPos extends Component {
   constructor(props) {
