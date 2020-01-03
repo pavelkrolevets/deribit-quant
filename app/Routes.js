@@ -6,6 +6,7 @@ import Profile from './containers/Profile'
 import DeribitOptionPos from './containers/DeribitOptionPos'
 import DeribitDeltaHedger from './containers/DeribitDeltaHedger'
 import Analize from './containers/Analize'
+import Simulate from './containers/Simulate'
 import Vola from './containers/Vola'
 import LoginView from './components/Login'
 import RegisterView from './components/Register'
@@ -24,6 +25,7 @@ export default () => (
       <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
       <Route path="/vola" component={requireAuthentication(Vola)} />
       <Route path="/profile" component={requireAuthentication(Profile)} />
+      <Route path="/simulate" component={requireAuthentication(Simulate)} />
       <Route path="/analyze" component={requireAuthentication(Analize)} />
       <Route path="/main" component={requireAuthentication(ProtectedView)} />
       <Route path="/" component={requireNoAuthentication(HomePage)} />
