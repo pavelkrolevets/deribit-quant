@@ -14,7 +14,11 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import TextField from '@material-ui/core/TextField';
 import ZoomIn from '@material-ui/icons/Add';
 import ZoomOut from '@material-ui/icons/Remove';
-import {black_scholes} from './bsm'
+import {BlackScholes} from './bsm'
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
 
 import {
   XYPlot,
@@ -68,7 +72,7 @@ class Simulate extends Component {
       keys: {},
       positions: [],
       indexBtc: 0,
-      indexEth:0,
+      indexEth: 0,
       account: [],
       time: new Date().toLocaleTimeString(),
       range_min:'',
@@ -84,7 +88,9 @@ class Simulate extends Component {
       instrumentAskIv: "",
       instrumentBidIv: "",
       instrumentDelta: "",
-      instrumentLastPrice: ""
+      instrumentLastPrice: "",
+      underlying_currency: "BTC",
+      underlying_expiration: "31DEC19"
     };
 
   }
@@ -96,8 +102,7 @@ class Simulate extends Component {
       .then(result=> {console.log(result);
         this.setState({keys: result.data});
       });
-
-    await this.updateData();
+    await this.getWebsocketsData();
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -110,24 +115,9 @@ class Simulate extends Component {
     // });
   }
 
-
-  async updateData(){
-
-    let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
-
-    await this.restClient.index((result) => {
-      console.log("Index: ", result);
-      this.setState({indexBtc: result.result.btc});
-    });
-
-    await this.restClient.account((result) => {
-      console.log("Account: ", result.result);
-      this.setState({account: [result.result]});
-    });
-  }
-
   async componentDidMount() {
+
+
 
     // this.interval()
 
@@ -153,12 +143,11 @@ class Simulate extends Component {
   }
 
   handleChange = name => event => {
-    // console.log(name, event.target.value);
+    console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
   };
 
-  getWebsocketsData(instrument){
-    console.log("Instrument", instrument);
+  getWebsocketsData(){
     let that=this;
     return new Promise(function(resolve, reject) {
       let RestClient = require("deribit-api").RestClient;
@@ -169,8 +158,9 @@ class Simulate extends Component {
 
       ws.on('open', function open() {
         var args = {
-          "instrument": [instrument],
-          "event": ["order_book"]
+          "instrument": ["index"],
+          "event": ["announcement"],
+          "currency": "BTC"
         };
         var obj = {
           "id": 5232,
@@ -185,24 +175,24 @@ class Simulate extends Component {
       ws.on('message', function incoming(data) {
         console.log('on message');
 
-        let value = black_scholes(true, parseInt(this.state.indexBtc), 8000, 0.01, 0.8, 0.3);
-        console.log("Value :", value);
+
 
         if(data.length > 0)
         {
           var obj = JSON.parse(data);
           console.log(obj.notifications);
-          // let notifications = obj.notifications;
-          console.log(obj.notifications);
           if (typeof obj.notifications !== 'undefined' && obj.notifications.length!==0){
-            that.setState({...that.state, instrumentData: obj.notifications});
-            that.setState({...that.state, bids: obj.notifications[0].result.bids});
-            that.setState({...that.state, asks: obj.notifications[0].result.asks});
-            that.setState({...that.state, instrumentAskIv: obj.notifications[0].result.askIv});
-            that.setState({...that.state, instrumentBidIv: obj.notifications[0].result.bidIv});
-            that.setState({...that.state, instrumentDelta: obj.notifications[0].result.delta});
-            that.setState({...that.state, instrumentLastPrice: obj.notifications[0].result.last})
+            if (obj.notifications.result.btc!== 'undefined' ){
+              that.setState({...that.state, indexBtc: obj.notifications.result.btc});
+            }
+            if (obj.notifications.result.eth!== 'undefined'){
+              that.setState({...that.state, indexEth: obj.notifications.result.eth});
+            }
+            // let value = BlackScholes("call", parseInt(obj.notifications[0].result.iPx), 8000, 0.1, 0.01, 0.6);
+            // console.log("Value :", value);
           };
+          console.log("Index BTC", that.state.indexBtc);
+          console.log("Index ETH", that.state.indexEth);
 
 
         }
@@ -219,14 +209,14 @@ class Simulate extends Component {
 
     ws.on('open', function open() {
       var args = {
-        "instrument": [instrument],
-        "event": ["order_book"]
+        "instrument": ["index"],
+        "event": ["announcement"],
       };
       var obj = {
         "id": 5232,
         "action": "/api/v1/private/unsubscribe",
         "arguments": args,
-        sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+        sig: restClient.generateSignature("/api/v1/private/unsubscribe", args)
       };
       console.log('Request object', obj);
       ws.send(JSON.stringify(obj));
@@ -242,30 +232,30 @@ class Simulate extends Component {
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
 
-  async computeBSM (trade_price, T, strike, vola, option_type, direction) {
-    let data = [];
-    let S0 = [];
-    let chart_data=[];
-
-    for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
-      data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
-      S0.push(i)
-    }
-    console.log(data);
-    await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
-      .then(response=> {console.log(response);
-        this.setState({option_values: response.data.option_values });
-      });
-
-    let y_range = [];
-    for (let i=0; i<S0.length; i++) {
-      chart_data.push({x: S0[i], y: (this.state.option_values[i])});
-      y_range.push((this.state.option_values[i]-trade_price))
-    }
-    this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
-
-    return chart_data;
-  }
+  // async computeBSM (trade_price, T, strike, vola, option_type, direction) {
+  //   let data = [];
+  //   let S0 = [];
+  //   let chart_data=[];
+  //
+  //   for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
+  //     data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
+  //     S0.push(i)
+  //   }
+  //   console.log(data);
+  //   await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
+  //     .then(response=> {console.log(response);
+  //       this.setState({option_values: response.data.option_values });
+  //     });
+  //
+  //   let y_range = [];
+  //   for (let i=0; i<S0.length; i++) {
+  //     chart_data.push({x: S0[i], y: (this.state.option_values[i])});
+  //     y_range.push((this.state.option_values[i]-trade_price))
+  //   }
+  //   this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
+  //
+  //   return chart_data;
+  // }
 
   _onMouseLeave = () => {
     this.setState({crosshairValues: []});
@@ -331,19 +321,44 @@ class Simulate extends Component {
     let {instrument} = this.state;
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <h6 style={{color:"#152880"}}>Range</h6>
-          <div style={{display: 'flex',  justifyContent:'left', alignItems:'left'}}>
-            <IconButton onClick={()=>this.zoomIn()}>
-              <ZoomIn color="secondary" />
-            </IconButton>
-            <IconButton onClick={()=>this.zoomOut()}>
-              <ZoomOut color="secondary" />
-            </IconButton>
-          </div>
-        </div>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze single option</h4>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Currency</InputLabel>
+            <Select
+              value={this.state.underlying_currency}
+              onChange={
+                this.handleChange("underlying_currency")
+              }
+              inputProps={{
+                name: 'underlying_currency',
+                id: 'underlying_currency-simple',
+              }}
+            >
+              <MenuItem value={"BTC"}>BTC</MenuItem>
+              <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Expiration</InputLabel>
+            <Select
+              value={this.state.underlying_expiration}
+              onChange={
+                this.handleChange("underlying_expiration")
+              }
+              inputProps={{
+                name: 'underlying_expiration',
+                id: 'underlying_expiration-simple',
+              }}
+            >
+              <MenuItem value={"27MAR20"}>27MAR20</MenuItem>
+              <MenuItem value={"31DEC19"}>31DEC19</MenuItem>
+            </Select>
+          </FormControl>
+
+
           <TextField
             required
             id="instrument id"
@@ -352,11 +367,14 @@ class Simulate extends Component {
             variant="filled"
             onChange={this.handleChange('instrument')}
           />
+
+
+
           <Button
-          className={classes.button}
-          onClick={()=>this.getWebsocketsData(instrument)}
-          variant="outlined"
-          // color="primary"
+            className={classes.button}
+            onClick={()=>this.getWebsocketsData(instrument)}
+            variant="outlined"
+            // color="primary"
           >Compute</Button>
         </div>
 
