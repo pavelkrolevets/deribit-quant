@@ -90,7 +90,16 @@ class Simulate extends Component {
       instrumentDelta: "",
       instrumentLastPrice: "",
       underlying_currency: "BTC",
-      underlying_expiration: "31DEC19"
+      expiration_list: [
+        { id: 100, strike: "31DEC19" },
+        { id: 101, strike: "27MAR202" },
+        { id: 102, strike: "31JAN202" }],
+      underlying_srike: "",
+      strike_list: [
+        { id: 100, strike: "1000" },
+        { id: 101, strike: "2000" },
+        { id: 102, strike: "3000" }],
+      underlying_expiration: ""
     };
 
   }
@@ -103,6 +112,7 @@ class Simulate extends Component {
         this.setState({keys: result.data});
       });
     await this.getWebsocketsData();
+
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -160,7 +170,7 @@ class Simulate extends Component {
         var args = {
           "instrument": ["index"],
           "event": ["announcement"],
-          "currency": "BTC"
+          "currency": "all"
         };
         var obj = {
           "id": 5232,
@@ -182,17 +192,17 @@ class Simulate extends Component {
           var obj = JSON.parse(data);
           console.log(obj.notifications);
           if (typeof obj.notifications !== 'undefined' && obj.notifications.length!==0){
-            if (obj.notifications.result.btc!== 'undefined' ){
+            if (obj.notifications.result.btc !== 'undefined' ){
               that.setState({...that.state, indexBtc: obj.notifications.result.btc});
-            }
-            if (obj.notifications.result.eth!== 'undefined'){
+              console.log("Index BTC", that.state.indexBtc);
+            } else {
               that.setState({...that.state, indexEth: obj.notifications.result.eth});
+              console.log("Index ETH", that.state.indexEth);
             }
+
             // let value = BlackScholes("call", parseInt(obj.notifications[0].result.iPx), 8000, 0.1, 0.01, 0.6);
             // console.log("Value :", value);
           };
-          console.log("Index BTC", that.state.indexBtc);
-          console.log("Index ETH", that.state.indexEth);
 
 
         }
@@ -319,6 +329,9 @@ class Simulate extends Component {
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
     let {instrument} = this.state;
+    let {strike_list,expiration_list} = this.state;
+
+
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze single option</h4>
@@ -353,11 +366,40 @@ class Simulate extends Component {
                 id: 'underlying_expiration-simple',
               }}
             >
-              <MenuItem value={"27MAR20"}>27MAR20</MenuItem>
-              <MenuItem value={"31DEC19"}>31DEC19</MenuItem>
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {
+                expiration_list.map(item => {
+                  return <MenuItem value={item.id}>{item.strike}</MenuItem>
+                })
+              }
             </Select>
           </FormControl>
 
+
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Strike</InputLabel>
+            <Select
+              value={this.state.underlying_srike}
+              onChange={
+                this.handleChange("underlying_srike")
+              }
+              inputProps={{
+                name: 'underlying_srike',
+                id: 'underlying_srike-simple',
+              }}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {
+                strike_list.map(item => {
+                  return <MenuItem value={item.id}>{item.strike}</MenuItem>
+                })
+              }
+            </Select>
+          </FormControl>
 
           <TextField
             required
