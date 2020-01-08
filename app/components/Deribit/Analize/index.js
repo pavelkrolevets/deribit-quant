@@ -463,9 +463,9 @@ class Analize extends Component {
     promise.then(()=>this.computePnL());
   }
 
-  getTables(date){
-    console.log(date);
-    const grouped = groupBy(this.state.instruments, item => item.expiration).get(date);
+  getTables(data){
+    console.log(data);
+    const grouped = groupBy(this.state.instruments, item => item.expiration).get(data);
     let groupedByCurrency = groupBy(grouped, item => item.baseCurrency).get("BTC");
     let groupedByOption = groupBy(groupedByCurrency, item => item.kind).get("option");
     let groupedByFuture = groupBy(groupedByCurrency, item => item.kind).get("future");

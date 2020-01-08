@@ -98,8 +98,27 @@ class Simulate extends Component {
       strike_list: [
         { id: 100, strike: "1000" },
         { id: 101, strike: "2000" },
-        { id: 102, strike: "3000" }],
-      underlying_expiration: ""
+        { id: 102, strike: "3000" },
+        { id: 103, strike: "4000" },
+        { id: 104, strike: "5000" },
+        { id: 105, strike: "6000" },
+        { id: 106, strike: "7000" },
+        { id: 107, strike: "8000" },
+        { id: 108, strike: "9000" },
+        { id: 109, strike: "10000" },
+        { id: 110, strike: "11000" },
+        { id: 111, strike: "12000" },
+        { id: 112, strike: "13000" },
+        { id: 113, strike: "14000" },
+        { id: 114, strike: "15000" },
+        { id: 115, strike: "16000" },
+        { id: 116, strike: "17000" },
+        { id: 117, strike: "18000" },
+        { id: 118, strike: "19000" },
+        { id: 119, strike: "20000" },
+      ],
+      underlying_expiration: "",
+
     };
 
   }
@@ -107,54 +126,137 @@ class Simulate extends Component {
 
   async componentWillMount(){
 
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      });
-    await this.getWebsocketsData();
-
-
-    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-    // this.web3.eth.getAccounts(function (error, res) {
-    //   if (!error) {
-    //     console.log(res);
-    //   } else {
-    //     console.log(error);
-    //   }
-    // });
+    let token = this.props.user.token;
+    let email = this.props.email;
+    let that = this;
+    let promise = new Promise(function (resolve, reject) {
+      resolve(get_api_keys(token, email)
+        .then(result=> {console.log(result);
+          that.setState({keys: result.data});
+          return null;
+        }))
+    })
+      .then(function(result) {
+          return new Promise (function(resolve, reject) {
+            resolve(that.updateData())
+          })
+        }
+      );
   }
 
-  async componentDidMount() {
+  async updateData(){
+    let that = this;
+    let RestClient = await require("deribit-api").RestClient;
+    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
-
-
-    // this.interval()
-
-    // setInterval(() => {
-    //   this.plot();
-    //   this.updateData();
-    //   this.setState({time: new Date().toLocaleTimeString()})
-    // }, 30000);
+    restClient.index()
+      .then((result) => {
+        console.log("Index: ", result);
+        that.setState({ index: result.result.btc });
+        return result
+      })
+      .then(()=> {
+        return that.computePnL()
+      })
+      .then(() => {
+        return new Promise(function (resolve, reject){
+          restClient.getinstruments((result) => {
+            let instruments = result.result.sort((a,b) => a["strike"]>b["strike"]?1:-1);
+            console.log("Instruments: ", instruments);
+            that.setState({ instruments: instruments});
+            resolve(result)
+          });
+        })
+      })
+      .then((result) => {
+        that.getExpirations(result.result)}
+      )
   }
 
-  getStrike(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[2]
-  }
 
-  getType(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[3]
-  }
-  getExpiration(instrument){
-    let parsed_string = instrument.split('-');
-    return parsed_string[1]
-  }
+    getExpirations(instruments){
+      const unique = [...new Set(instruments.map(item => item.expiration))];
+      let result = [];
+      const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+      ];
+      for (let item of unique ){
+        if (item !== "3000-01-01 08:00:00 GMT"){
+          // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+          var date = new Date(item);
+          let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
+          result.push(exp);
+        }
+      }
+      // result.sort((a,b)=>a.getTime()-b.getTime());
+      // console.log("Result:  ", result);
+      this.setState({expiration_list: result});
+      console.log("Expirations", result);
+
+    }
+
+
 
   handleChange = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
+  };
+
+  handleChangeCurrency = name => event => {
+    console.log(name, event.target.value);
+    this.setState({ [name]: event.target.value });
+    if (event.target.value === 'BTC'){
+      this.setState({ strike_list:
+          [
+            { id: 100, strike: "1000" },
+            { id: 101, strike: "2000" },
+            { id: 102, strike: "3000" },
+            { id: 103, strike: "4000" },
+            { id: 104, strike: "5000" },
+            { id: 105, strike: "6000" },
+            { id: 106, strike: "7000" },
+            { id: 107, strike: "8000" },
+            { id: 108, strike: "9000" },
+            { id: 109, strike: "10000" },
+            { id: 110, strike: "11000" },
+            { id: 111, strike: "12000" },
+            { id: 112, strike: "13000" },
+            { id: 113, strike: "14000" },
+            { id: 114, strike: "15000" },
+            { id: 115, strike: "16000" },
+            { id: 116, strike: "17000" },
+            { id: 117, strike: "18000" },
+            { id: 118, strike: "19000" },
+            { id: 119, strike: "20000" },
+          ],
+      });
+    }
+    if (event.target.value === 'ETH'){
+      this.setState({ strike_list:
+          [
+            { id: 100, strike: "100" },
+            { id: 101, strike: "200" },
+            { id: 102, strike: "300" },
+            { id: 103, strike: "400" },
+            { id: 104, strike: "500" },
+            { id: 105, strike: "600" },
+            { id: 106, strike: "700" },
+            { id: 107, strike: "800" },
+            { id: 108, strike: "900" },
+            { id: 109, strike: "1000" },
+            { id: 110, strike: "1100" },
+            { id: 111, strike: "1200" },
+            { id: 112, strike: "1300" },
+            { id: 113, strike: "1400" },
+            { id: 114, strike: "1500" },
+            { id: 115, strike: "1600" },
+            { id: 116, strike: "1700" },
+            { id: 117, strike: "1800" },
+            { id: 118, strike: "1900" },
+            { id: 119, strike: "2000" },
+            ],
+      });
+    }
   };
 
   getWebsocketsData(){
@@ -342,7 +444,7 @@ class Simulate extends Component {
             <Select
               value={this.state.underlying_currency}
               onChange={
-                this.handleChange("underlying_currency")
+                this.handleChangeCurrency("underlying_currency")
               }
               inputProps={{
                 name: 'underlying_currency',
@@ -366,12 +468,12 @@ class Simulate extends Component {
                 id: 'underlying_expiration-simple',
               }}
             >
-              <MenuItem value="">
+              <MenuItem value="None">
                 <em>None</em>
               </MenuItem>
               {
                 expiration_list.map(item => {
-                  return <MenuItem value={item.id}>{item.strike}</MenuItem>
+                  return <MenuItem value={item}>{item}</MenuItem>
                 })
               }
             </Select>
@@ -390,7 +492,7 @@ class Simulate extends Component {
                 id: 'underlying_srike-simple',
               }}
             >
-              <MenuItem value="">
+              <MenuItem value="None">
                 <em>None</em>
               </MenuItem>
               {
@@ -400,17 +502,6 @@ class Simulate extends Component {
               }
             </Select>
           </FormControl>
-
-          <TextField
-            required
-            id="instrument id"
-            label="Instrument ID"
-            defaultValue=""
-            variant="filled"
-            onChange={this.handleChange('instrument')}
-          />
-
-
 
           <Button
             className={classes.button}
