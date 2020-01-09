@@ -246,8 +246,11 @@ class Header extends Component {
               </div>
               :
               <div>
+                <MenuItem onClick={() => this.props.history.push('/simulate')}>
+                  Simulate
+                </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/analyze')}>
-                  Analyze
+                  Strategy
                 </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/deltahedger')}>
                   DeltaHedger

@@ -66,7 +66,7 @@ export function requireNoAuthentication(Component) {
                           });
                         });
                 } else {
-                  this.props.history.push('/login');
+                  // this.props.history.push('/');
                     this.setState({
                         loaded: true,
                     });

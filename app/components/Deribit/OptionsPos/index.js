@@ -51,6 +51,7 @@ const styles = theme => ({
   }
 });
 
+const deribit_http = "https://www.deribit.com";
 
 class DeribitOptionPos extends Component {
   constructor(props) {
@@ -102,7 +103,7 @@ class DeribitOptionPos extends Component {
   async updateData(){
 
     let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, "https://deribit.com");
+    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     await this.restClient.index((result) => {
       console.log("Index: ", result);
@@ -201,14 +202,14 @@ class DeribitOptionPos extends Component {
   }
 
   async computePnL(){
-    let range_min = 0;
+    let range_min = 10;
     let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
-      range_min = 0;
-    }
-    else {
-      range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
-    }
+    // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
+    //   range_min = 0;
+    // }
+    // else {
+    //   range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
+    // }
 
     let step = 100;
     let risk_free = 0.03;
