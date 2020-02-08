@@ -11,6 +11,7 @@ import Vola from './containers/Vola'
 import LoginView from './components/Login'
 import RegisterView from './components/Register'
 import ProtectedView from './components/Main';
+import Stat from './containers/Statistics'
 import { requireAuthentication } from './components/Auth/AuthenticatedComponent';
 import { requireNoAuthentication } from './components/Auth/notAuthenticatedComponent';
 
@@ -21,6 +22,7 @@ export default () => (
     <Switch>
       <Route path="/login" component={requireNoAuthentication(LoginView)} />
       <Route path="/register" component={requireNoAuthentication(RegisterView)} />
+      <Route path="/stat" component={requireAuthentication(Stat)} />
       <Route path="/deltahedger" component={requireAuthentication(DeribitDeltaHedger)} />
       <Route path="/options" component={requireAuthentication(DeribitOptionPos)} />
       <Route path="/vola" component={requireAuthentication(Vola)} />
