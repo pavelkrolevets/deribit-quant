@@ -83,6 +83,7 @@ class Stat extends Component {
       zoom: 1.2,
       instrument: "",
       instruments:[],
+      instrumentData:new Object(),
       bids: [],
       asks: [],
       instrumentAskIv: "",
@@ -192,7 +193,10 @@ class Stat extends Component {
         // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
         var date = new Date(item);
         let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
-        result.push(exp);
+        // let jsonString = new Object();
+        // jsonString[exp] = "";
+        // JSON.stringify(jsonString);
+        result.push({[exp]: "100"});
       // }
     }
     // result.sort((a,b)=>a.getTime()-b.getTime());
@@ -297,7 +301,12 @@ class Stat extends Component {
           var obj = JSON.parse(data);
           console.log("Data ", obj.notifications);
           if (typeof obj.notifications !== "undefined"){
-            console.log("Perpetual ", obj.notifications[0].result.last);
+            for (let item of that.state.instruments){
+              if (item === obj.notifications[0].result.instrument) {
+                that.setState({[item]: obj.notifications[0].result.last});
+                console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last);
+              }
+            }
           }
         }
       });
@@ -331,7 +340,7 @@ class Stat extends Component {
     let pos = this.state.positions[0];
 
     await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_current: result}));
+      .then(result=>this.State({chart_data_current: result}));
     await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
@@ -435,6 +444,7 @@ class Stat extends Component {
               <TableRow>
                 <TableCell align="left">Instrument</TableCell>
                 <TableCell align="left">Last</TableCell>
+                <TableCell align="left">Return APR</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -442,6 +452,12 @@ class Stat extends Component {
                 <TableRow>
                   <TableCell align="left">
                     {row}
+                  </TableCell>
+                  <TableCell align="left">
+                    {this.state[row]}
+                  </TableCell>
+                  <TableCell align="left">
+
                   </TableCell>
                 </TableRow>
               ))}
