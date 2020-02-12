@@ -176,9 +176,9 @@ class Stat extends Component {
           });
         })
       })
-      .then((result) => {
-        that.getExpirations(result.result)}
-      )
+      // .then((result) => {
+      //   that.getExpirations(result.result)}
+      // )
   }
 
 
@@ -196,7 +196,7 @@ class Stat extends Component {
         // let jsonString = new Object();
         // jsonString[exp] = "";
         // JSON.stringify(jsonString);
-        result.push({[exp]: "100"});
+        result.push(exp);
       // }
     }
     // result.sort((a,b)=>a.getTime()-b.getTime());
@@ -303,8 +303,20 @@ class Stat extends Component {
           if (typeof obj.notifications !== "undefined"){
             for (let item of that.state.instruments){
               if (item === obj.notifications[0].result.instrument) {
-                that.setState({[item]: obj.notifications[0].result.last});
-                console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last);
+                if (item !== "BTC-PERPETUAL"&&item.substring(0,3)==="BTC"){
+                    let fut_ret = parseInt(that.state[item])/parseInt(that.state["BTC-PERPETUAL"]) - 1;
+                    let new_item = "RET-"+item.toString();
+                    that.setState({[new_item]: fut_ret});
+                    that.setState({[item]: obj.notifications[0].result.last});
+                    console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
+
+
+                } else {
+                  that.setState({[item]: obj.notifications[0].result.last});
+                }
+
+
+
               }
             }
           }
@@ -433,8 +445,16 @@ class Stat extends Component {
     let {yDomain} = this.state;
     let {instrument} = this.state;
     let {strike_list,expiration_list} = this.state;
-
-
+    let that = this;
+    function comp_ret(that, row) {
+      if (typeof that.state[row] !== "undefined"){
+        let result = that.state[row];
+        console.log("Result ...",result);
+        return result.ret
+      } else {
+        return 0
+      }
+    }
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>General Statistics</h4>
@@ -448,16 +468,22 @@ class Stat extends Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {this.state.instruments.map(row => (
+              {this.state.instruments.map(item => (
                 <TableRow>
                   <TableCell align="left">
-                    {row}
+                    {
+                      item
+                    }
                   </TableCell>
                   <TableCell align="left">
-                    {this.state[row]}
+                    {
+                      this.state[item]
+                    }
                   </TableCell>
                   <TableCell align="left">
-
+                    {
+                      this.state["RET-"+item]
+                    }
                   </TableCell>
                 </TableRow>
               ))}
