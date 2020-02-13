@@ -126,23 +126,31 @@ class Stat extends Component {
 
 
   async componentWillMount(){
-
     let token = this.props.user.token;
     let email = this.props.email;
     let that = this;
     let promise = new Promise(function (resolve, reject) {
       resolve(get_api_keys(token, email)
-        .then(result=> {console.log(result);
+        .then(result=> {console.log("Result ",result);
           that.setState({keys: result.data});
           return null;
         }))
     })
       .then(function(result) {
           return new Promise (function(resolve, reject) {
-            resolve(that.updateData())
+            resolve(
+              that.updateData()
+            )
           })
         }
       );
+
+  }
+
+  async componentDidMount(){
+    setTimeout(function() {
+      this.getWebsocketsData()
+    }.bind(this), 2000);
   }
 
   async updateData(){
@@ -299,19 +307,25 @@ class Stat extends Component {
         if(data.length > 0)
         {
           var obj = JSON.parse(data);
-          console.log("Data ", obj.notifications);
+          // console.log("Data ", obj.notifications);
           if (typeof obj.notifications !== "undefined"){
             for (let item of that.state.instruments){
               if (item === obj.notifications[0].result.instrument) {
                 if (item !== "BTC-PERPETUAL"&&item.substring(0,3)==="BTC"){
-                    let fut_ret = parseInt(that.state[item])/parseInt(that.state["BTC-PERPETUAL"]) - 1;
+                    let fut_ret = (parseInt(that.state[item])/parseInt(that.state["BTC-PERPETUAL"]) - 1)*100;
                     let new_item = "RET-"+item.toString();
-                    that.setState({[new_item]: fut_ret});
-                    that.setState({[item]: obj.notifications[0].result.last});
+                    that.setState({[new_item]: fut_ret.toFixed(2)});
+                    that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
                     console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
-
-
+                } else if (item !== "ETH-PERPETUAL"&&item.substring(0,3)==="ETH"){
+                  let fut_ret = (parseInt(that.state[item])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*100;
+                  let new_item = "RET-"+item.toString();
+                  that.setState({[new_item]: fut_ret.toFixed(2)});
+                  that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
+                  console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
                 } else {
+                  let new_item = "RET-"+item.toString();
+                  that.setState({[new_item]: (0).toFixed(2)});
                   that.setState({[item]: obj.notifications[0].result.last});
                 }
 
@@ -464,7 +478,7 @@ class Stat extends Component {
               <TableRow>
                 <TableCell align="left">Instrument</TableCell>
                 <TableCell align="left">Last</TableCell>
-                <TableCell align="left">Return APR</TableCell>
+                <TableCell align="left">Return %</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -490,12 +504,12 @@ class Stat extends Component {
             </TableBody>
           </Table>
 
-          <Button
-            className={classes.button}
-            onClick={()=>this.getWebsocketsData(instrument)}
-            variant="outlined"
-            // color="primary"
-          >Compute</Button>
+          {/*<Button*/}
+          {/*  className={classes.button}*/}
+          {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
+          {/*  variant="outlined"*/}
+          {/*  // color="primary"*/}
+          {/*>Compute</Button>*/}
         </div>
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
