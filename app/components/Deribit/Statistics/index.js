@@ -14,7 +14,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import TextField from '@material-ui/core/TextField';
 import ZoomIn from '@material-ui/icons/Add';
 import ZoomOut from '@material-ui/icons/Remove';
-import {BlackScholes} from './bsm'
+
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
@@ -59,7 +59,7 @@ const styles = theme => ({
 
 const deribit_http = "https://www.deribit.com";
 
-class Simulate extends Component {
+class Stat extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -68,7 +68,7 @@ class Simulate extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-10000, 10000],
+      yDomain: [-7000, 7000],
       keys: {},
       positions: [],
       indexBtc: 0,
@@ -82,7 +82,8 @@ class Simulate extends Component {
       vola:'',
       zoom: 1.2,
       instrument: "",
-      instrumentData:[],
+      instruments:[],
+      instrumentData:new Object(),
       bids: [],
       asks: [],
       instrumentAskIv: "",
@@ -94,7 +95,7 @@ class Simulate extends Component {
         { id: 100, strike: "31DEC19" },
         { id: 101, strike: "27MAR202" },
         { id: 102, strike: "31JAN202" }],
-      underlying_srike: "None",
+      underlying_srike: "",
       strike_list: [
         { id: 100, strike: "1000" },
         { id: 101, strike: "2000" },
@@ -117,32 +118,39 @@ class Simulate extends Component {
         { id: 118, strike: "19000" },
         { id: 119, strike: "20000" },
       ],
-      underlying_expiration: "None",
-      direction: "None",
-      direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ]
+      underlying_expiration: "",
+
     };
 
   }
 
 
   async componentWillMount(){
-
     let token = this.props.user.token;
     let email = this.props.email;
     let that = this;
     let promise = new Promise(function (resolve, reject) {
       resolve(get_api_keys(token, email)
-        .then(result=> {console.log(result);
+        .then(result=> {console.log("Result ",result);
           that.setState({keys: result.data});
           return null;
         }))
     })
       .then(function(result) {
           return new Promise (function(resolve, reject) {
-            resolve(that.updateData())
+            resolve(
+              that.updateData()
+            )
           })
         }
       );
+
+  }
+
+  async componentDidMount(){
+    setTimeout(function() {
+      this.getWebsocketsData()
+    }.bind(this), 2000);
   }
 
   async updateData(){
@@ -162,10 +170,17 @@ class Simulate extends Component {
       .then(() => {
         return new Promise(function (resolve, reject){
           restClient.getinstruments((result) => {
-            let instruments = result.result.sort((a,b) => a["strike"]>b["strike"]?1:-1);
-            console.log("Instruments: ", instruments);
-            that.setState({ instruments: instruments});
-            resolve(result)
+            let instruments = result.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
+
+            let futures = [];
+            for (let item of instruments) {
+              if (item.kind == "future"){
+                futures.push(item.instrumentName);
+              }
+            }
+            console.log("Instruments: ", futures);
+            that.setState({ instruments: futures});
+            resolve(instruments)
           });
         })
       })
@@ -175,27 +190,29 @@ class Simulate extends Component {
   }
 
 
-    getExpirations(instruments){
-      const unique = [...new Set(instruments.map(item => item.expiration))];
-      let result = [];
-      const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
-      ];
-      for (let item of unique ){
-        if (item !== "3000-01-01 08:00:00 GMT"){
-          // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
-          var date = new Date(item);
-          let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
-          result.push({'exp_short':exp, 'exp_datetime': date});
-        }
-      }
-      // result.sort((a,b)=>a.getTime()-b.getTime());
-      // console.log("Result:  ", result);
-      this.setState({expiration_list: result});
-      console.log("Expirations", result);
-
+  getExpirations(instruments){
+    const unique = [...new Set(instruments.map(item => item.expiration))];
+    let result = [];
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    ];
+    for (let item of unique ){
+      // if (item !== "3000-01-01 08:00:00 GMT"){
+        // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+        var date = new Date(item);
+        let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
+        // let jsonString = new Object();
+        // jsonString[exp] = "";
+        // JSON.stringify(jsonString);
+        result.push(exp);
+      // }
     }
+    // result.sort((a,b)=>a.getTime()-b.getTime());
+    // console.log("Result:  ", result);
+    this.setState({expiration_list: result});
+    console.log("Expirations", result);
 
+  }
 
 
   handleChange = name => event => {
@@ -255,7 +272,7 @@ class Simulate extends Component {
             { id: 117, strike: "1800" },
             { id: 118, strike: "1900" },
             { id: 119, strike: "2000" },
-            ],
+          ],
       });
     }
   };
@@ -271,9 +288,8 @@ class Simulate extends Component {
 
       ws.on('open', function open() {
         var args = {
-          "instrument": ["index"],
-          "event": ["announcement"],
-          "currency": "all"
+          "instrument": ["futures"],
+          "event": ["order_book"]
         };
         var obj = {
           "id": 5232,
@@ -287,49 +303,42 @@ class Simulate extends Component {
 
       ws.on('message', function incoming(data) {
         console.log('on message');
-
-
-
         if(data.length > 0)
         {
           var obj = JSON.parse(data);
-          console.log(obj.notifications);
-          if (typeof obj.notifications !== 'undefined' && obj.notifications.length!==0){
-            if (typeof obj.notifications.result.btc !== 'undefined' ){
-              that.setState({...that.state, indexBtc: obj.notifications.result.btc});
+          // console.log("Data ", obj.notifications);
+          if (typeof obj.notifications !== "undefined"){
+            for (let item of that.state.instruments){
+              if (item === obj.notifications[0].result.instrument) {
+                if (item !== "BTC-PERPETUAL"&&item.substring(0,3)==="BTC"){
+                    let fut_ret = (parseInt(that.state[item])/parseInt(that.state["BTC-PERPETUAL"]) - 1)*100;
+                    let new_item = "RET-"+item.toString();
+                    that.setState({[new_item]: fut_ret.toFixed(2)});
+                    that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
+                    console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
+                } else if (item !== "ETH-PERPETUAL"&&item.substring(0,3)==="ETH"){
+                  let fut_ret = (parseInt(that.state[item])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*100;
+                  let new_item = "RET-"+item.toString();
+                  that.setState({[new_item]: fut_ret.toFixed(2)});
+                  that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
+                  console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
+                } else {
+                  let new_item = "RET-"+item.toString();
+                  that.setState({[new_item]: (0).toFixed(2)});
+                  that.setState({[item]: obj.notifications[0].result.last});
+                }
 
-            } else if (typeof obj.notifications.result.eth !== 'undefined' ){
-              that.setState({...that.state, indexEth: obj.notifications.result.eth});
 
-            }
-            console.log("Index BTC", that.state.indexBtc, "Index ETH", that.state.indexEth);
 
-            setTimeout(function() {
-              let current_values = [];
-              let values_at_zero = [];
-              for (let i=1;i<=20002; i+=500){
-                let current_value = BlackScholes("call", i, 10000, 0.1, 0.01, 0.6);
-                // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-                let value_at_zero = BlackScholes("call", i, 10000, 0.00001, 0.01, 0.6);
-
-                values_at_zero.push({'x':i, 'y':value_at_zero});
-                current_values.push({'x':i, 'y':current_value});
               }
-              console.log("Value current:", current_values);
-              console.log("Value at zero:", values_at_zero);
-              that.setState({...that.state, chart_data_current: current_values});
-              that.setState({...that.state, chart_data_at_zero: values_at_zero});
-
-            }.bind(this), 1000);
-          };
-
-
+            }
+          }
         }
       });
     })
   }
 
-  unsubscribe(instrument){
+  unsubscribe(){
     let RestClient = require("deribit-api").RestClient;
     let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
@@ -338,8 +347,8 @@ class Simulate extends Component {
 
     ws.on('open', function open() {
       var args = {
-        "instrument": ["index"],
-        "event": ["announcement"],
+        "instrument": ["futures"],
+        "event": ["order_book"],
       };
       var obj = {
         "id": 5232,
@@ -356,7 +365,7 @@ class Simulate extends Component {
     let pos = this.state.positions[0];
 
     await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_current: result}));
+      .then(result=>this.State({chart_data_current: result}));
     await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
       .then(result=>this.setState({chart_data_at_zero: result}));
   }
@@ -419,7 +428,7 @@ class Simulate extends Component {
     let risk_free = 0.03;
     let vola = 0.8;
     compute_pnl(this.props.user.token,this.props.email, range_min, range_max, step, risk_free, vola)
-      .then(result => {console.log(result.data.pnl);
+      .then(result => {console.log("Compute PNL 417",result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
   }
@@ -448,110 +457,60 @@ class Simulate extends Component {
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
     let {instrument} = this.state;
-    let {strike_list,expiration_list, direction_list} = this.state;
-
-
+    let {strike_list,expiration_list} = this.state;
+    let that = this;
+    function comp_ret(that, row) {
+      if (typeof that.state[row] !== "undefined"){
+        let result = that.state[row];
+        console.log("Result ...",result);
+        return result.ret
+      } else {
+        return 0
+      }
+    }
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze single option</h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Statistics</h4>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+          <Table className={classes.table} style={{maxWidth: "100%"}}>
+            <TableHead>
+              <TableRow>
+                <TableCell align="left">Instrument</TableCell>
+                <TableCell align="left">Last</TableCell>
+                <TableCell align="left">Return %</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {this.state.instruments.map(item => (
+                <TableRow>
+                  <TableCell align="left">
+                    {
+                      item
+                    }
+                  </TableCell>
+                  <TableCell align="left">
+                    {
+                      this.state[item]
+                    }
+                  </TableCell>
+                  <TableCell align="left">
+                    {
+                      this.state["RET-"+item]
+                    }
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Currency</InputLabel>
-            <Select
-              value={this.state.underlying_currency}
-              onChange={
-                this.handleChangeCurrency("underlying_currency")
-              }
-              inputProps={{
-                name: 'underlying_currency',
-                id: 'underlying_currency-simple',
-              }}
-            >
-              <MenuItem value={"BTC"}>BTC</MenuItem>
-              <MenuItem value={"ETH"}>ETH</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Expiration</InputLabel>
-            <Select
-              value={this.state.underlying_expiration}
-              onChange={
-                this.handleChange("underlying_expiration")
-              }
-              inputProps={{
-                name: 'underlying_expiration',
-                id: 'underlying_expiration-simple',
-              }}
-            >
-              <MenuItem value="None">
-                <em>None</em>
-              </MenuItem>
-              {
-                expiration_list.map(item => {
-                  return <MenuItem value={item.exp_short}>{item.exp_short}</MenuItem>
-                })
-              }
-            </Select>
-          </FormControl>
-
-
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Strike</InputLabel>
-            <Select
-              value={this.state.underlying_srike}
-              onChange={
-                this.handleChange("underlying_srike")
-              }
-              inputProps={{
-                name: 'underlying_srike',
-                id: 'underlying_srike-simple',
-              }}
-            >
-              <MenuItem value="None">
-                <em>None</em>
-              </MenuItem>
-              {
-                strike_list.map(item => {
-                  return <MenuItem value={item.id}>{item.strike}</MenuItem>
-                })
-              }
-            </Select>
-          </FormControl>
-
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Direction</InputLabel>
-            <Select
-              value={this.state.direction}
-              onChange={
-                this.handleChange("direction")
-              }
-              inputProps={{
-                name: 'direction',
-                id: 'direction-simple',
-              }}
-            >
-              <MenuItem value="None">
-                <em>None</em>
-              </MenuItem>
-              {
-                direction_list.map(item => {
-                  return <MenuItem value={item.id}>{item.direction}</MenuItem>
-                })
-              }
-            </Select>
-          </FormControl>
-
-          <Button
-            className={classes.button}
-            onClick={()=>this.getWebsocketsData()}
-            variant="outlined"
-            // color="primary"
-          >Compute</Button>
+          {/*<Button*/}
+          {/*  className={classes.button}*/}
+          {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
+          {/*  variant="outlined"*/}
+          {/*  // color="primary"*/}
+          {/*>Compute</Button>*/}
         </div>
-        <br/>
-        <br/>
+
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
@@ -601,8 +560,8 @@ class Simulate extends Component {
 }
 
 
-Simulate.propTypes = {
+Stat.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Simulate);
+export default withStyles(styles)(Stat);
