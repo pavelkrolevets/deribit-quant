@@ -68,7 +68,7 @@ class Simulate extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-7000, 7000],
+      yDomain: [-10000, 10000],
       keys: {},
       positions: [],
       indexBtc: 0,
@@ -94,7 +94,7 @@ class Simulate extends Component {
         { id: 100, strike: "31DEC19" },
         { id: 101, strike: "27MAR202" },
         { id: 102, strike: "31JAN202" }],
-      underlying_srike: "",
+      underlying_srike: "None",
       strike_list: [
         { id: 100, strike: "1000" },
         { id: 101, strike: "2000" },
@@ -117,8 +117,9 @@ class Simulate extends Component {
         { id: 118, strike: "19000" },
         { id: 119, strike: "20000" },
       ],
-      underlying_expiration: "",
-
+      underlying_expiration: "None",
+      direction: "None",
+      direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ]
     };
 
   }
@@ -185,7 +186,7 @@ class Simulate extends Component {
           // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
           var date = new Date(item);
           let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
-          result.push(exp);
+          result.push({'exp_short':exp, 'exp_datetime': date});
         }
       }
       // result.sort((a,b)=>a.getTime()-b.getTime());
@@ -294,16 +295,32 @@ class Simulate extends Component {
           var obj = JSON.parse(data);
           console.log(obj.notifications);
           if (typeof obj.notifications !== 'undefined' && obj.notifications.length!==0){
-            if (obj.notifications.result.btc !== 'undefined' ){
+            if (typeof obj.notifications.result.btc !== 'undefined' ){
               that.setState({...that.state, indexBtc: obj.notifications.result.btc});
-              console.log("Index BTC", that.state.indexBtc);
-            } else {
-              that.setState({...that.state, indexEth: obj.notifications.result.eth});
-              console.log("Index ETH", that.state.indexEth);
-            }
 
-            // let value = BlackScholes("call", parseInt(obj.notifications[0].result.iPx), 8000, 0.1, 0.01, 0.6);
-            // console.log("Value :", value);
+            } else if (typeof obj.notifications.result.eth !== 'undefined' ){
+              that.setState({...that.state, indexEth: obj.notifications.result.eth});
+
+            }
+            console.log("Index BTC", that.state.indexBtc, "Index ETH", that.state.indexEth);
+
+            setTimeout(function() {
+              let current_values = [];
+              let values_at_zero = [];
+              for (let i=1;i<=20002; i+=500){
+                let current_value = BlackScholes("call", i, 10000, 0.1, 0.01, 0.6);
+                // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+                let value_at_zero = BlackScholes("call", i, 10000, 0.00001, 0.01, 0.6);
+
+                values_at_zero.push({'x':i, 'y':value_at_zero});
+                current_values.push({'x':i, 'y':current_value});
+              }
+              console.log("Value current:", current_values);
+              console.log("Value at zero:", values_at_zero);
+              that.setState({...that.state, chart_data_current: current_values});
+              that.setState({...that.state, chart_data_at_zero: values_at_zero});
+
+            }.bind(this), 1000);
           };
 
 
@@ -431,7 +448,7 @@ class Simulate extends Component {
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let {yDomain} = this.state;
     let {instrument} = this.state;
-    let {strike_list,expiration_list} = this.state;
+    let {strike_list,expiration_list, direction_list} = this.state;
 
 
     return (
@@ -473,7 +490,7 @@ class Simulate extends Component {
               </MenuItem>
               {
                 expiration_list.map(item => {
-                  return <MenuItem value={item}>{item}</MenuItem>
+                  return <MenuItem value={item.exp_short}>{item.exp_short}</MenuItem>
                 })
               }
             </Select>
@@ -503,14 +520,38 @@ class Simulate extends Component {
             </Select>
           </FormControl>
 
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Direction</InputLabel>
+            <Select
+              value={this.state.direction}
+              onChange={
+                this.handleChange("direction")
+              }
+              inputProps={{
+                name: 'direction',
+                id: 'direction-simple',
+              }}
+            >
+              <MenuItem value="None">
+                <em>None</em>
+              </MenuItem>
+              {
+                direction_list.map(item => {
+                  return <MenuItem value={item.id}>{item.direction}</MenuItem>
+                })
+              }
+            </Select>
+          </FormControl>
+
           <Button
             className={classes.button}
-            onClick={()=>this.getWebsocketsData(instrument)}
+            onClick={()=>this.getWebsocketsData()}
             variant="outlined"
             // color="primary"
           >Compute</Button>
         </div>
-
+        <br/>
+        <br/>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>

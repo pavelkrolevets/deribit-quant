@@ -184,9 +184,9 @@ class Stat extends Component {
           });
         })
       })
-      // .then((result) => {
-      //   that.getExpirations(result.result)}
-      // )
+      .then((result) => {
+        that.getExpirations(result.result)}
+      )
   }
 
 
@@ -213,7 +213,6 @@ class Stat extends Component {
     console.log("Expirations", result);
 
   }
-
 
 
   handleChange = name => event => {
@@ -429,7 +428,7 @@ class Stat extends Component {
     let risk_free = 0.03;
     let vola = 0.8;
     compute_pnl(this.props.user.token,this.props.email, range_min, range_max, step, risk_free, vola)
-      .then(result => {console.log(result.data.pnl);
+      .then(result => {console.log("Compute PNL 417",result.data.pnl);
         this.setState({chart_data_current: result.data.pnl,
           chart_data_at_zero: result.data.pnl_at_exp})})
   }
@@ -471,7 +470,7 @@ class Stat extends Component {
     }
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>General Statistics</h4>
+        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Statistics</h4>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
           <Table className={classes.table} style={{maxWidth: "100%"}}>
             <TableHead>
