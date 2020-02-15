@@ -119,7 +119,7 @@ class Stat extends Component {
         { id: 119, strike: "20000" },
       ],
       underlying_expiration: "",
-
+      ws_close: false
     };
 
   }
@@ -145,6 +145,12 @@ class Stat extends Component {
         }
       );
 
+  }
+  componentWillUnmount() {
+    let that = this;
+    setTimeout(function() {
+      that.unsubscribe();
+    }, 1000);
   }
 
   async componentDidMount(){
@@ -292,7 +298,7 @@ class Stat extends Component {
           "event": ["order_book"]
         };
         var obj = {
-          "id": 5232,
+          "id": 5230,
           "action": "/api/v1/private/subscribe",
           "arguments": args,
           sig: restClient.generateSignature("/api/v1/private/subscribe", args)
@@ -328,7 +334,10 @@ class Stat extends Component {
                   that.setState({[item]: obj.notifications[0].result.last});
                 }
 
-
+                if ( that.state.ws_close === true){
+                  console.log("Closing ws...");
+                  ws.close();
+                }
 
               }
             }
@@ -339,26 +348,7 @@ class Stat extends Component {
   }
 
   unsubscribe(){
-    let RestClient = require("deribit-api").RestClient;
-    let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
-
-    const WebSocket = require('ws');
-    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
-
-    ws.on('open', function open() {
-      var args = {
-        "instrument": ["futures"],
-        "event": ["order_book"],
-      };
-      var obj = {
-        "id": 5232,
-        "action": "/api/v1/private/unsubscribe",
-        "arguments": args,
-        sig: restClient.generateSignature("/api/v1/private/unsubscribe", args)
-      };
-      console.log('Request object', obj);
-      ws.send(JSON.stringify(obj));
-    });
+    this.setState({...this.state, ws_close: true});
   }
 
   async plot(){

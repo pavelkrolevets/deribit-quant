@@ -119,7 +119,8 @@ class Simulate extends Component {
       ],
       underlying_expiration: "None",
       direction: "None",
-      direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ]
+      direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ],
+      ws_close: false
     };
 
   }
@@ -144,6 +145,11 @@ class Simulate extends Component {
         }
       );
   }
+
+  componentWillUnmount() {
+    this.setState({...this.state, ws_close: true});
+  }
+
 
   async updateData(){
     let that = this;
@@ -304,7 +310,6 @@ class Simulate extends Component {
             }
             console.log("Index BTC", that.state.indexBtc, "Index ETH", that.state.indexEth);
 
-            setTimeout(function() {
               let current_values = [];
               let values_at_zero = [];
               for (let i=1;i<=20002; i+=500){
@@ -320,7 +325,11 @@ class Simulate extends Component {
               that.setState({...that.state, chart_data_current: current_values});
               that.setState({...that.state, chart_data_at_zero: values_at_zero});
 
-            }.bind(this), 1000);
+              if ( that.state.ws_close === true){
+                console.log("Closing ws...");
+                ws.close();
+              }
+
           };
 
 
@@ -329,62 +338,9 @@ class Simulate extends Component {
     })
   }
 
-  unsubscribe(instrument){
-    let RestClient = require("deribit-api").RestClient;
-    let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
-
-    const WebSocket = require('ws');
-    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
-
-    ws.on('open', function open() {
-      var args = {
-        "instrument": ["index"],
-        "event": ["announcement"],
-      };
-      var obj = {
-        "id": 5232,
-        "action": "/api/v1/private/unsubscribe",
-        "arguments": args,
-        sig: restClient.generateSignature("/api/v1/private/unsubscribe", args)
-      };
-      console.log('Request object', obj);
-      ws.send(JSON.stringify(obj));
-    });
+  unsubscribe(){
+    this.setState({...this.state, ws_close: true});
   }
-
-  async plot(){
-    let pos = this.state.positions[0];
-
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_current: result}));
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_at_zero: result}));
-  }
-
-  // async computeBSM (trade_price, T, strike, vola, option_type, direction) {
-  //   let data = [];
-  //   let S0 = [];
-  //   let chart_data=[];
-  //
-  //   for (let i= parseInt(strike)-10000; i < parseInt(strike)+10000; i +=1000){
-  //     data.push(JSON.stringify({S0: i, K:parseInt(strike), T:T, r: 0.03, sigma: vola}));
-  //     S0.push(i)
-  //   }
-  //   console.log(data);
-  //   await compute_bsm(this.props.user.token, option_type, data, direction, trade_price)
-  //     .then(response=> {console.log(response);
-  //       this.setState({option_values: response.data.option_values });
-  //     });
-  //
-  //   let y_range = [];
-  //   for (let i=0; i<S0.length; i++) {
-  //     chart_data.push({x: S0[i], y: (this.state.option_values[i])});
-  //     y_range.push((this.state.option_values[i]-trade_price))
-  //   }
-  //   this.setState({yDomain: [Math.min(...y_range)-1000, Math.max(...y_range)+1000]});
-  //
-  //   return chart_data;
-  // }
 
   _onMouseLeave = () => {
     this.setState({crosshairValues: []});
@@ -405,41 +361,7 @@ class Simulate extends Component {
 
   }
 
-  async computePnL(){
-    let range_min = 10;
-    let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
-    //   range_min = 0;
-    // }
-    // else {
-    //   range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
-    // }
 
-    let step = 100;
-    let risk_free = 0.03;
-    let vola = 0.8;
-    compute_pnl(this.props.user.token,this.props.email, range_min, range_max, step, risk_free, vola)
-      .then(result => {console.log(result.data.pnl);
-        this.setState({chart_data_current: result.data.pnl,
-          chart_data_at_zero: result.data.pnl_at_exp})})
-  }
-
-  zoomIn(){
-    let that = this;
-    let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.2})));
-      return null
-    });
-    promise.then(()=>this.computePnL());
-  }
-  zoomOut(){
-    let that = this;
-    let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.2})));
-      return null
-    });
-    promise.then(()=>this.computePnL());
-  }
 
   render() {
     const {classes} = this.props;
@@ -549,6 +471,12 @@ class Simulate extends Component {
             variant="outlined"
             // color="primary"
           >Compute</Button>
+          <Button
+            className={classes.button}
+            onClick={()=>this.unsubscribe()}
+            variant="outlined"
+            // color="primary"
+          >Stop</Button>
         </div>
         <br/>
         <br/>
