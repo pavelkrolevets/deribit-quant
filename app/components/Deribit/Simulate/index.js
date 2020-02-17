@@ -94,7 +94,7 @@ class Simulate extends Component {
         { id: 100, strike: "31DEC19" },
         { id: 101, strike: "27MAR202" },
         { id: 102, strike: "31JAN202" }],
-      underlying_srike: "None",
+      underlying_strike: "None",
       strike_list: [
         { id: 100, strike: "1000" },
         { id: 101, strike: "2000" },
@@ -120,7 +120,8 @@ class Simulate extends Component {
       underlying_expiration: "None",
       direction: "None",
       direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ],
-      ws_close: false
+      ws_close: false,
+      option_type: "call"
     };
 
   }
@@ -147,7 +148,7 @@ class Simulate extends Component {
   }
 
   componentWillUnmount() {
-    this.setState({...this.state, ws_close: true});
+    // this.setState({...this.state, ws_close: true});
   }
 
 
@@ -162,13 +163,10 @@ class Simulate extends Component {
         that.setState({ index: result.result.btc });
         return result
       })
-      .then(()=> {
-        return that.computePnL()
-      })
       .then(() => {
         return new Promise(function (resolve, reject){
           restClient.getinstruments((result) => {
-            let instruments = result.result.sort((a,b) => a["strike"]>b["strike"]?1:-1);
+            let instruments = result.result.sort((a,b) => a["strike"] > b["strike"]?1:-1);
             console.log("Instruments: ", instruments);
             that.setState({ instruments: instruments});
             resolve(result)
@@ -268,6 +266,8 @@ class Simulate extends Component {
 
   getWebsocketsData(){
     let that=this;
+    this.setState({...this.state, ws_close: false});
+
     return new Promise(function(resolve, reject) {
       let RestClient = require("deribit-api").RestClient;
       let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
@@ -313,9 +313,9 @@ class Simulate extends Component {
               let current_values = [];
               let values_at_zero = [];
               for (let i=1;i<=20002; i+=500){
-                let current_value = BlackScholes("call", i, 10000, 0.1, 0.01, 0.6);
+                let current_value = BlackScholes(that.state.option_type, i, that.state.underlying_strike, 0.1, 0.01, 0.6);
                 // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-                let value_at_zero = BlackScholes("call", i, 10000, 0.00001, 0.01, 0.6);
+                let value_at_zero = BlackScholes(that.state.option_type, i, that.state.underlying_strike, 0.00001, 0.01, 0.6);
 
                 values_at_zero.push({'x':i, 'y':value_at_zero});
                 current_values.push({'x':i, 'y':current_value});
@@ -377,7 +377,6 @@ class Simulate extends Component {
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze single option</h4>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
-
           <FormControl className={classes.formControl}>
             <InputLabel htmlFor="age-simple">Currency</InputLabel>
             <Select
@@ -392,6 +391,23 @@ class Simulate extends Component {
             >
               <MenuItem value={"BTC"}>BTC</MenuItem>
               <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl className={classes.formControl}>
+            <InputLabel htmlFor="age-simple">Type</InputLabel>
+            <Select
+              value={this.state.option_type}
+              onChange={
+                this.handleChange("option_type")
+              }
+              inputProps={{
+                name: 'option_type',
+                id: 'option_type-simple',
+              }}
+            >
+              <MenuItem value={"call"}>Call</MenuItem>
+              <MenuItem value={"put"}>Put</MenuItem>
             </Select>
           </FormControl>
 
@@ -422,13 +438,13 @@ class Simulate extends Component {
           <FormControl className={classes.formControl}>
             <InputLabel htmlFor="age-simple">Strike</InputLabel>
             <Select
-              value={this.state.underlying_srike}
+              value={this.state.underlying_strike}
               onChange={
-                this.handleChange("underlying_srike")
+                this.handleChange("underlying_strike")
               }
               inputProps={{
-                name: 'underlying_srike',
-                id: 'underlying_srike-simple',
+                name: 'underlying_strike',
+                id: 'underlying_strike-simple',
               }}
             >
               <MenuItem value="None">
@@ -436,7 +452,7 @@ class Simulate extends Component {
               </MenuItem>
               {
                 strike_list.map(item => {
-                  return <MenuItem value={item.id}>{item.strike}</MenuItem>
+                  return <MenuItem value={item.strike}>{item.strike}</MenuItem>
                 })
               }
             </Select>
@@ -464,7 +480,6 @@ class Simulate extends Component {
               }
             </Select>
           </FormControl>
-
           <Button
             className={classes.button}
             onClick={()=>this.getWebsocketsData()}
@@ -479,6 +494,7 @@ class Simulate extends Component {
           >Stop</Button>
         </div>
         <br/>
+        <h6 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC: {this.state.indexBtc}, ETH: {this.state.indexEth}</h6>
         <br/>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
