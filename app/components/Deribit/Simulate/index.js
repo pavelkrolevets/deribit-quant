@@ -19,6 +19,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 import {
   XYPlot,
@@ -54,6 +55,9 @@ const styles = theme => ({
   },
   chart:{
 
+  },
+  textField:{
+    width: "100px",
   }
 });
 
@@ -73,6 +77,8 @@ class Simulate extends Component {
       positions: [],
       indexBtc: 0,
       indexEth: 0,
+      index: 0,
+      volatility: 0,
       account: [],
       time: new Date().toLocaleTimeString(),
       range_min:'',
@@ -121,7 +127,8 @@ class Simulate extends Component {
       direction: "None",
       direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ],
       ws_close: false,
-      option_type: "call"
+      option_type: "call",
+      impl_option_value: 0,
     };
 
   }
@@ -310,20 +317,7 @@ class Simulate extends Component {
             }
             console.log("Index BTC", that.state.indexBtc, "Index ETH", that.state.indexEth);
 
-              let current_values = [];
-              let values_at_zero = [];
-              for (let i=1;i<=20002; i+=500){
-                let current_value = BlackScholes(that.state.option_type, i, that.state.underlying_strike, 0.1, 0.01, 0.6);
-                // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-                let value_at_zero = BlackScholes(that.state.option_type, i, that.state.underlying_strike, 0.00001, 0.01, 0.6);
-
-                values_at_zero.push({'x':i, 'y':value_at_zero});
-                current_values.push({'x':i, 'y':current_value});
-              }
-              console.log("Value current:", current_values);
-              console.log("Value at zero:", values_at_zero);
-              that.setState({...that.state, chart_data_current: current_values});
-              that.setState({...that.state, chart_data_at_zero: values_at_zero});
+              that.computePnl();
 
               if ( that.state.ws_close === true){
                 console.log("Closing ws...");
@@ -361,7 +355,53 @@ class Simulate extends Component {
 
   }
 
+  computePnl(){
+    let current_values = [];
+    let values_at_zero = [];
+    let date = new Date(this.state.underlying_expiration);
+    let now = Date.now();
+    const diffTime = Math.abs(date - now);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const timeToExp = diffDays/365;
 
+    if (this.state.underlying_currency === "BTC"){
+      for (let i=1;i<=20002; i+=100){
+        let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
+        // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+        let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
+
+        values_at_zero.push({'x':i, 'y':value_at_zero});
+        current_values.push({'x':i, 'y':current_value});
+      }
+      console.log("Value current:", current_values);
+      console.log("Value at zero:", values_at_zero);
+      this.setState({...this.state, chart_data_current: current_values});
+      this.setState({...this.state, chart_data_at_zero: values_at_zero});
+      this.setState({yDomain: [-10000, 10000]});
+      this.setState({index: this.state.indexBtc});
+      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
+
+    } else if (this.state.underlying_currency === "ETH") {
+      for (let i=0.1;i<=1000; i+=10){
+        let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i ;
+
+        // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+        let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
+
+        values_at_zero.push({'x':i, 'y':value_at_zero});
+        current_values.push({'x':i, 'y':current_value});
+      }
+      console.log("Value current:", current_values);
+      console.log("Value at zero:", values_at_zero);
+      this.setState({...this.state, chart_data_current: current_values});
+      this.setState({...this.state, chart_data_at_zero: values_at_zero});
+      this.setState({yDomain: [-1000, 1000]});
+      this.setState({index: this.state.indexEth});
+      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
+    }
+
+
+  }
 
   render() {
     const {classes} = this.props;
@@ -428,7 +468,7 @@ class Simulate extends Component {
               </MenuItem>
               {
                 expiration_list.map(item => {
-                  return <MenuItem value={item.exp_short}>{item.exp_short}</MenuItem>
+                  return <MenuItem value={item.exp_datetime}>{item.exp_short}</MenuItem>
                 })
               }
             </Select>
@@ -480,22 +520,42 @@ class Simulate extends Component {
               }
             </Select>
           </FormControl>
+          {/*<TextField*/}
+          {/*  id="outlined-name"*/}
+          {/*  label="Index"*/}
+          {/*  className={classes.textField}*/}
+          {/*  onChange={this.handleChange('index')}*/}
+          {/*  margin="normal"*/}
+          {/*  variant="outlined"*/}
+          {/*  startAdornment={<InputAdornment position="start">$</InputAdornment>}*/}
+          {/*/>*/}
+
+          <TextField
+            id="outlined-name"
+            label="Vola"
+            className={classes.textField}
+            onChange={this.handleChange('volatility')}
+            margin="normal"
+            variant="outlined"
+
+          />
+
           <Button
             className={classes.button}
             onClick={()=>this.getWebsocketsData()}
             variant="outlined"
             // color="primary"
           >Compute</Button>
-          <Button
-            className={classes.button}
-            onClick={()=>this.unsubscribe()}
-            variant="outlined"
-            // color="primary"
-          >Stop</Button>
+          {/*<Button*/}
+          {/*  className={classes.button}*/}
+          {/*  onClick={()=>this.unsubscribe()}*/}
+          {/*  variant="outlined"*/}
+          {/*  // color="primary"*/}
+          {/*>Stop</Button>*/}
         </div>
-        <br/>
+        <h5 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Implied option value {this.state.impl_option_value.toFixed(2)}</h5>
         <h6 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC: {this.state.indexBtc}, ETH: {this.state.indexEth}</h6>
-        <br/>
+
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           {/*Main graph*/}
           <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
@@ -532,10 +592,10 @@ class Simulate extends Component {
               values={this.state.crosshairValues}
               className={'test-class-name'}
             />
-            {/*<Crosshair*/}
-            {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
-            {/*className={'market-class-name'}*/}
-            {/*/>*/}
+            <Crosshair
+            values={[{x: parseInt(this.state.index), y:0}]}
+            className={'market-class-name'}
+            />
           </XYPlot>
         </div>
         <br/>

@@ -501,48 +501,6 @@ class Stat extends Component {
           {/*>Compute</Button>*/}
         </div>
 
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          {/*Main graph*/}
-          <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
-            <HorizontalGridLines />
-            <VerticalGridLines />
-            <XAxis on0={true}/>
-            <YAxis on0={true}/>
-            <ChartLabel
-              text="Price"
-              className="alt-x-label"
-              includeMargin={false}
-              xPercent={0.025}
-              yPercent={1.01}
-            />
-
-            <ChartLabel
-              text="Profit"
-              className="alt-y-label"
-              includeMargin={false}
-              xPercent={0.06}
-              yPercent={0.06}
-              style={{
-                transform: 'rotate(-90)',
-                textAnchor: 'end'
-              }}
-            />
-            <LineSeries
-              className="first-series"
-              onNearestX={this._onNearestX}
-              data={this.state.chart_data_current}
-            />
-            <LineSeries data={this.state.chart_data_at_zero} />
-            <Crosshair
-              values={this.state.crosshairValues}
-              className={'test-class-name'}
-            />
-            {/*<Crosshair*/}
-            {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
-            {/*className={'market-class-name'}*/}
-            {/*/>*/}
-          </XYPlot>
-        </div>
         <br/>
       </div>
     );

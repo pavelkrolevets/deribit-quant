@@ -14,12 +14,12 @@
 
 
 export function BlackScholes(PutCallFlag, S, X, T, r, v) {
-  var d1 = (Math.log(S / X) + (r + v * v / 2) * T) / (v * Math.sqrt(T));
+  var d1 = (Math.log(1 / (X/S)) + (r + v * v / 2) * T) / (v * Math.sqrt(T));
   var d2 = d1 - v * Math.sqrt(T);
   if (PutCallFlag === "call") {
-    return ( S * CND(d1) - X * Math.exp(-r * T) * CND(d2) );
+    return ( CND(d1) - (X/S) * Math.exp(-r * T) * CND(d2));
   } else {
-    return ( X * Math.exp(-r * T) * CND(-d2) - S * CND(-d1) );
+    return ( (X/S) * Math.exp(-r * T) * CND(-d2) - CND(-d1));
   }
 }
 
