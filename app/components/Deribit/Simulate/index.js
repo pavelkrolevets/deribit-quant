@@ -20,6 +20,16 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import Grid from '@material-ui/core/Grid';
+import DateFnsUtils from '@date-io/date-fns';
+import {
+  MuiPickersUtilsProvider,
+  KeyboardTimePicker,
+  KeyboardDatePicker,
+} from '@material-ui/pickers';
+import 'date-fns';
+
+
 
 import {
   XYPlot,
@@ -33,6 +43,7 @@ import {
   Crosshair
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
+
 
 
 
@@ -77,8 +88,8 @@ class Simulate extends Component {
       positions: [],
       indexBtc: 0,
       indexEth: 0,
-      index: 0,
-      volatility: 0,
+      index: 10000,
+      volatility: 0.6,
       account: [],
       time: new Date().toLocaleTimeString(),
       range_min:'',
@@ -101,34 +112,14 @@ class Simulate extends Component {
         { id: 101, strike: "27MAR202" },
         { id: 102, strike: "31JAN202" }],
       underlying_strike: "None",
-      strike_list: [
-        { id: 100, strike: "1000" },
-        { id: 101, strike: "2000" },
-        { id: 102, strike: "3000" },
-        { id: 103, strike: "4000" },
-        { id: 104, strike: "5000" },
-        { id: 105, strike: "6000" },
-        { id: 106, strike: "7000" },
-        { id: 107, strike: "8000" },
-        { id: 108, strike: "9000" },
-        { id: 109, strike: "10000" },
-        { id: 110, strike: "11000" },
-        { id: 111, strike: "12000" },
-        { id: 112, strike: "13000" },
-        { id: 113, strike: "14000" },
-        { id: 114, strike: "15000" },
-        { id: 115, strike: "16000" },
-        { id: 116, strike: "17000" },
-        { id: 117, strike: "18000" },
-        { id: 118, strike: "19000" },
-        { id: 119, strike: "20000" },
-      ],
+      strike_list: [],
       underlying_expiration: "None",
-      direction: "None",
+      direction: "Buy",
       direction_list: [{id:1, direction: "Buy"},{id:2, direction: "Sell"} ],
       ws_close: false,
       option_type: "call",
       impl_option_value: 0,
+      selectedDate: Date.now(),
     };
 
   }
@@ -181,7 +172,15 @@ class Simulate extends Component {
         })
       })
       .then((result) => {
-        that.getExpirations(result.result)}
+        that.getExpirations(result.result);
+        let strikes = [];
+        for (let i = 4000 ; i<=36000; i+=1000){
+          strikes.push({id: i, strike:i})
+        }
+        that.setState({ strike_list: strikes
+        });
+        that.getWebsocketsData();
+      }
       )
   }
 
@@ -213,60 +212,27 @@ class Simulate extends Component {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
   };
-
+  handleDateChange = name => event => {
+    console.log(name, event);
+    this.setState({ [name]: event });
+  };
   handleChangeCurrency = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
     if (event.target.value === 'BTC'){
-      this.setState({ strike_list:
-          [
-            { id: 100, strike: "1000" },
-            { id: 101, strike: "2000" },
-            { id: 102, strike: "3000" },
-            { id: 103, strike: "4000" },
-            { id: 104, strike: "5000" },
-            { id: 105, strike: "6000" },
-            { id: 106, strike: "7000" },
-            { id: 107, strike: "8000" },
-            { id: 108, strike: "9000" },
-            { id: 109, strike: "10000" },
-            { id: 110, strike: "11000" },
-            { id: 111, strike: "12000" },
-            { id: 112, strike: "13000" },
-            { id: 113, strike: "14000" },
-            { id: 114, strike: "15000" },
-            { id: 115, strike: "16000" },
-            { id: 116, strike: "17000" },
-            { id: 117, strike: "18000" },
-            { id: 118, strike: "19000" },
-            { id: 119, strike: "20000" },
-          ],
+      let strikes = [];
+      for (let i = 4000 ; i<=36000; i+=1000){
+        strikes.push({id: i, strike:i})
+      }
+      this.setState({ strike_list: strikes
       });
     }
     if (event.target.value === 'ETH'){
-      this.setState({ strike_list:
-          [
-            { id: 100, strike: "100" },
-            { id: 101, strike: "200" },
-            { id: 102, strike: "300" },
-            { id: 103, strike: "400" },
-            { id: 104, strike: "500" },
-            { id: 105, strike: "600" },
-            { id: 106, strike: "700" },
-            { id: 107, strike: "800" },
-            { id: 108, strike: "900" },
-            { id: 109, strike: "1000" },
-            { id: 110, strike: "1100" },
-            { id: 111, strike: "1200" },
-            { id: 112, strike: "1300" },
-            { id: 113, strike: "1400" },
-            { id: 114, strike: "1500" },
-            { id: 115, strike: "1600" },
-            { id: 116, strike: "1700" },
-            { id: 117, strike: "1800" },
-            { id: 118, strike: "1900" },
-            { id: 119, strike: "2000" },
-            ],
+      let strikes = [];
+      for (let i = 40 ; i<=800; i+=20){
+       strikes.push({id: i, strike:i})
+      }
+      this.setState({ strike_list: strikes
       });
     }
   };
@@ -359,45 +325,64 @@ class Simulate extends Component {
     let current_values = [];
     let values_at_zero = [];
     let date = new Date(this.state.underlying_expiration);
-    let now = Date.now();
+    let now = this.state.selectedDate;
     const diffTime = Math.abs(date - now);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const timeToExp = diffDays/365;
 
     if (this.state.underlying_currency === "BTC"){
       for (let i=1;i<=20002; i+=100){
-        let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
-        // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-        let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
+        if(this.state.direction === "Buy") {
+          let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility) - BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)) * i;
+          // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+          let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility) - BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)) * i
+          values_at_zero.push({'x':i, 'y':value_at_zero});
+          current_values.push({'x':i, 'y':current_value});
+        } else if (this.state.direction === "Sell") {
+          let current_value = (BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility) - (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))) * i;
+          // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+          let value_at_zero = (BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)) * i;
+          values_at_zero.push({'x':i, 'y':value_at_zero});
+          current_values.push({'x':i, 'y':current_value});
+        }
 
-        values_at_zero.push({'x':i, 'y':value_at_zero});
-        current_values.push({'x':i, 'y':current_value});
       }
       console.log("Value current:", current_values);
       console.log("Value at zero:", values_at_zero);
       this.setState({...this.state, chart_data_current: current_values});
       this.setState({...this.state, chart_data_at_zero: values_at_zero});
       this.setState({yDomain: [-10000, 10000]});
-      this.setState({index: this.state.indexBtc});
-      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.indexBtc, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
+      // this.setState({index: this.state.indexBtc});
+      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
 
     } else if (this.state.underlying_currency === "ETH") {
       for (let i=0.1;i<=1000; i+=10){
-        let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i ;
+        if(this.state.direction === "Buy") {
+          let current_value = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility) - BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)) * i;
 
-        // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-        let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility))*i;
+          // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+          let value_at_zero = (BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility) - BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)) * i;
 
-        values_at_zero.push({'x':i, 'y':value_at_zero});
-        current_values.push({'x':i, 'y':current_value});
+          values_at_zero.push({ 'x': i, 'y': value_at_zero });
+          current_values.push({ 'x': i, 'y': current_value });
+        } else if (this.state.direction === "Sell") {
+          let current_value = (BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, i, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)) * i;
+
+          // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
+          let value_at_zero = (BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)-BlackScholes(this.state.option_type, i, this.state.underlying_strike, 0.00001, 0.01, this.state.volatility)) * i;
+
+          values_at_zero.push({ 'x': i, 'y': value_at_zero });
+          current_values.push({ 'x': i, 'y': current_value });
+        }
+
       }
       console.log("Value current:", current_values);
       console.log("Value at zero:", values_at_zero);
       this.setState({...this.state, chart_data_current: current_values});
       this.setState({...this.state, chart_data_at_zero: values_at_zero});
       this.setState({yDomain: [-1000, 1000]});
-      this.setState({index: this.state.indexEth});
-      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.indexEth, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
+      // this.setState({index: this.state.indexEth});
+      this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
     }
 
 
@@ -515,22 +500,23 @@ class Simulate extends Component {
               </MenuItem>
               {
                 direction_list.map(item => {
-                  return <MenuItem value={item.id}>{item.direction}</MenuItem>
+                  return <MenuItem value={item.direction}>{item.direction}</MenuItem>
                 })
               }
             </Select>
           </FormControl>
-          {/*<TextField*/}
-          {/*  id="outlined-name"*/}
-          {/*  label="Index"*/}
-          {/*  className={classes.textField}*/}
-          {/*  onChange={this.handleChange('index')}*/}
-          {/*  margin="normal"*/}
-          {/*  variant="outlined"*/}
-          {/*  startAdornment={<InputAdornment position="start">$</InputAdornment>}*/}
-          {/*/>*/}
+          <TextField
+            value={this.state.index}
+            id="outlined-name"
+            label="Index"
+            className={classes.textField}
+            onChange={this.handleChange('index')}
+            margin="normal"
+            variant="outlined"
+          />
 
           <TextField
+            value={this.state.volatility}
             id="outlined-name"
             label="Vola"
             className={classes.textField}
@@ -540,12 +526,31 @@ class Simulate extends Component {
 
           />
 
-          <Button
-            className={classes.button}
-            onClick={()=>this.getWebsocketsData()}
-            variant="outlined"
-            // color="primary"
-          >Compute</Button>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+
+            <KeyboardDatePicker
+                disableToolbar
+                variant="inline"
+                format="MM/dd/yyyy"
+                margin="normal"
+                id="date-picker-inline"
+                label="Date"
+                value={this.state.selectedDate}
+                onChange={this.handleDateChange("selectedDate")}
+                KeyboardButtonProps={{
+                  'aria-label': 'change date',
+                }}
+              />
+
+          </MuiPickersUtilsProvider>
+          );
+
+          {/*<Button*/}
+          {/*  className={classes.button}*/}
+          {/*  onClick={()=>this.getWebsocketsData()}*/}
+          {/*  variant="outlined"*/}
+          {/*  // color="primary"*/}
+          {/*>Compute</Button>*/}
           {/*<Button*/}
           {/*  className={classes.button}*/}
           {/*  onClick={()=>this.unsubscribe()}*/}
