@@ -22,6 +22,11 @@ import Select from '@material-ui/core/Select';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Grid from '@material-ui/core/Grid';
 import DateFnsUtils from '@date-io/date-fns';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+import Typography from '@material-ui/core/Typography';
+
 import {
   MuiPickersUtilsProvider,
   KeyboardTimePicker,
@@ -69,6 +74,9 @@ const styles = theme => ({
   },
   textField:{
     width: "100px",
+  },
+  formControlLabel:{
+      color: 'primary',
   }
 });
 
@@ -120,6 +128,7 @@ class Simulate extends Component {
       option_type: "call",
       impl_option_value: 0,
       selectedDate: Date.now(),
+      manual_index: false,
     };
 
   }
@@ -211,6 +220,11 @@ class Simulate extends Component {
   handleChange = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
+  };
+
+  handleChangeCheckbox =  event => {
+    console.log(event.target.checked);
+    this.setState({ manual_index: event.target.checked });
   };
   handleDateChange = name => event => {
     console.log(name, event);
@@ -352,7 +366,10 @@ class Simulate extends Component {
       this.setState({...this.state, chart_data_current: current_values});
       this.setState({...this.state, chart_data_at_zero: values_at_zero});
       this.setState({yDomain: [-10000, 10000]});
-      // this.setState({index: this.state.indexBtc});
+      if (this.state.manual_index===false){
+        this.setState({index: this.state.indexBtc});
+      }
+
       this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
 
     } else if (this.state.underlying_currency === "ETH") {
@@ -381,7 +398,9 @@ class Simulate extends Component {
       this.setState({...this.state, chart_data_current: current_values});
       this.setState({...this.state, chart_data_at_zero: values_at_zero});
       this.setState({yDomain: [-1000, 1000]});
-      // this.setState({index: this.state.indexEth});
+      if (this.state.manual_index===false) {
+        this.setState({index: this.state.indexEth});
+      }
       this.setState({impl_option_value: BlackScholes(this.state.option_type, this.state.index, this.state.underlying_strike, timeToExp, 0.01, this.state.volatility)})
     }
 
@@ -401,6 +420,21 @@ class Simulate extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Analyze single option</h4>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+          <FormGroup row>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={this.state.manual_index}
+                onChange={this.handleChangeCheckbox}
+                color="primary"
+                inputProps={{ 'aria-label': 'primary checkbox' }}
+
+              />}
+            label={<Typography style={styles.formControlLabel} color='primary'>Manual index</Typography>}
+          />
+          </FormGroup>
+        </div>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
           <FormControl className={classes.formControl}>
             <InputLabel htmlFor="age-simple">Currency</InputLabel>
@@ -558,7 +592,7 @@ class Simulate extends Component {
           {/*  // color="primary"*/}
           {/*>Stop</Button>*/}
         </div>
-        <h5 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Implied option value {this.state.impl_option_value.toFixed(2)}</h5>
+        <h5 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Implied option value {this.state.impl_option_value.toFixed(4)}</h5>
         <h6 style={{color:"gray", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC: {this.state.indexBtc}, ETH: {this.state.indexEth}</h6>
 
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>

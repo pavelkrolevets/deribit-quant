@@ -2,9 +2,9 @@
 
 import axios from 'axios';
 
-let backend = 'http://localhost:5002';
+// let backend = 'http://localhost:5002';
 // let backend = 'http://161.117.194.3:5002';
-// let backend = 'https://0xbtc.me:5000';
+let backend = 'https://0xbtc.me:5000';
 
 export function validate_token(token) {
   return axios.post(backend+'/api/is_token_valid', {

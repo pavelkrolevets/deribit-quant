@@ -250,7 +250,7 @@ class Header extends Component {
                   Stats
                 </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/simulate')}>
-                  Simulate
+                  Single
                 </MenuItem>
                 <MenuItem onClick={() => this.props.history.push('/analyze')}>
                   Strategy
