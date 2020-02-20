@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import Web3 from 'web3';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 const Store = require('electron-store');
