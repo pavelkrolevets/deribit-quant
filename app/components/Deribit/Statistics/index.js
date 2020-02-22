@@ -32,6 +32,7 @@ import {
   Crosshair
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
+import { typeOfNode } from 'enzyme/src/Utils';
 
 
 
@@ -54,7 +55,10 @@ const styles = theme => ({
   },
   chart:{
 
-  }
+  },
+  elementPadding: {
+    padding: '20px',
+  },
 });
 
 const deribit_http = "https://www.deribit.com";
@@ -68,7 +72,6 @@ class Stat extends Component {
       chart_data_at_zero: [],
       trade_price: 10,
       crosshairValues: [],
-      yDomain: [-7000, 7000],
       keys: {},
       positions: [],
       indexBtc: 0,
@@ -170,21 +173,19 @@ class Stat extends Component {
         that.setState({ index: result.result.btc });
         return result
       })
-      .then(()=> {
-        return that.computePnL()
-      })
       .then(() => {
         return new Promise(function (resolve, reject){
           restClient.getinstruments((result) => {
+            console.log("Instruments: ", result);
             let instruments = result.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
 
             let futures = [];
             for (let item of instruments) {
               if (item.kind == "future"){
-                futures.push(item.instrumentName);
+                futures.push({instrumentName: item.instrumentName, expiration: item.expiration});
               }
             }
-            console.log("Instruments: ", futures);
+            // console.log("Instruments: ", futures);
             that.setState({ instruments: futures});
             resolve(instruments)
           });
@@ -312,29 +313,31 @@ class Stat extends Component {
         if(data.length > 0)
         {
           var obj = JSON.parse(data);
-          // console.log("Data ", obj.notifications);
+          console.log("Data ", obj.notifications);
           if (typeof obj.notifications !== "undefined"){
             for (let item of that.state.instruments){
-              if (item === obj.notifications[0].result.instrument) {
-                if (item !== "BTC-PERPETUAL"&&item.substring(0,3)==="BTC"){
-                    let fut_ret = (parseInt(that.state[item])/parseInt(that.state["BTC-PERPETUAL"]) - 1)*100;
-                    let new_item = "RET-"+item.toString();
+              if (item.instrumentName === obj.notifications[0].result.instrument) {
+                if (item.instrumentName !== "BTC-PERPETUAL"&&item.instrumentName.substring(0,3)==="BTC"){
+                    let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["BTC-PERPETUAL"]) - 1)*100;
+                    let new_item = "RET-"+item.instrumentName.toString();
                     that.setState({[new_item]: fut_ret.toFixed(2)});
-                    that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
-                    console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
-                } else if (item !== "ETH-PERPETUAL"&&item.substring(0,3)==="ETH"){
-                  let fut_ret = (parseInt(that.state[item])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*100;
-                  let new_item = "RET-"+item.toString();
+                    that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
+                    // that.setState()
+                    console.log("Instrument ", that.state[item.instrumentName], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
+                } else if (item.instrumentName !== "ETH-PERPETUAL"&&item.instrumentName.substring(0,3)==="ETH"){
+                  let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*100;
+                  let new_item = "RET-"+item.instrumentName.toString();
                   that.setState({[new_item]: fut_ret.toFixed(2)});
-                  that.setState({[item]: obj.notifications[0].result.last.toFixed(2)});
-                  console.log("Instrument ", that.state[item], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
+                  that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
+                  console.log("Instrument ", that.state[item.instrumentName], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
                 } else {
                   let new_item = "RET-"+item.toString();
                   that.setState({[new_item]: (0).toFixed(2)});
-                  that.setState({[item]: obj.notifications[0].result.last});
+                  that.setState({[item.instrumentName]: obj.notifications[0].result.last});
                 }
+                that.getChartFromInstruments();
 
-                if ( that.state.ws_close === true){
+                  if ( that.state.ws_close === true){
                   console.log("Closing ws...");
                   ws.close();
                 }
@@ -345,6 +348,41 @@ class Stat extends Component {
         }
       });
     })
+  }
+
+  getChartFromInstruments(){
+    let chartBTC =[];
+    let chartETH =[];
+    for (let item of this.state.instruments){
+      let date = new Date();
+
+      if (item.instrumentName === "BTC-PERPETUAL" || item.instrumentName === "ETH-PERPETUAL"){
+        date = Date.now();
+      } else {
+        date = new Date(item.expiration);
+      }
+
+      if (item.instrumentName.substring(0,3)==="BTC"){
+        chartBTC.push({"x": date, "y":parseInt(this.state[item.instrumentName])})
+      }
+      if (item.instrumentName.substring(0,3)==="ETH"){
+        chartETH.push({"x": date, "y":parseInt(this.state[item.instrumentName])})
+      }
+    }
+    chartETH.sort( (a, b) => {
+      if (typeof a.x!=='undefined'&&typeof b.x!=='undefined') {
+        return a.x-b.x;
+      }
+    });
+
+    chartBTC.sort( (a, b) => {
+      if (typeof a.x!=='undefined'&&typeof b.x!=='undefined') {
+        return a.x-b.x;
+      }
+    });
+    this.setState({chartETH: chartETH});
+    this.setState({chartBTC: chartBTC});
+    console.log("Chart data", chartBTC, chartETH);
   }
 
   unsubscribe(){
@@ -404,25 +442,6 @@ class Stat extends Component {
 
   }
 
-  async computePnL(){
-    let range_min = 10;
-    let range_max = parseInt(this.state.index)+parseInt(this.state.index)*this.state.zoom;
-    // if (parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom < 0){
-    //   range_min = 0;
-    // }
-    // else {
-    //   range_min = parseInt(this.state.index)-parseInt(this.state.index)*this.state.zoom;
-    // }
-
-    let step = 100;
-    let risk_free = 0.03;
-    let vola = 0.8;
-    compute_pnl(this.props.user.token,this.props.email, range_min, range_max, step, risk_free, vola)
-      .then(result => {console.log("Compute PNL 417",result.data.pnl);
-        this.setState({chart_data_current: result.data.pnl,
-          chart_data_at_zero: result.data.pnl_at_exp})})
-  }
-
   zoomIn(){
     let that = this;
     let promise = new Promise(function(resolve, reject) {
@@ -460,6 +479,8 @@ class Stat extends Component {
     }
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+        <Paper className={classes.elementPadding}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Statistics</h4>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
           <Table className={classes.table} style={{maxWidth: "100%"}}>
@@ -475,17 +496,17 @@ class Stat extends Component {
                 <TableRow>
                   <TableCell align="left">
                     {
-                      item
+                      item.instrumentName
                     }
                   </TableCell>
                   <TableCell align="left">
                     {
-                      this.state[item]
+                      this.state[item.instrumentName]
                     }
                   </TableCell>
                   <TableCell align="left">
                     {
-                      this.state["RET-"+item]
+                      this.state["RET-"+item.instrumentName]
                     }
                   </TableCell>
                 </TableRow>
@@ -502,7 +523,87 @@ class Stat extends Component {
         </div>
 
         <br/>
+        </Paper>
+
+
+          <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
+          <Paper className={classes.elementPadding}>
+            {/*Main graph*/}
+            <XYPlot width={300} height={200} xType="time">
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis tickLabelAngle={-45} />
+              <YAxis />
+              <ChartLabel
+                text="Date"
+                className="alt-x-label"
+                includeMargin={false}
+                xPercent={0.025}
+                yPercent={1.01}
+              />
+              <ChartLabel
+                text="Price"
+                className="alt-y-label"
+                includeMargin={false}
+                xPercent={0.06}
+                yPercent={0.06}
+                style={{
+                  transform: 'rotate(-90)',
+                  textAnchor: 'end'
+                }}
+              />
+              <LineSeries
+                data={this.state.chartBTC}
+                style={{
+                  strokeLinejoin: 'round',
+                  strokeWidth: 2
+                }}
+              />
+            </XYPlot>
+          </Paper>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot width={300} height={200} xType="time">
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <ChartLabel
+                  text="Date"
+                  className="alt-x-label"
+                  includeMargin={false}
+                  xPercent={0.025}
+                  yPercent={1.01}
+                />
+
+                <ChartLabel
+                  text="Price"
+                  className="alt-y-label"
+                  includeMargin={false}
+                  xPercent={0.06}
+                  yPercent={0.06}
+                  style={{
+                    transform: 'rotate(-90)',
+                    textAnchor: 'end'
+                  }}
+                />
+                <LineSeries
+                  data={this.state.chartETH}
+                  style={{
+                    strokeLinejoin: 'round',
+                    strokeWidth: 2
+                  }}
+                />
+
+              </XYPlot>
+            </Paper>
+
+          </div>
+
+
+        </div>
       </div>
+
     );
   }
 }
