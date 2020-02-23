@@ -29,7 +29,9 @@ import {
   VerticalGridLines,
   LineSeries,
   LineSeriesCanvas,
-  Crosshair
+  Crosshair,
+  MarkSeries,
+  LabelSeries
 } from 'react-vis';
 import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
 import { typeOfNode } from 'enzyme/src/Utils';
@@ -318,14 +320,18 @@ class Stat extends Component {
             for (let item of that.state.instruments){
               if (item.instrumentName === obj.notifications[0].result.instrument) {
                 if (item.instrumentName !== "BTC-PERPETUAL"&&item.instrumentName.substring(0,3)==="BTC"){
-                    let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["BTC-PERPETUAL"]) - 1)*100;
+                  const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    let fut_ret = ((parseInt(that.state[item.instrumentName])/parseInt(that.state["BTC-PERPETUAL"]) - 1))*(365/diffDays)*100;
                     let new_item = "RET-"+item.instrumentName.toString();
                     that.setState({[new_item]: fut_ret.toFixed(2)});
                     that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
                     // that.setState()
                     console.log("Instrument ", that.state[item.instrumentName], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
                 } else if (item.instrumentName !== "ETH-PERPETUAL"&&item.instrumentName.substring(0,3)==="ETH"){
-                  let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*100;
+                  const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*(365/diffDays)*100;
                   let new_item = "RET-"+item.instrumentName.toString();
                   that.setState({[new_item]: fut_ret.toFixed(2)});
                   that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
@@ -363,10 +369,10 @@ class Stat extends Component {
       }
 
       if (item.instrumentName.substring(0,3)==="BTC"){
-        chartBTC.push({"x": date, "y":parseInt(this.state[item.instrumentName])})
+        chartBTC.push({"x": date, "y":parseInt(this.state[item.instrumentName]), "label": item.instrumentName, style: {fontSize: 8}})
       }
       if (item.instrumentName.substring(0,3)==="ETH"){
-        chartETH.push({"x": date, "y":parseInt(this.state[item.instrumentName])})
+        chartETH.push({"x": date, "y":parseInt(this.state[item.instrumentName]), "label": item.instrumentName, style: {fontSize: 8}})
       }
     }
     chartETH.sort( (a, b) => {
@@ -481,14 +487,14 @@ class Stat extends Component {
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
         <Paper className={classes.elementPadding}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Statistics</h4>
+        <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Short Futures Returns</h5>
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
           <Table className={classes.table} style={{maxWidth: "100%"}}>
             <TableHead>
               <TableRow>
                 <TableCell align="left">Instrument</TableCell>
                 <TableCell align="left">Last</TableCell>
-                <TableCell align="left">Return %</TableCell>
+                <TableCell align="left">APR %</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -529,71 +535,31 @@ class Stat extends Component {
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
           <Paper className={classes.elementPadding}>
             {/*Main graph*/}
-            <XYPlot width={300} height={200} xType="time">
+            <XYPlot width={300} height={200} xType="time" margin={{bottom: 30, left: 50, right: 10, top: 20}}>
               <HorizontalGridLines />
               <VerticalGridLines />
               <XAxis tickLabelAngle={-45} />
               <YAxis />
-              <ChartLabel
-                text="Date"
-                className="alt-x-label"
-                includeMargin={false}
-                xPercent={0.025}
-                yPercent={1.01}
-              />
-              <ChartLabel
-                text="Price"
-                className="alt-y-label"
-                includeMargin={false}
-                xPercent={0.06}
-                yPercent={0.06}
-                style={{
-                  transform: 'rotate(-90)',
-                  textAnchor: 'end'
-                }}
-              />
-              <LineSeries
+              <MarkSeries
                 data={this.state.chartBTC}
-                style={{
-                  strokeLinejoin: 'round',
-                  strokeWidth: 2
-                }}
               />
+              <LabelSeries animation allowOffsetToBeReversed data={this.state.chartBTC}/>
             </XYPlot>
           </Paper>
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={300} height={200} xType="time">
+              <XYPlot width={300} height={200} xType="time" margin={{bottom: 30, left: 50, right: 10, top: 20}}>
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
                 <YAxis />
-                <ChartLabel
-                  text="Date"
-                  className="alt-x-label"
-                  includeMargin={false}
-                  xPercent={0.025}
-                  yPercent={1.01}
-                />
-
-                <ChartLabel
-                  text="Price"
-                  className="alt-y-label"
-                  includeMargin={false}
-                  xPercent={0.06}
-                  yPercent={0.06}
-                  style={{
-                    transform: 'rotate(-90)',
-                    textAnchor: 'end'
-                  }}
-                />
-                <LineSeries
+                <MarkSeries
+                  className="mark-series-example"
+                  strokeWidth={2}
+                  sizeRange={[5, 15]}
                   data={this.state.chartETH}
-                  style={{
-                    strokeLinejoin: 'round',
-                    strokeWidth: 2
-                  }}
                 />
+                <LabelSeries animation allowOffsetToBeReversed data={this.state.chartETH}/>
 
               </XYPlot>
             </Paper>
