@@ -13,6 +13,11 @@ import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ZoomIn from '@material-ui/icons/Add';
 import ZoomOut from '@material-ui/icons/Remove';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
+import Grid from '@material-ui/core/Grid';
+import Typography from '@material-ui/core/Typography';
 
 import {
   XYPlot,
@@ -74,6 +79,7 @@ class DeribitOptionPos extends Component {
       risk_free:'',
       vola:'',
       zoom: 1.2,
+      currency_type: true
     };
 
   }
@@ -81,12 +87,22 @@ class DeribitOptionPos extends Component {
 
   async componentWillMount(){
 
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      });
-
-    await this.updateData();
+    let token = this.props.user.token;
+    let email = this.props.email;
+    let that = this;
+    let promise = new Promise(function (resolve, reject) {
+      resolve(get_api_keys(token, email)
+        .then(result=> {console.log(result);
+          that.setState({keys: result.data});
+          return null;
+        }))
+    })
+      .then(function(result) {
+          return new Promise (function(resolve, reject) {
+            resolve(that.updateData())
+          })
+        }
+      );
 
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
@@ -102,13 +118,22 @@ class DeribitOptionPos extends Component {
 
   async updateData(){
 
-    let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = await require("deribit-api").RestClient;
+    // this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
-    await this.restClient.index((result) => {
+
+    const ccxt = await require('ccxt');
+
+    let deribit = new ccxt.deribit ({
+      apiKey: this.state.keys.api_pubkey,
+      secret:  this.state.keys.api_privkey,
+    });
+    console.log (deribit.id, await deribit.fetchOrderBook("BTC-PERPETUAL"));
+
+    await this.deribit.index((result) => {
       console.log("Index: ", result);
       this.setState({index: result.result.btc});
-      this.restClient.positions((result) => {
+      this.deribit.positions((result) => {
           console.log("Positions: ", result.result);
           this.setState({positions: result.result});
           let strike = this.getStrike(this.state.positions[0].instrument);
@@ -117,10 +142,10 @@ class DeribitOptionPos extends Component {
         })
     });
 
-    await this.restClient.account((result) => {
-      console.log("Account: ", result.result);
-      this.setState({account: [result.result]});
-    });
+    // await this.restClient.account((result) => {
+    //   console.log("Account: ", result.result);
+    //   this.setState({account: [result.result]});
+    // });
   }
 
   async componentDidMount() {
@@ -237,6 +262,10 @@ class DeribitOptionPos extends Component {
     promise.then(()=>this.computePnL());
   }
 
+  handleCurrencyTypeChange = event => {
+    setState({ ...state, [event.target.name]: event.target.checked });
+  };
+
   render() {
     const {classes} = this.props;
     const {useCanvas} = this.state;
@@ -246,6 +275,23 @@ class DeribitOptionPos extends Component {
     return (
       <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
         <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
+
+        <FormGroup>
+          <Typography component="div">
+            <Grid component="label" container alignItems="center" spacing={1}>
+              <Grid item>Off</Grid>
+              <Grid item>
+                <Switch
+                  checked={this.state.currency_type}
+                  onChange={this.handleCurrencyTypeChange("currency_type")}
+                  color="primary"
+                />
+              </Grid>
+              <Grid item>On</Grid>
+            </Grid>
+          </Typography>
+        </FormGroup>
+
         <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
           <h6 style={{color:"#152880"}}>Range</h6>
           <div style={{display: 'flex',  justifyContent:'left', alignItems:'left'}}>

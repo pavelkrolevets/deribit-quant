@@ -63,7 +63,8 @@ const styles = theme => ({
   },
 });
 
-const deribit_http = "https://www.deribit.com";
+const WebSocket = require('ws');
+const ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
 
 class Stat extends Component {
   constructor(props) {
@@ -151,52 +152,165 @@ class Stat extends Component {
       );
 
   }
-  componentWillUnmount() {
-    let that = this;
-    setTimeout(function() {
-      that.unsubscribe();
-    }, 1000);
-  }
+  // componentWillUnmount() {
+  //   let that = this;
+  //   setTimeout(function() {
+  //     that.unsubscribe();
+  //   }, 1000);
+  // }
 
-  async componentDidMount(){
-    setTimeout(function() {
-      this.getWebsocketsData()
-    }.bind(this), 2000);
-  }
+  // async componentDidMount(){
+  //   setTimeout(function() {
+  //     this.getWebsocketsData()
+  //   }.bind(this), 2000);
+  // }
 
   async updateData(){
     let that = this;
-    let RestClient = await require("deribit-api").RestClient;
-    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = await require("deribit-api").RestClient;
+    // let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
-    restClient.index()
-      .then((result) => {
-        console.log("Index: ", result);
-        that.setState({ index: result.result.btc });
-        return result
-      })
-      .then(() => {
-        return new Promise(function (resolve, reject){
-          restClient.getinstruments((result) => {
-            console.log("Instruments: ", result);
-            let instruments = result.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
 
-            let futures = [];
-            for (let item of instruments) {
-              if (item.kind == "future"){
-                futures.push({instrumentName: item.instrumentName, expiration: item.expiration});
-              }
-            }
-            // console.log("Instruments: ", futures);
-            that.setState({ instruments: futures});
-            resolve(instruments)
-          });
-        })
-      })
-      .then((result) => {
-        that.getExpirations(result.result)}
-      )
+    var auth =
+      {
+        "jsonrpc" : "2.0",
+        "id" : 9929,
+        "method" : "public/auth",
+        "params" : {
+          "grant_type" : "client_credentials",
+          "client_id" : this.state.keys.api_pubkey,
+          "client_secret" : this.state.keys.api_privkey
+        }
+      };
+
+    var msg2 =
+      {
+        "jsonrpc": "2.0",
+        "method": "public/get_index",
+        "id": 1001,
+        "params": {
+          "currency": "BTC"}
+      };
+
+    var msg3 =
+      {
+        "jsonrpc" : "2.0",
+        "id" : 2236,
+        "method" : "private/get_positions",
+        "params" : {
+          "currency" : "ETH",
+          "kind" : "future"
+        }
+      };
+
+    var msg4 =
+      {
+        "jsonrpc" : "2.0",
+        "id" : 1002,
+        "method" : "public/getinstruments",
+        "params" : {
+          // "currency" : "BTC",
+          // "kind" : "future",
+          "expired" : false
+        }
+      };
+
+    var msg5 =
+      {
+        "jsonrpc" : "2.0",
+        "id" : 9344,
+        "method" : "public/get_book_summary_by_currency",
+        "params" : {
+          "currency" : "BTC",
+          "kind" : "future"
+        }
+      };
+
+    ws.onmessage = function (e) {
+      // do something with the response...
+      // console.log('received from server : ', e.data);
+      that.eventHandler(e.data);
+
+    };
+    ws.onopen = async function () {
+      await ws.send(JSON.stringify(auth));
+      await setInterval(() =>  {
+
+        ws.send(JSON.stringify(msg2));
+        ws.send(JSON.stringify(msg4));
+        ws.send(JSON.stringify(msg5))
+
+      }, 5000);
+
+    };
+
+
+    // deribit.index()
+    //   .then((result) => {
+    //     console.log("Index: ", result);
+    //     that.setState({ index: result.result.btc });
+    //     return result
+    //   })
+    //   .then(() => {
+    //     return new Promise(function (resolve, reject){
+    //       deribit.getinstruments((result) => {
+    //         // console.log("Instruments: ", result);
+    //         let instruments = result.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
+    //
+    //         let futures = [];
+    //         for (let item of instruments) {
+    //           if (item.kind == "future"){
+    //             futures.push({instrumentName: item.instrumentName, expiration: item.expiration});
+    //           }
+    //         }
+    //         console.log("Instruments: ", futures);
+    //         that.setState({ instruments: futures});
+    //         resolve(instruments)
+    //       });
+    //     })
+    //   })
+    //   .then((result) => {
+    //     that.getExpirations(result.result)}
+    //   )
   }
+
+  eventHandler (data) {
+    if (typeof data !== "undefined"){
+      let parsed = JSON.parse(data);
+
+      if (parsed.id === 1001){
+        console.log("Index ", parsed.result.BTC);
+        this.setState({ index: parsed.result.BTC});
+      }
+
+      if (parsed.id === 1002){
+        let that = this;
+        // console.log("Index ", parsed.result);
+        new Promise(function (resolve, reject){
+                // console.log("Instruments: ", result);
+                let instruments = parsed.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
+
+                let futures = [];
+                for (let item of instruments) {
+                  if (item.kind === "future"){
+                    futures.push({instrumentName: item.instrumentName, expiration: item.expiration});
+                  }
+                }
+                console.log("Instruments: ", futures);
+                that.setState({ instruments: futures});
+                resolve(futures)
+              }).then((result) => {
+                console.log(result);
+              this.getExpirations(result)})
+                .then()
+      }
+      if (parsed.id === 9344){
+        console.log("Book ", parsed.result);
+      }
+
+    }
+  }
+
 
 
   getExpirations(instruments){
@@ -289,8 +403,8 @@ class Stat extends Component {
   getWebsocketsData(){
     let that=this;
     return new Promise(function(resolve, reject) {
-      let RestClient = require("deribit-api").RestClient;
-      let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
+      // let RestClient = require("deribit-api").RestClient;
+      // let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
 
       const WebSocket = require('ws');
       const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
@@ -304,7 +418,7 @@ class Stat extends Component {
           "id": 5230,
           "action": "/api/v1/private/subscribe",
           "arguments": args,
-          sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+          // sig: restClient.generateSignature("/api/v1/private/subscribe", args)
         };
         console.log('Request object', obj);
         resolve(ws.send(JSON.stringify(obj)));

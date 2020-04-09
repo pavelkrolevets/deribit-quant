@@ -105,7 +105,6 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const deribit_http = "https://www.deribit.com";
 
 const styles = theme => ({
   root: {
@@ -238,8 +237,8 @@ class Analize extends Component {
 
   async updateData(){
     let that = this;
-    let RestClient = await require("deribit-api").RestClient;
-    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = await require("deribit-api").RestClient;
+    // let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     restClient.index()
       .then((result) => {
@@ -347,9 +346,10 @@ class Analize extends Component {
 
   async searchInstrument(){
     console.log("Adding instrument: ", this.state.instrument);
-    let RestClient = await require("deribit-api").RestClient;
-    this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = await require("deribit-api").RestClient;
+    // this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
     // let instrument = this.state.instrument+"-"+this.state.expiration+"-"+this.state.strike+"-"+this.state.type;
+
     await this.restClient.getsummary(this.state.instrument)
       .then(response => {
         console.log(response);
@@ -373,8 +373,8 @@ class Analize extends Component {
   }
 
   unsubscribe(instrument){
-    let RestClient = require("deribit-api").RestClient;
-    let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = require("deribit-api").RestClient;
+    // let restClient = new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     const WebSocket = require('ws');
     const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
@@ -494,7 +494,7 @@ class Analize extends Component {
   async getInstrument(){
     let that =this;
     return new Promise(function(resolve, reject) {
-      let RestClient = require("deribit-api").RestClient;
+      // let RestClient = require("deribit-api").RestClient;
       that.restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
         that.restClient.getsummary(that.state.instrument)
         .then(response => {
@@ -514,8 +514,8 @@ class Analize extends Component {
     console.log("Instrument", instrument);
     let that=this;
     return new Promise(function(resolve, reject) {
-      let RestClient = require("deribit-api").RestClient;
-      let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
+      // let RestClient = require("deribit-api").RestClient;
+      // let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
 
       const WebSocket = require('ws');
       const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');

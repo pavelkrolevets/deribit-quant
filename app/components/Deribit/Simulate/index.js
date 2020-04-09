@@ -161,8 +161,8 @@ class Simulate extends Component {
 
   async updateData(){
     let that = this;
-    let RestClient = await require("deribit-api").RestClient;
-    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // let RestClient = await require("deribit-api").RestClient;
+    // let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
     restClient.index()
       .then((result) => {
@@ -256,8 +256,8 @@ class Simulate extends Component {
     this.setState({...this.state, ws_close: false});
 
     return new Promise(function(resolve, reject) {
-      let RestClient = require("deribit-api").RestClient;
-      let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
+      // let RestClient = require("deribit-api").RestClient;
+      // let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
 
       const WebSocket = require('ws');
       const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
