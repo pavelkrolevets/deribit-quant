@@ -154,14 +154,19 @@ class Stat extends Component {
   componentWillUnmount() {
     let that = this;
     setTimeout(function() {
-      that.unsubscribe();
+      this.ws_unsubscribe();
     }, 1000);
   }
 
   async componentDidMount(){
+    let that = this;
     setTimeout(function() {
-      this.getWebsocketsData()
+      this.getWebsocketsData();
     }.bind(this), 2000);
+
+    setInterval(function() {
+      this.computeReturns();
+    }.bind(this), 3000)
   }
 
   async updateData(){
@@ -311,49 +316,52 @@ class Stat extends Component {
       });
 
       ws.on('message', function incoming(data) {
-        console.log('on message');
+        // console.log('on message');
         if(data.length > 0)
         {
           var obj = JSON.parse(data);
-          console.log("Data ", obj.notifications);
+          // console.log("Data ", obj.notifications);
+
           if (typeof obj.notifications !== "undefined"){
-            for (let item of that.state.instruments){
-              if (item.instrumentName === obj.notifications[0].result.instrument) {
-                if (item.instrumentName !== "BTC-PERPETUAL"&&item.instrumentName.substring(0,3)==="BTC"){
-                  const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    let fut_ret = ((parseInt(that.state[item.instrumentName])/parseInt(that.state["BTC-PERPETUAL"]) - 1))*(365/diffDays)*100;
-                    let new_item = "RET-"+item.instrumentName.toString();
-                    that.setState({[new_item]: fut_ret.toFixed(2)});
-                    that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
-                    // that.setState()
-                    console.log("Instrument ", that.state[item.instrumentName], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
-                } else if (item.instrumentName !== "ETH-PERPETUAL"&&item.instrumentName.substring(0,3)==="ETH"){
-                  const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  let fut_ret = (parseInt(that.state[item.instrumentName])/parseInt(that.state["ETH-PERPETUAL"]) - 1)*(365/diffDays)*100;
-                  let new_item = "RET-"+item.instrumentName.toString();
-                  that.setState({[new_item]: fut_ret.toFixed(2)});
-                  that.setState({[item.instrumentName]: obj.notifications[0].result.last.toFixed(2)});
-                  console.log("Instrument ", that.state[item.instrumentName], " last " ,obj.notifications[0].result.last, "Return", that.state[new_item]);
-                } else {
-                  let new_item = "RET-"+item.toString();
-                  that.setState({[new_item]: (0).toFixed(2)});
-                  that.setState({[item.instrumentName]: obj.notifications[0].result.last});
-                }
-                that.getChartFromInstruments();
-
-                  if ( that.state.ws_close === true){
-                  console.log("Closing ws...");
-                  ws.close();
-                }
-
-              }
-            }
+            that.setState({["ws_"+obj.notifications[0].result.instrument]: obj});
           }
         }
       });
     })
+  }
+
+  computeReturns(){
+    // console.log("Hello");
+    for (let item of this.state.instruments){
+      // console.log("Hello", this.state["ws_"+item.instrumentName]);
+      if (typeof this.state["ws_"+item.instrumentName] !== "undefined") {
+
+        if (item.instrumentName !== "BTC-PERPETUAL" && item.instrumentName.substring(0, 3) === "BTC") {
+          const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          let fut_ret = ((parseInt(this.state[item.instrumentName]) / parseInt(this.state["BTC-PERPETUAL"]) - 1)) * (365 / diffDays) * 100;
+          let new_item = "RET-" + item.instrumentName.toString();
+          this.setState({ [new_item]: fut_ret.toFixed(2) });
+          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last.toFixed(2) });
+          // that.setState()
+          // console.log("Instrument ", this.state[item.instrumentName], " last ", this.state["ws_" + item.instrumentName].notifications[0].result.last, "Return", this.state[new_item]);
+        } else if (item.instrumentName !== "ETH-PERPETUAL" && item.instrumentName.substring(0, 3) === "ETH") {
+          const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          let fut_ret = (parseInt(this.state[item.instrumentName]) / parseInt(this.state["ETH-PERPETUAL"]) - 1) * (365 / diffDays) * 100;
+          let new_item = "RET-" + item.instrumentName.toString();
+          this.setState({ [new_item]: fut_ret.toFixed(2) });
+          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last.toFixed(2) });
+          // console.log("Instrument ", this.state[item.instrumentName], " last ", this.state["ws_" + item.instrumentName].notifications[0].result.last, "Return", this.state[new_item]);
+        } else {
+          let new_item = "RET-" + item.toString();
+          this.setState({ [new_item]: (0).toFixed(2) });
+          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last });
+        }
+
+        this.getChartFromInstruments();
+      }
+    }
   }
 
   getChartFromInstruments(){
@@ -388,10 +396,10 @@ class Stat extends Component {
     });
     this.setState({chartETH: chartETH});
     this.setState({chartBTC: chartBTC});
-    console.log("Chart data", chartBTC, chartETH);
+    // console.log("Chart data", chartBTC, chartETH);
   }
 
-  unsubscribe(){
+  ws_unsubscribe(){
     this.setState({...this.state, ws_close: true});
   }
 
@@ -535,7 +543,7 @@ class Stat extends Component {
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
           <Paper className={classes.elementPadding}>
             {/*Main graph*/}
-            <XYPlot width={300} height={200} xType="time" margin={{bottom: 30, left: 50, right: 10, top: 20}}>
+            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
               <HorizontalGridLines />
               <VerticalGridLines />
               <XAxis tickLabelAngle={-45} />
@@ -548,7 +556,7 @@ class Stat extends Component {
           </Paper>
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={300} height={200} xType="time" margin={{bottom: 30, left: 50, right: 10, top: 20}}>
+              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
