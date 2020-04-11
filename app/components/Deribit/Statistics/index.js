@@ -210,7 +210,7 @@ class Stat extends Component {
         "method" : "public/getinstruments",
         "params" : {
           // "currency" : "BTC",
-          // "kind" : "future",
+          "kind" : "future",
           "expired" : false
         }
       };
@@ -304,8 +304,20 @@ class Stat extends Component {
               this.getExpirations(result)})
                 .then()
       }
+
       if (parsed.id === 9344){
         console.log("Book ", parsed.result);
+        let btcReturns = [];
+        for (let item of parsed.result) {
+            console.log(item.instrument_name, item.last);
+          var date = new Date(item);
+          let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
+          // let jsonString = new Object();
+          // jsonString[exp] = "";
+          // JSON.stringify(jsonString);
+          result.push(exp);
+
+        }
       }
 
     }

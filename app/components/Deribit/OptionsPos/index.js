@@ -1,4 +1,5 @@
 // @flow
+import { forwardRef } from 'react';
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles/index';
 import PropTypes from 'prop-types';
@@ -81,12 +82,19 @@ class DeribitOptionPos extends Component {
       zoom: 1.2,
       currency_type: true
     };
-
+    this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
 
+  updateWindowDimensions() {
+    this.setState({ width: window.innerWidth, height: window.innerHeight });
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateWindowDimensions);
+  }
 
-  async componentWillMount(){
+  componentWillMount(){
 
+    window.removeEventListener('resize', this.updateWindowDimensions);
     let token = this.props.user.token;
     let email = this.props.email;
     let that = this;
@@ -102,38 +110,27 @@ class DeribitOptionPos extends Component {
             resolve(that.updateData())
           })
         }
-      );
-
-    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-    // this.web3.eth.getAccounts(function (error, res) {
-    //   if (!error) {
-    //     console.log(res);
-    //   } else {
-    //     console.log(error);
-    //   }
-    // });
+      )
   }
 
-
   async updateData(){
+    let that = this;
+    let RestClient = await require("deribit-api").RestClient;
+    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
 
-    // let RestClient = await require("deribit-api").RestClient;
-    // this.restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    // console.log(this.restClient);
+    // const ccxt = await require('ccxt');
 
+    // let deribit = new ccxt.deribit ({
+    //   apiKey: this.state.keys.api_pubkey,
+    //   secret:  this.state.keys.api_privkey,
+    // });
+    // console.log (deribit.id, await deribit.fetchOrderBook("BTC-PERPETUAL"));
 
-    const ccxt = await require('ccxt');
-
-    let deribit = new ccxt.deribit ({
-      apiKey: this.state.keys.api_pubkey,
-      secret:  this.state.keys.api_privkey,
-    });
-    console.log (deribit.id, await deribit.fetchOrderBook("BTC-PERPETUAL"));
-
-    await this.deribit.index((result) => {
+    restClient.index((result) => {
       console.log("Index: ", result);
       this.setState({index: result.result.btc});
-      this.deribit.positions((result) => {
+      restClient.positions((result) => {
           console.log("Positions: ", result.result);
           this.setState({positions: result.result});
           let strike = this.getStrike(this.state.positions[0].instrument);
@@ -263,7 +260,7 @@ class DeribitOptionPos extends Component {
   }
 
   handleCurrencyTypeChange = event => {
-    setState({ ...state, [event.target.name]: event.target.checked });
+    this.setState({ ...state, [event.target.name]: event.target.checked });
   };
 
   render() {
