@@ -2,9 +2,9 @@
 
 import axios from 'axios';
 
-let backend = 'http://localhost:5002';
+// let backend = 'http://localhost:5002';
 // let backend = 'http://161.117.194.3:5002';
-// let backend = 'https://0xbtc.me:5000';
+let backend = 'https://0xbtc.me:5000';
 
 export function validate_token(token) {
   return axios.post(backend+'/api/is_token_valid', {
@@ -163,5 +163,17 @@ export function analaize_positions(token, email, positions, range_min, range_max
     step,
     risk_free,
     vola
+  });
+}
+
+export function get_btc_contango(token) {
+  return axios.post(backend+'/api/get_btc_contango', {
+    token
+  });
+}
+
+export function get_eth_contango(token) {
+  return axios.post(backend+'/api/get_eth_contango', {
+    token
   });
 }

@@ -33,7 +33,7 @@ import {
   MarkSeries,
   LabelSeries
 } from 'react-vis';
-import { compute_bsm, get_api_keys, compute_pnl } from '../../../utils/http_functions';
+import { compute_bsm, get_api_keys, compute_pnl, get_btc_contango, get_eth_contango} from '../../../utils/http_functions';
 import { typeOfNode } from 'enzyme/src/Utils';
 
 
@@ -124,7 +124,12 @@ class Stat extends Component {
         { id: 119, strike: "20000" },
       ],
       underlying_expiration: "",
-      ws_close: false
+      ws_close: false,
+      btc_3_months_contango: [],
+      btc_6_months_contango: [],
+      eth_3_months_contango: [],
+      eth_6_months_contango: [],
+
     };
 
   }
@@ -166,7 +171,13 @@ class Stat extends Component {
 
     setInterval(function() {
       this.computeReturns();
-    }.bind(this), 3000)
+    }.bind(this), 5000);
+
+    setInterval(function() {
+      this.getBtcFuturesContango();
+      this.getEthFuturesContango();
+    }.bind(this), 5000)
+
   }
 
   async updateData(){
@@ -403,14 +414,14 @@ class Stat extends Component {
     this.setState({...this.state, ws_close: true});
   }
 
-  async plot(){
-    let pos = this.state.positions[0];
-
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.State({chart_data_current: result}));
-    await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
-      .then(result=>this.setState({chart_data_at_zero: result}));
-  }
+  // async plot(){
+  //   let pos = this.state.positions[0];
+  //
+  //   await this.computeBSM(parseInt(pos.averageUsdPrice), 0.3, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
+  //     .then(result=>this.State({chart_data_current: result}));
+  //   await this.computeBSM(parseInt(pos.averageUsdPrice), 0.00001, this.getStrike(pos.instrument), 0.7, 'call', 'sell')
+  //     .then(result=>this.setState({chart_data_at_zero: result}));
+  // }
 
   // async computeBSM (trade_price, T, strike, vola, option_type, direction) {
   //   let data = [];
@@ -451,9 +462,7 @@ class Stat extends Component {
       console.log(item);
       console.log(index);
     }
-
     this.state.positions.forEach(calculate)
-
   }
 
   zoomIn(){
@@ -471,6 +480,45 @@ class Stat extends Component {
       return null
     });
     promise.then(()=>this.computePnL());
+  }
+
+  getBtcFuturesContango () {
+    let that = this;
+    get_btc_contango(this.props.user.token)
+      .then(data =>{
+        // console.log("BTC futures", data);
+        let btc_3_months_contango = [];
+        let btc_6_months_contango = [];
+
+        for (let i of data.data.json_list){
+          let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
+          let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
+          let date =  new Date(i.timestamp);
+          btc_3_months_contango.push({"x": date, "y":parseInt(diff_3_month)});
+          btc_6_months_contango.push({"x": date, "y":parseInt(diff_6_month)});
+        }
+        that.setState({btc_3_months_contango: btc_3_months_contango});
+        that.setState({btc_6_months_contango: btc_6_months_contango});
+      });
+  }
+
+  getEthFuturesContango () {
+    let that = this;
+    get_eth_contango(this.props.user.token)
+      .then(data =>{
+          // console.log("ETH futures", data);
+        let eth_3_months_contango = [];
+        let eth_6_months_contango = [];
+        for (let i of data.data.json_list){
+          let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
+          let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
+          let date =  new Date(i.timestamp);
+          eth_3_months_contango.push({"x": date, "y":parseInt(diff_3_month)});
+          eth_6_months_contango.push({"x": date, "y":parseInt(diff_6_month)})
+        }
+        that.setState({eth_3_months_contango: eth_3_months_contango});
+        that.setState({eth_6_months_contango: eth_6_months_contango});
+      });
   }
 
   render() {
@@ -543,7 +591,7 @@ class Stat extends Component {
           <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
           <Paper className={classes.elementPadding}>
             {/*Main graph*/}
-            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+            <XYPlot width={340} height={200} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
               <HorizontalGridLines />
               <VerticalGridLines />
               <XAxis tickLabelAngle={-45} />
@@ -556,7 +604,7 @@ class Stat extends Component {
           </Paper>
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <XYPlot width={340} height={200} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
@@ -571,11 +619,107 @@ class Stat extends Component {
 
               </XYPlot>
             </Paper>
+            {/*<Button*/}
+            {/*  className={classes.button}*/}
+            {/*  onClick={()=>this.getBtcFuturesContango()}*/}
+            {/*  variant="outlined"*/}
+            {/*  // color="primary"*/}
+            {/*>BTC</Button>*/}
+            {/*<Button*/}
+            {/*  className={classes.button}*/}
+            {/*  onClick={()=>this.getEthFuturesContango()}*/}
+            {/*  variant="outlined"*/}
+            {/*  // color="primary"*/}
+            {/*>ETH</Button>*/}
+          </div>
+        </div>
 
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+          <div>
+            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC three months contango</h5>
+          <Paper className={classes.elementPadding}>
+            {/*Main graph*/}
+            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis tickLabelAngle={-45} />
+              <YAxis />
+              <LineSeries
+                className="btc-contango"
+                strokeWidth={2}
+                sizeRange={[5, 15]}
+                data={this.state.btc_3_months_contango}
+              />
+              {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+            </XYPlot>
+          </Paper>
           </div>
 
-
+          <div>
+            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC six months contango</h5>
+          <Paper className={classes.elementPadding}>
+            {/*Main graph*/}
+            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis tickLabelAngle={-45} />
+              <YAxis />
+              <LineSeries
+                className="btc-contango"
+                strokeWidth={2}
+                sizeRange={[5, 15]}
+                data={this.state.btc_6_months_contango}
+              />
+              {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+            </XYPlot>
+          </Paper>
+          </div>
         </div>
+
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+          <div>
+            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>ETH three months contango</h5>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <LineSeries
+                  className="btc-contango"
+                  strokeWidth={2}
+                  sizeRange={[5, 15]}
+                  data={this.state.eth_3_months_contango}
+                />
+                {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+              </XYPlot>
+            </Paper>
+          </div>
+
+          <div>
+            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>ETH six months contango</h5>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <LineSeries
+                  className="btc-contango"
+                  strokeWidth={2}
+                  sizeRange={[5, 15]}
+                  data={this.state.eth_6_months_contango}
+                />
+                {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+              </XYPlot>
+            </Paper>
+          </div>
+        </div>
+
+
+
       </div>
 
     );
