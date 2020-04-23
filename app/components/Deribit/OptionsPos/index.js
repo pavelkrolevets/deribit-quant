@@ -94,7 +94,7 @@ class DeribitOptionPos extends Component {
       keys: {},
       positions: [],
       index: 0,
-      account: [],
+      account: [{account:0, delta_total:0}],
       time: new Date().toLocaleTimeString(),
       range_min: '',
       range_max: '',
@@ -105,8 +105,26 @@ class DeribitOptionPos extends Component {
       TabValue: 0,
       width: 0,
       height: 0,
-      currency: 'BTC'
+      currency: 'ETH',
+      fut_positions: [],
+      opt_positions: [],
+      all_instruments: [],
+      client_positions: [{
+        instrument_name: '',
+        expiration: 0,
+        size: 0,
+        average_price: 0,
+        kind: '',
+        direction: '',
+        option_type: '',
+        strike: 0,
+        delta: 0,
+        total_profit_loss: 0
+      }],
+      volatility_btc: 0.8,
+      volatility_eth: 0.8
     };
+
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
     this.eventHandler = this.eventHandler.bind(this);
   }
@@ -142,7 +160,7 @@ class DeribitOptionPos extends Component {
 
     setInterval(() => {
       this.getData();
-      this.updateData();
+      // this.updateData();
     }, 5000);
   }
 
@@ -176,6 +194,15 @@ class DeribitOptionPos extends Component {
       }
     };
 
+    var positions = {
+      jsonrpc: '2.0',
+      id: 2238,
+      method: 'private/get_positions',
+      params: {
+        currency: this.state.currency,
+      }
+    };
+
     var account = {
       jsonrpc: '2.0',
       id: 2515,
@@ -186,10 +213,23 @@ class DeribitOptionPos extends Component {
       }
     };
 
+    var all_instruments =
+      {
+        "jsonrpc" : "2.0",
+        "id" : 7617,
+        "method" : "public/get_instruments",
+        "params" : {
+          "currency" : this.state.currency,
+          "expired" : false
+        }
+      };
+
     ws.send(JSON.stringify(index));
     ws.send(JSON.stringify(fut_positions));
     ws.send(JSON.stringify(opt_positions));
     ws.send(JSON.stringify(account));
+    ws.send(JSON.stringify(positions));
+    ws.send(JSON.stringify(all_instruments));
 
     // Update time
     this.setState({ time: new Date().toLocaleTimeString() });
@@ -209,128 +249,21 @@ class DeribitOptionPos extends Component {
       this.setState({ opt_positions: msg.result });
       console.log('Opt_pos : ', msg.result);
     }
+    if (msg.id === 2238) {
+      this.setState({ positions: msg.result });
+      console.log('Positions : ', msg.result);
+    }
     if (msg.id === 2515) {
       this.setState({ account: [msg.result] });
       console.log('Account : ', msg.result);
     }
-  }
-
-  async updateData() {
-    let RestClient = await require('deribit-api').RestClient;
-    this.restClient = await new RestClient(
-      this.state.keys.api_pubkey,
-      this.state.keys.api_privkey,
-      deribit_http
-    );
-
-    // ws.onopen = async function () {
-    //   await ws.send(JSON.stringify(positionsEth));
-    //
-    // };
-
-    await this.restClient.index(result => {
-      this.restClient.positions(result => {
-        console.log('Positions: ', result.result);
-        this.setState({ positions: result.result });
-        let strike = this.getStrike(this.state.positions[0].instrument);
-        console.log(strike);
-        this.computePnL();
-      });
-    });
-
-    // await this.restClient.account((result) => {
-    //   console.log("Account: ", result.result);
-    //   this.setState({account: [result.result]});
-    // });
-  }
-
-  async componentDidMount() {
-    // this.interval()
-    // setInterval(() => {
-    //   this.plot();
-    //   this.updateData();
-    //   this.setState({time: new Date().toLocaleTimeString()})
-    // }, 30000);
-  }
-
-  getStrike(instrument) {
-    let parsed_string = instrument.split('-');
-    return parsed_string[2];
-  }
-
-  getType(instrument) {
-    let parsed_string = instrument.split('-');
-    return parsed_string[3];
-  }
-  getExpiration(instrument) {
-    let parsed_string = instrument.split('-');
-    return parsed_string[1];
-  }
-
-  async plot() {
-    let pos = this.state.positions[0];
-
-    await this.computeBSM(
-      parseInt(pos.averageUsdPrice),
-      0.3,
-      this.getStrike(pos.instrument),
-      0.7,
-      'call',
-      'sell'
-    ).then(result => this.setState({ chart_data_current: result }));
-    await this.computeBSM(
-      parseInt(pos.averageUsdPrice),
-      0.00001,
-      this.getStrike(pos.instrument),
-      0.7,
-      'call',
-      'sell'
-    ).then(result => this.setState({ chart_data_at_zero: result }));
-  }
-
-  async computeBSM(trade_price, T, strike, vola, option_type, direction) {
-    let data = [];
-    let S0 = [];
-    let chart_data = [];
-
-    for (
-      let i = parseInt(strike) - 10000;
-      i < parseInt(strike) + 10000;
-      i += 1000
-    ) {
-      data.push(
-        JSON.stringify({
-          S0: i,
-          K: parseInt(strike),
-          T: T,
-          r: 0.03,
-          sigma: vola
-        })
-      );
-      S0.push(i);
+    if (msg.id === 7617) {
+      this.setState({ all_instruments: msg.result });
+      console.log('Instruments : ', msg.result);
+      this.prepareClientPositions();
+      this.computeTotalPnl();
     }
-    console.log(data);
-    await compute_bsm(
-      this.props.user.token,
-      option_type,
-      data,
-      direction,
-      trade_price
-    ).then(response => {
-      console.log(response);
-      this.setState({ option_values: response.data.option_values });
-    });
 
-    let y_range = [];
-    for (let i = 0; i < S0.length; i++) {
-      chart_data.push({ x: S0[i], y: this.state.option_values[i] });
-      y_range.push(this.state.option_values[i] - trade_price);
-    }
-    this.setState({
-      yDomain: [Math.min(...y_range) - 1000, Math.max(...y_range) + 1000]
-    });
-
-    return chart_data;
   }
 
   _onMouseLeave = () => {
@@ -341,199 +274,226 @@ class DeribitOptionPos extends Component {
     this.setState({ crosshairValues: [this.state.chart_data_current[index]] });
   };
 
-  computePnl() {
+  prepareClientPositions(){
+
+    let client_positions =[];
+    for (let position of this.state.positions){
+        for (let instruments of this.state.all_instruments){
+          if (position.instrument_name === instruments.instrument_name && position.direction !=="zero"){
+            let exp = new Date(parseInt(instruments.expiration_timestamp));
+            client_positions.push(
+              {
+                instrument_name: position.instrument_name,
+                expiration: exp,
+                size: position.size,
+                average_price: position.average_price,
+                kind: position.kind,
+                direction: position.direction,
+                option_type: instruments.option_type,
+                strike: instruments.strike,
+                delta: position.delta,
+                total_profit_loss: position.total_profit_loss
+              })
+          }
+        }
+      }
+    console.log("Client positions: ", client_positions);
+    this.setState({client_positions: client_positions})
+  }
+
+  computeTotalPnl(){
+    let total_pnl_current = [];
+    let total_pnl_at_zero = [];
+
+    for (let instrument of this.state.client_positions){
+      if (instrument.kind === 'option'){
+        console.log("Calc pos: ", instrument);
+        this.computeOptPnl(instrument)
+          .then(result => {
+            console.log('Value current:', result[0]);
+            console.log('Value at zero:', result[1]);
+            total_pnl_current.push(result[0]);
+            total_pnl_at_zero.push(result[1])
+          })
+      }
+    }
+  }
+
+  async computeOptPnl(instrument) {
     let current_values = [];
     let values_at_zero = [];
-    let date = new Date();
-    let now = this.state.selectedDate;
+    let date = instrument.expiration;
+    let now = Date.now();
     const diffTime = Math.abs(date - now);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const timeToExp = diffDays / 365;
 
-    if (this.state.underlying_currency === 'BTC') {
+    console.log("Time to exp", timeToExp);
+
+    if (this.state.currency === 'BTC') {
       for (let i = 1; i <= 20002; i += 100) {
-        if (this.state.direction === 'Buy') {
+        if (instrument.direction === 'buy') {
           let current_value =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               i,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_btc
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 this.state.index,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_btc
+              )) * i;
           // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
           let value_at_zero =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               i,
-              this.state.underlying_strike,
+              instrument.strike,
               0.00001,
               0.01,
-              this.state.volatility
+              this.state.volatility_btc
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 this.state.index,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
                 this.state.volatility
-              )) *
-            i;
+              )) * i;
           values_at_zero.push({ x: i, y: value_at_zero });
           current_values.push({ x: i, y: current_value });
-        } else if (this.state.direction === 'Sell') {
+        } else if (instrument.direction === 'Sell') {
           let current_value =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               this.state.index,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_btc
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 i,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_btc
+              )) * i;
           // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
           let value_at_zero =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               this.state.index,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_btc
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 i,
-                this.state.underlying_strike,
+                instrument.strike,
                 0.00001,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_btc
+              )) * i;
           values_at_zero.push({ x: i, y: value_at_zero });
           current_values.push({ x: i, y: current_value });
         }
       }
-      console.log('Value current:', current_values);
-      console.log('Value at zero:', values_at_zero);
-      this.setState({ ...this.state, chart_data_current: current_values });
-      this.setState({ ...this.state, chart_data_at_zero: values_at_zero });
-      this.setState({ yDomain: [-10000, 10000] });
-      if (this.state.manual_index === false) {
-        this.setState({ index: this.state.indexBtc });
-      }
+      // console.log('Value current:', current_values);
+      // console.log('Value at zero:', values_at_zero);
+      // this.setState({ ...this.state, chart_data_current: current_values });
+      // this.setState({ ...this.state, chart_data_at_zero: values_at_zero });
+      // this.setState({ yDomain: [-10000, 10000] });
 
-      this.setState({
-        impl_option_value: BlackScholes(
-          this.state.option_type,
-          this.state.index,
-          this.state.underlying_strike,
-          timeToExp,
-          0.01,
-          this.state.volatility
-        )
-      });
-    } else if (this.state.underlying_currency === 'ETH') {
+    } else if (this.state.currency === 'ETH') {
       for (let i = 0.1; i <= 1000; i += 10) {
-        if (this.state.direction === 'Buy') {
+        if (instrument.direction === 'buy') {
           let current_value =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               i,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_eth
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 this.state.index,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_eth
+              )) * i;
 
           // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
           let value_at_zero =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               i,
-              this.state.underlying_strike,
+              instrument.strike,
               0.00001,
               0.01,
-              this.state.volatility
+              this.state.volatility_eth
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 this.state.index,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_eth
+              )) * i;
 
           values_at_zero.push({ x: i, y: value_at_zero });
           current_values.push({ x: i, y: current_value });
-        } else if (this.state.direction === 'Sell') {
+        } else if (instrument.direction === 'sell') {
           let current_value =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               this.state.index,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_eth
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 i,
-                this.state.underlying_strike,
+                instrument.strike,
                 timeToExp,
                 0.01,
-                this.state.volatility
-              )) *
-            i;
+                this.state.volatility_eth
+              )) * i;
 
           // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
           let value_at_zero =
             (BlackScholes(
-              this.state.option_type,
+              instrument.option_type,
               this.state.index,
-              this.state.underlying_strike,
+              instrument.strike,
               timeToExp,
               0.01,
-              this.state.volatility
+              this.state.volatility_eth
             ) -
               BlackScholes(
-                this.state.option_type,
+                instrument.option_type,
                 i,
-                this.state.underlying_strike,
+                instrument.strike,
                 0.00001,
                 0.01,
-                this.state.volatility
+                this.state.volatility_eth
               )) *
             i;
 
@@ -541,24 +501,13 @@ class DeribitOptionPos extends Component {
           current_values.push({ x: i, y: current_value });
         }
       }
-      console.log('Value current:', current_values);
-      console.log('Value at zero:', values_at_zero);
-      this.setState({ ...this.state, chart_data_current: current_values });
-      this.setState({ ...this.state, chart_data_at_zero: values_at_zero });
-      this.setState({ yDomain: [-1000, 1000] });
-      if (this.state.manual_index === false) {
-        this.setState({ index: this.state.indexEth });
-      }
-      this.setState({
-        impl_option_value: BlackScholes(
-          this.state.option_type,
-          this.state.index,
-          this.state.underlying_strike,
-          timeToExp,
-          0.01,
-          this.state.volatility
-        )
-      });
+      // console.log('Value current:', current_values);
+      // console.log('Value at zero:', values_at_zero);
+      // this.setState({ ...this.state, chart_data_current: current_values });
+      // this.setState({ ...this.state, chart_data_at_zero: values_at_zero });
+      // this.setState({ yDomain: [-1000, 1000] });
+
+      return [current_values, values_at_zero]
     }
   }
 
@@ -642,16 +591,16 @@ class DeribitOptionPos extends Component {
                 <TableHead>
                   {/*<TableRow style={{backgroundColor:'red', color: 'white'}}>*/}
                   <TableRow>
-                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                    <TableCell align="center" style={{ color: '#FFF' }}>
                       Equity
                     </TableCell>
-                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                    <TableCell align="center" style={{ color: '#FFF' }}>
                       Global delta
                     </TableCell>
-                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                    <TableCell align="center" style={{ color: '#FFF' }}>
                       Index
                     </TableCell>
-                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                    <TableCell align="center" style={{ color: '#FFF' }}>
                       Time
                     </TableCell>
                   </TableRow>
@@ -754,54 +703,59 @@ class DeribitOptionPos extends Component {
                 {/*/>*/}
               </XYPlot>
             </div>
-            <div>
-              {/*Table with parameters*/}
-              <Paper>
+            <br/>
+              {/* Positions*/}
                 <div>
                   <Table className={classes.table} size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell align="center">Instrument</TableCell>
-                        <TableCell align="center">Amount</TableCell>
-                        <TableCell align="center">Direction</TableCell>
-                        <TableCell align="center">Delta</TableCell>
-                        <TableCell align="center">Average price</TableCell>
-                        <TableCell align="center">Average price USD</TableCell>
-                        <TableCell align="center">PnL</TableCell>
+                        <TableCell align="center" style={{ color: '#FFF' }}>Instrument</TableCell>
+                        <TableCell align="center" style={{ color: '#FFF' }}>Amount</TableCell>
+                        <TableCell align="center" style={{ color: '#FFF' }}>Direction</TableCell>
+                        <TableCell align="center" style={{ color: '#FFF' }}>Delta</TableCell>
+                        <TableCell align="center" style={{ color: '#FFF' }}>Average price</TableCell>
+                        {/*<TableCell align="center">Average price USD</TableCell>*/}
+                        <TableCell align="center" style={{ color: '#FFF' }}>PnL</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {this.state.positions.map((row, i) => (
+                      {this.state.client_positions.map((row, i) => (
                         <TableRow
                           key={i}
                           // onClick={event => this.handleClick(event, row.pid)}
                           selected
                           hover
                         >
-                          <TableCell align="center">{row.instrument}</TableCell>
-                          <TableCell align="center">
-                            {parseFloat(row.amount).toFixed(2)}
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
+                            {row.instrument_name}
                           </TableCell>
-                          <TableCell align="center">{row.direction}</TableCell>
-                          <TableCell align="center">
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
+                            {parseFloat(row.size).toFixed(2)}
+                          </TableCell>
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
+                            {row.direction}
+                          </TableCell>
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
                             {parseFloat(row.delta).toFixed(2)}
                           </TableCell>
-                          <TableCell align="center">
-                            {parseFloat(row.averagePrice).toFixed(2)}
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
+                            {parseFloat(row.average_price).toFixed(2)}
                           </TableCell>
-                          <TableCell align="center">
-                            {parseFloat(row.averageUsdPrice).toFixed(2)}
-                          </TableCell>
-                          <TableCell align="center">
-                            {parseFloat(row.profitLoss).toFixed(2)}
+                          {/*<TableCell align="center">*/}
+                          {/*  {parseFloat(row.averageUsdPrice).toFixed(2)}*/}
+                          {/*</TableCell>*/}
+                          <TableCell align="center" style={{ color: '#dc6b02' }}>
+                            {parseFloat(row.total_profit_loss).toFixed(2)}
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-              </Paper>
-            </div>
+
+
+
+
           </TabContainer>
         )}
 
