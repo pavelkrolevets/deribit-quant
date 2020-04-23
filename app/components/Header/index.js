@@ -22,44 +22,43 @@ import Drawer from '@material-ui/core/Drawer';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
-
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as actionCreators from '../actions/auth';
 
-
-
 const styles = theme => ({
   root: {
-    width: '100%',
+    width: '100%'
   },
   grow: {
-    flexGrow: 1,
+    flexGrow: 1
   },
   menuButton: {
     marginLeft: -12,
-    marginRight: 20,
+    marginRight: 20
   },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
-      display: 'block',
-    },
+      display: 'block'
+    }
   },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
-    '&:hover': {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
-    },
+
+    backgroundColor: '#FF9A00',
+    // backgroundColor: fade(theme.palette.common.white, 0.15),
+    // '&:hover': {
+    //   backgroundColor: fade(theme.palette.common.white, 0.25),
+    // },
     marginRight: theme.spacing.unit * 2,
     marginLeft: 0,
     width: '100%',
     [theme.breakpoints.up('sm')]: {
       marginLeft: theme.spacing.unit * 3,
-      width: 'auto',
-    },
+      width: 'auto'
+    }
   },
   searchIcon: {
     width: theme.spacing.unit * 9,
@@ -69,10 +68,11 @@ const styles = theme => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    color: 'black'
   },
   inputRoot: {
     color: 'inherit',
-    width: '100%',
+    width: '100%'
   },
   inputInput: {
     paddingTop: theme.spacing.unit,
@@ -82,35 +82,35 @@ const styles = theme => ({
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('md')]: {
-      width: 200,
+      width: 200
     },
+    color: 'black'
   },
   sectionDesktop: {
     display: 'none',
     [theme.breakpoints.up('md')]: {
-      display: 'flex',
-    },
+      display: 'flex'
+    }
   },
   sectionMobile: {
     display: 'flex',
     [theme.breakpoints.up('md')]: {
-      display: 'none',
-    },
+      display: 'none'
+    }
   },
 
   gradientAppBar: {
     background: 'linear-gradient(45deg, #4A4A4A 30%, #7C7C7C 90%)',
     borderRadius: 3,
     border: 0,
-    color: 'white',
-    padding: '0 30px',
-  },
+    padding: '0 30px'
+  }
 });
 function mapStateToProps(state) {
   return {
     token: state.auth.token,
     userName: state.auth.userName,
-    isAuthenticated: state.auth.isAuthenticated,
+    isAuthenticated: state.auth.isAuthenticated
   };
 }
 
@@ -118,29 +118,31 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actionCreators, dispatch);
 }
 
-@connect(mapStateToProps, mapDispatchToProps)
+@connect(
+  mapStateToProps,
+  mapDispatchToProps
+)
 class Header extends Component {
   constructor(props) {
     super(props);
-
   }
 
   state = {
     anchorEl: null,
     mobileMoreAnchorEl: null,
-    DrowerOpen: false,
+    DrowerOpen: false
   };
 
   dispatchNewRoute(route) {
     this.props.history.push(route);
     this.setState({
-      DrowerOpen: false,
+      DrowerOpen: false
     });
   }
 
   handleDrawerOpen() {
     this.setState({
-      DrowerOpen: true,
+      DrowerOpen: true
     });
   }
 
@@ -170,13 +172,13 @@ class Header extends Component {
     e.preventDefault();
     this.props.logoutAndRedirect(this.props.history);
     this.setState({
-      open: false,
+      open: false
     });
   }
 
   render() {
     const { anchorEl, mobileMoreAnchorEl } = this.state;
-    const { classes , theme} = this.props;
+    const { classes, theme } = this.props;
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
@@ -231,55 +233,65 @@ class Header extends Component {
         <Drawer open={this.state.DrowerOpen}>
           <div className={classes.drawerHeader}>
             <IconButton onClick={this.handleDrawerClose}>
-              {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+              {theme.direction === 'ltr' ? (
+                <ChevronLeftIcon />
+              ) : (
+                <ChevronRightIcon />
+              )}
             </IconButton>
           </div>
-          {
-            !this.props.isAuthenticated ?
-              <div>
-                <MenuItem onClick={() => this.dispatchNewRoute('/login')}>
-                  Login
-                </MenuItem>
-                <MenuItem onClick={() => this.dispatchNewRoute('/register')}>
-                  Register
-                </MenuItem>
-              </div>
-              :
-              <div>
-                <MenuItem onClick={() => this.props.history.push('/stat')}>
-                  Stats
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/simulate')}>
-                  Single
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/analyze')}>
-                  Strategy
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/deltahedger')}>
-                  DeltaHedger
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/options')}>
-                  Position
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/vola')}>
-                  Vola
-                </MenuItem>
-                <MenuItem onClick={() => this.props.history.push('/')}>
-                  Home
-                </MenuItem>
-                <MenuItem onClick={(e) => this.logout(e)}>
-                  Logout
-                </MenuItem>
-              </div>
-          }
-
+          {!this.props.isAuthenticated ? (
+            <div>
+              <MenuItem onClick={() => this.dispatchNewRoute('/login')}>
+                Login
+              </MenuItem>
+              <MenuItem onClick={() => this.dispatchNewRoute('/register')}>
+                Register
+              </MenuItem>
+            </div>
+          ) : (
+            <div>
+              <MenuItem onClick={() => this.props.history.push('/stat')}>
+                Stats
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/simulate')}>
+                Single
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/analyze')}>
+                Strategy
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/deltahedger')}>
+                DeltaHedger
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/options')}>
+                Position
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/vola')}>
+                Vola
+              </MenuItem>
+              <MenuItem onClick={() => this.props.history.push('/')}>
+                Home
+              </MenuItem>
+              <MenuItem onClick={e => this.logout(e)}>Logout</MenuItem>
+            </div>
+          )}
         </Drawer>
-        <AppBar position="static" className={ classes.gradientAppBar}>
+        <AppBar position="static" className={classes.gradientAppBar}>
           <Toolbar>
-            <IconButton className={classes.menuButton} color="inherit" aria-label="Open drawer" onClick={()=>this.handleDrawerOpen()}>
+            <IconButton
+              className={classes.menuButton}
+              color="inherit"
+              aria-label="Open drawer"
+              onClick={() => this.handleDrawerOpen()}
+            >
               <MenuIcon />
             </IconButton>
-            <Typography className={classes.title} variant="h6" color="inherit" noWrap>
+            <Typography
+              className={classes.title}
+              variant="h6"
+              color="inherit"
+              noWrap
+            >
               DQaunt Terminal
             </Typography>
             <div className={classes.search}>
@@ -290,21 +302,21 @@ class Header extends Component {
                 placeholder="Search…"
                 classes={{
                   root: classes.inputRoot,
-                  input: classes.inputInput,
+                  input: classes.inputInput
                 }}
               />
             </div>
             <div className={classes.grow} />
             <div className={classes.sectionDesktop}>
               {/*<IconButton color="inherit">*/}
-                {/*<Badge badgeContent={4} color="secondary">*/}
-                  {/*<MailIcon />*/}
-                {/*</Badge>*/}
+              {/*<Badge badgeContent={4} color="secondary">*/}
+              {/*<MailIcon />*/}
+              {/*</Badge>*/}
               {/*</IconButton>*/}
               {/*<IconButton color="inherit">*/}
-                {/*<Badge badgeContent={17} color="secondary">*/}
-                  {/*<NotificationsIcon />*/}
-                {/*</Badge>*/}
+              {/*<Badge badgeContent={17} color="secondary">*/}
+              {/*<NotificationsIcon />*/}
+              {/*</Badge>*/}
               {/*</IconButton>*/}
               <IconButton
                 aria-owns={isMenuOpen ? 'material-appbar' : undefined}
@@ -316,7 +328,11 @@ class Header extends Component {
               </IconButton>
             </div>
             <div className={classes.sectionMobile}>
-              <IconButton aria-haspopup="true" onClick={this.handleMobileMenuOpen} color="inherit">
+              <IconButton
+                aria-haspopup="true"
+                onClick={this.handleMobileMenuOpen}
+                color="inherit"
+              >
                 <MoreIcon />
               </IconButton>
             </div>
@@ -333,7 +349,7 @@ Header.propTypes = {
   classes: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired,
   logoutAndRedirect: PropTypes.func,
-  isAuthenticated: PropTypes.bool,
+  isAuthenticated: PropTypes.bool
 };
 
 export default withRouter(withStyles(styles, { withTheme: true })(Header));

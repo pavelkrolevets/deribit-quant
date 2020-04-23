@@ -20,50 +20,50 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
-import { compute_bsm, get_api_keys, compute_pnl, get_hist_vola } from '../../../utils/http_functions';
-
-
+import {
+  compute_bsm,
+  get_api_keys,
+  compute_pnl,
+  get_hist_vola
+} from '../../../utils/http_functions';
 
 const styles = theme => ({
   root: {
-    width: '100%',
+    width: '100%'
   },
   grow: {
-    flexGrow: 1,
+    flexGrow: 1
   },
   menuButton: {
     marginLeft: -12,
-    marginRight: 20,
+    marginRight: 20
   },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
-      display: 'block',
-    },
+      display: 'block'
+    }
   },
-  chart:{
-
-  },
+  chart: {},
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200,
+    width: 100
   },
   dense: {
-    marginTop: 19,
+    marginTop: 19
   },
   menu: {
-    width: 200,
+    width: 200
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 120,
+    minWidth: 120
   },
   selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
+    marginTop: theme.spacing(2)
+  }
 });
-
 
 class Vola extends Component {
   constructor(props) {
@@ -80,33 +80,25 @@ class Vola extends Component {
       index: 0,
       account: [],
       time: new Date().toLocaleTimeString(),
-      range_min:'',
-      range_max:'',
-      step:'',
-      risk_free:'',
-      vola:'',
+      range_min: '',
+      range_max: '',
+      step: '',
+      risk_free: '',
+      vola: '',
       hist_vola: [],
-      window: 7,
+      window: 21,
       timeframe: '1d',
-      instrument: "BTC"
+      instrument: 'BTC'
     };
-
   }
 
+  async componentWillMount() {
+    await get_api_keys(this.props.user.token, this.props.email).then(result => {
+      console.log(result);
+      this.setState({ keys: result.data });
+    });
 
-  async componentWillMount(){
-
-    await get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({keys: result.data});
-      });
-
-
-    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe, this.state.instrument)
-      .then(result=>{
-        console.log(result);
-        this.setState({hist_vola: result.data.hist_vola})
-      })
+    await await this.updateVola();
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
     // this.web3.eth.getAccounts(function (error, res) {
@@ -118,10 +110,13 @@ class Vola extends Component {
     // });
   }
 
-
   async componentDidMount() {
-
-    // this.interval()
+    setInterval(
+      async function() {
+        await this.updateVola();
+      }.bind(this),
+      5000
+    );
 
     // setInterval(() => {
     //   this.plot();
@@ -130,22 +125,35 @@ class Vola extends Component {
     // }, 30000);
   }
 
-  async updateVola(){
-    await get_hist_vola(this.props.user.token, this.props.email, this.state.window, this.state.timeframe, this.state.instrument)
-      .then(result=>{
-        console.log(result);
-        this.setState({hist_vola: result.data.hist_vola})
-      })
+  async updateVola() {
+    await get_hist_vola(
+      this.props.user.token,
+      this.props.email,
+      this.state.window,
+      this.state.timeframe,
+      this.state.instrument
+    ).then(result => {
+      console.log(result);
+      // let vola = [];
+      // for (let i of result.data.hist_vola){
+      //   console.log(JSON.parse(JSON.stringify(i)).x);
+      //   // console.log(i.x);
+      //   let date = new Date(parseInt(i.x) * 1000);
+      //   vola.push({"x": date, "y": parseInt(i.y)});
+      //   // console.log({"x": date, "y": parseInt(i.y)});
+      // }
+      // // console.log(vola);
+      this.setState({ hist_vola: result.data.hist_vola });
+    });
   }
 
   _onMouseLeave = () => {
-    this.setState({crosshairValues: []});
+    this.setState({ crosshairValues: [] });
   };
 
-  _onNearestX = (value, {index}) => {
-    this.setState({crosshairValues: [this.state.hist_vola[index]]});
+  _onNearestX = (value, { index }) => {
+    this.setState({ crosshairValues: [this.state.hist_vola[index]] });
   };
-
 
   handleChange = name => event => {
     console.log(name, event.target.value);
@@ -154,39 +162,88 @@ class Vola extends Component {
   };
 
   render() {
-    const {classes} = this.props;
-    const {useCanvas} = this.state;
+    const { classes } = this.props;
+    const { useCanvas } = this.state;
     const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
-    let {yDomain} = this.state;
+    let { yDomain } = this.state;
     return (
-      <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Historical volatility</h4>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <FormControl className={classes.formControl}>
+      <div
+        data-tid="container"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column'
+        }}
+      >
+        <h4 style={{ color: '#152880' }}>Historical volatility</h4>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
+          }}
+        >
+          <FormControl variant="outlined" className={classes.formControl}>
             <InputLabel htmlFor="age-simple">Instrument</InputLabel>
             <Select
               value={this.state.instrument}
-              onChange={
-                this.handleChange("instrument")
-              }
+              onChange={this.handleChange('instrument')}
               inputProps={{
                 name: 'instrument',
-                id: 'instruemnt-simple',
+                id: 'instruemnt-simple'
               }}
             >
-              <MenuItem value={"BTC"}>BTC</MenuItem>
-              <MenuItem value={"ETH"}>ETH</MenuItem>
+              <MenuItem value={'BTC'}>BTC</MenuItem>
+              <MenuItem value={'ETH'}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            id="outlined-name"
+            label="Window"
+            className={classes.textField}
+            onChange={this.handleChange('window')}
+            margin="normal"
+            variant="outlined"
+            defaultValue={21}
+          />
+
+          <FormControl variant="outlined" className={classes.formControl}>
+            <InputLabel htmlFor="timeframe-simple">Timeframe</InputLabel>
+            <Select
+              value={this.state.timeframe}
+              onChange={this.handleChange('timeframe')}
+              inputProps={{
+                name: 'timeframe',
+                id: 'timeframe-simple'
+              }}
+            >
+              <MenuItem value={'1m'}>Minutes</MenuItem>
+              <MenuItem value={'1h'}>Hourly</MenuItem>
+              <MenuItem value={'1d'}>Daily</MenuItem>
             </Select>
           </FormControl>
         </div>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
           {/*Main graph*/}
-          <XYPlot width={700} height={500} onMouseLeave={this._onMouseLeave} {...{yDomain}}>
+          <XYPlot
+            width={700}
+            height={500}
+            onMouseLeave={this._onMouseLeave}
+            {...{ yDomain }}
+          >
             <HorizontalGridLines />
             <VerticalGridLines />
-            <XAxis on0={true}/>
-            <YAxis on0={true}/>
+            <XAxis on0={true} />
+            <YAxis on0={true} />
             <ChartLabel
               text="Time"
               className="alt-x-label"
@@ -222,47 +279,13 @@ class Vola extends Component {
             {/*/>*/}
           </XYPlot>
         </div>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <TextField
-            id="outlined-name"
-            label="Window"
-            className={classes.textField}
-            onChange={this.handleChange('window')}
-            margin="normal"
-          />
-
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="timeframe-simple">Timeframe</InputLabel>
-            <Select
-              value={this.state.timeframe}
-              onChange={this.handleChange('timeframe')}
-              inputProps={{
-                name: 'timeframe',
-                id: 'timeframe-simple',
-              }}
-            >
-              <MenuItem value={'1m'}>Minutes</MenuItem>
-              <MenuItem value={'1h'}>Hourly</MenuItem>
-              <MenuItem value={'1d'}>Daily</MenuItem>
-            </Select>
-          </FormControl>
-
-        <Button
-        className={classes.button}
-        onClick={()=>this.updateVola()}
-        variant="outlined"
-        // color="primary"
-        >Recalculate</Button>
-        <br/>
-        </div>
       </div>
     );
   }
 }
 
-
 Vola.propTypes = {
-  classes: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(Vola);

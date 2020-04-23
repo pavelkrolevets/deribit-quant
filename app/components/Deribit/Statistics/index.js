@@ -33,37 +33,39 @@ import {
   MarkSeries,
   LabelSeries
 } from 'react-vis';
-import { compute_bsm, get_api_keys, compute_pnl, get_btc_contango, get_eth_contango} from '../../../utils/http_functions';
+import {
+  compute_bsm,
+  get_api_keys,
+  compute_pnl,
+  get_btc_contango,
+  get_eth_contango
+} from '../../../utils/http_functions';
 import { typeOfNode } from 'enzyme/src/Utils';
-
-
 
 const styles = theme => ({
   root: {
-    width: '100%',
+    width: '100%'
   },
   grow: {
-    flexGrow: 1,
+    flexGrow: 1
   },
   menuButton: {
     marginLeft: -12,
-    marginRight: 20,
+    marginRight: 20
   },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
-      display: 'block',
-    },
+      display: 'block'
+    }
   },
-  chart:{
-
-  },
+  chart: {},
   elementPadding: {
-    padding: '20px',
-  },
+    padding: '20px'
+  }
 });
 
-const deribit_http = "https://www.deribit.com";
+const deribit_http = 'https://www.deribit.com';
 
 class Stat extends Component {
   constructor(props) {
@@ -80,81 +82,76 @@ class Stat extends Component {
       indexEth: 0,
       account: [],
       time: new Date().toLocaleTimeString(),
-      range_min:'',
-      range_max:'',
-      step:'',
-      risk_free:'',
-      vola:'',
+      range_min: '',
+      range_max: '',
+      step: '',
+      risk_free: '',
+      vola: '',
       zoom: 1.2,
-      instrument: "",
-      instruments:[],
-      instrumentData:new Object(),
+      instrument: '',
+      instruments: [],
+      instrumentData: new Object(),
       bids: [],
       asks: [],
-      instrumentAskIv: "",
-      instrumentBidIv: "",
-      instrumentDelta: "",
-      instrumentLastPrice: "",
-      underlying_currency: "BTC",
+      instrumentAskIv: '',
+      instrumentBidIv: '',
+      instrumentDelta: '',
+      instrumentLastPrice: '',
+      underlying_currency: 'BTC',
       expiration_list: [
-        { id: 100, strike: "31DEC19" },
-        { id: 101, strike: "27MAR202" },
-        { id: 102, strike: "31JAN202" }],
-      underlying_srike: "",
-      strike_list: [
-        { id: 100, strike: "1000" },
-        { id: 101, strike: "2000" },
-        { id: 102, strike: "3000" },
-        { id: 103, strike: "4000" },
-        { id: 104, strike: "5000" },
-        { id: 105, strike: "6000" },
-        { id: 106, strike: "7000" },
-        { id: 107, strike: "8000" },
-        { id: 108, strike: "9000" },
-        { id: 109, strike: "10000" },
-        { id: 110, strike: "11000" },
-        { id: 111, strike: "12000" },
-        { id: 112, strike: "13000" },
-        { id: 113, strike: "14000" },
-        { id: 114, strike: "15000" },
-        { id: 115, strike: "16000" },
-        { id: 116, strike: "17000" },
-        { id: 117, strike: "18000" },
-        { id: 118, strike: "19000" },
-        { id: 119, strike: "20000" },
+        { id: 100, strike: '31DEC19' },
+        { id: 101, strike: '27MAR202' },
+        { id: 102, strike: '31JAN202' }
       ],
-      underlying_expiration: "",
+      underlying_srike: '',
+      strike_list: [
+        { id: 100, strike: '1000' },
+        { id: 101, strike: '2000' },
+        { id: 102, strike: '3000' },
+        { id: 103, strike: '4000' },
+        { id: 104, strike: '5000' },
+        { id: 105, strike: '6000' },
+        { id: 106, strike: '7000' },
+        { id: 107, strike: '8000' },
+        { id: 108, strike: '9000' },
+        { id: 109, strike: '10000' },
+        { id: 110, strike: '11000' },
+        { id: 111, strike: '12000' },
+        { id: 112, strike: '13000' },
+        { id: 113, strike: '14000' },
+        { id: 114, strike: '15000' },
+        { id: 115, strike: '16000' },
+        { id: 116, strike: '17000' },
+        { id: 117, strike: '18000' },
+        { id: 118, strike: '19000' },
+        { id: 119, strike: '20000' }
+      ],
+      underlying_expiration: '',
       ws_close: false,
       btc_3_months_contango: [],
       btc_6_months_contango: [],
       eth_3_months_contango: [],
-      eth_6_months_contango: [],
-
+      eth_6_months_contango: []
     };
-
   }
 
-
-  async componentWillMount(){
+  async componentWillMount() {
     let token = this.props.user.token;
     let email = this.props.email;
     let that = this;
-    let promise = new Promise(function (resolve, reject) {
-      resolve(get_api_keys(token, email)
-        .then(result=> {console.log("Result ",result);
-          that.setState({keys: result.data});
+    let promise = new Promise(function(resolve, reject) {
+      resolve(
+        get_api_keys(token, email).then(result => {
+          // console.log("Result ",result);
+          that.setState({ keys: result.data });
           return null;
-        }))
-    })
-      .then(function(result) {
-          return new Promise (function(resolve, reject) {
-            resolve(
-              that.updateData()
-            )
-          })
-        }
+        })
       );
-
+    }).then(function(result) {
+      return new Promise(function(resolve, reject) {
+        resolve(that.updateData());
+      });
+    });
   }
   componentWillUnmount() {
     let that = this;
@@ -163,82 +160,114 @@ class Stat extends Component {
     }, 1000);
   }
 
-  async componentDidMount(){
+  async componentDidMount() {
     let that = this;
-    setTimeout(function() {
-      this.getWebsocketsData();
-    }.bind(this), 2000);
+    setTimeout(
+      function() {
+        this.getWebsocketsData();
+      }.bind(this),
+      2000
+    );
 
-    setInterval(function() {
-      this.computeReturns();
-    }.bind(this), 5000);
+    setInterval(
+      function() {
+        this.computeReturns();
+      }.bind(this),
+      5000
+    );
 
-    setInterval(function() {
-      this.getBtcFuturesContango();
-      this.getEthFuturesContango();
-    }.bind(this), 5000)
-
+    setInterval(
+      function() {
+        this.getBtcFuturesContango();
+        this.getEthFuturesContango();
+      }.bind(this),
+      5000
+    );
   }
 
-  async updateData(){
+  async updateData() {
     let that = this;
-    let RestClient = await require("deribit-api").RestClient;
-    let restClient = await new RestClient(this.state.keys.api_pubkey, this.state.keys.api_privkey, deribit_http);
+    let RestClient = await require('deribit-api').RestClient;
+    let restClient = await new RestClient(
+      this.state.keys.api_pubkey,
+      this.state.keys.api_privkey,
+      deribit_http
+    );
 
-    restClient.index()
-      .then((result) => {
-        console.log("Index: ", result);
+    restClient
+      .index()
+      .then(result => {
+        // console.log("Index: ", result);
         that.setState({ index: result.result.btc });
-        return result
+        return result;
       })
       .then(() => {
-        return new Promise(function (resolve, reject){
-          restClient.getinstruments((result) => {
-            console.log("Instruments: ", result);
-            let instruments = result.result.sort((a,b) => a["kind"]>b["kind"]?1:-1);
+        return new Promise(function(resolve, reject) {
+          restClient.getinstruments(result => {
+            // console.log("Instruments: ", result);
+            let instruments = result.result.sort((a, b) =>
+              a['kind'] > b['kind'] ? 1 : -1
+            );
 
             let futures = [];
             for (let item of instruments) {
-              if (item.kind == "future"){
-                futures.push({instrumentName: item.instrumentName, expiration: item.expiration});
+              if (item.kind == 'future') {
+                futures.push({
+                  instrumentName: item.instrumentName,
+                  expiration: item.expiration
+                });
               }
             }
             // console.log("Instruments: ", futures);
-            that.setState({ instruments: futures});
-            resolve(instruments)
+            that.setState({ instruments: futures });
+            resolve(instruments);
           });
-        })
+        });
       })
-      .then((result) => {
-        that.getExpirations(result.result)}
-      )
+      .then(result => {
+        that.getExpirations(result.result);
+      });
   }
 
-
-  getExpirations(instruments){
+  getExpirations(instruments) {
     const unique = [...new Set(instruments.map(item => item.expiration))];
     let result = [];
-    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    const monthNames = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC'
     ];
-    for (let item of unique ){
+    for (let item of unique) {
       // if (item !== "3000-01-01 08:00:00 GMT"){
-        // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
-        var date = new Date(item);
-        let exp = date.getDate().toString()+monthNames[date.getMonth()]+date.getFullYear().toString().substring(2,4);
-        // let jsonString = new Object();
-        // jsonString[exp] = "";
-        // JSON.stringify(jsonString);
-        result.push(exp);
+      // let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+      var date = new Date(item);
+      let exp =
+        date.getDate().toString() +
+        monthNames[date.getMonth()] +
+        date
+          .getFullYear()
+          .toString()
+          .substring(2, 4);
+      // let jsonString = new Object();
+      // jsonString[exp] = "";
+      // JSON.stringify(jsonString);
+      result.push(exp);
       // }
     }
     // result.sort((a,b)=>a.getTime()-b.getTime());
     // console.log("Result:  ", result);
-    this.setState({expiration_list: result});
-    console.log("Expirations", result);
-
+    this.setState({ expiration_list: result });
+    console.log('Expirations', result);
   }
-
 
   handleChange = name => event => {
     console.log(name, event.target.value);
@@ -248,126 +277,161 @@ class Stat extends Component {
   handleChangeCurrency = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
-    if (event.target.value === 'BTC'){
-      this.setState({ strike_list:
-          [
-            { id: 100, strike: "1000" },
-            { id: 101, strike: "2000" },
-            { id: 102, strike: "3000" },
-            { id: 103, strike: "4000" },
-            { id: 104, strike: "5000" },
-            { id: 105, strike: "6000" },
-            { id: 106, strike: "7000" },
-            { id: 107, strike: "8000" },
-            { id: 108, strike: "9000" },
-            { id: 109, strike: "10000" },
-            { id: 110, strike: "11000" },
-            { id: 111, strike: "12000" },
-            { id: 112, strike: "13000" },
-            { id: 113, strike: "14000" },
-            { id: 114, strike: "15000" },
-            { id: 115, strike: "16000" },
-            { id: 116, strike: "17000" },
-            { id: 117, strike: "18000" },
-            { id: 118, strike: "19000" },
-            { id: 119, strike: "20000" },
-          ],
+    if (event.target.value === 'BTC') {
+      this.setState({
+        strike_list: [
+          { id: 100, strike: '1000' },
+          { id: 101, strike: '2000' },
+          { id: 102, strike: '3000' },
+          { id: 103, strike: '4000' },
+          { id: 104, strike: '5000' },
+          { id: 105, strike: '6000' },
+          { id: 106, strike: '7000' },
+          { id: 107, strike: '8000' },
+          { id: 108, strike: '9000' },
+          { id: 109, strike: '10000' },
+          { id: 110, strike: '11000' },
+          { id: 111, strike: '12000' },
+          { id: 112, strike: '13000' },
+          { id: 113, strike: '14000' },
+          { id: 114, strike: '15000' },
+          { id: 115, strike: '16000' },
+          { id: 116, strike: '17000' },
+          { id: 117, strike: '18000' },
+          { id: 118, strike: '19000' },
+          { id: 119, strike: '20000' }
+        ]
       });
     }
-    if (event.target.value === 'ETH'){
-      this.setState({ strike_list:
-          [
-            { id: 100, strike: "100" },
-            { id: 101, strike: "200" },
-            { id: 102, strike: "300" },
-            { id: 103, strike: "400" },
-            { id: 104, strike: "500" },
-            { id: 105, strike: "600" },
-            { id: 106, strike: "700" },
-            { id: 107, strike: "800" },
-            { id: 108, strike: "900" },
-            { id: 109, strike: "1000" },
-            { id: 110, strike: "1100" },
-            { id: 111, strike: "1200" },
-            { id: 112, strike: "1300" },
-            { id: 113, strike: "1400" },
-            { id: 114, strike: "1500" },
-            { id: 115, strike: "1600" },
-            { id: 116, strike: "1700" },
-            { id: 117, strike: "1800" },
-            { id: 118, strike: "1900" },
-            { id: 119, strike: "2000" },
-          ],
+    if (event.target.value === 'ETH') {
+      this.setState({
+        strike_list: [
+          { id: 100, strike: '100' },
+          { id: 101, strike: '200' },
+          { id: 102, strike: '300' },
+          { id: 103, strike: '400' },
+          { id: 104, strike: '500' },
+          { id: 105, strike: '600' },
+          { id: 106, strike: '700' },
+          { id: 107, strike: '800' },
+          { id: 108, strike: '900' },
+          { id: 109, strike: '1000' },
+          { id: 110, strike: '1100' },
+          { id: 111, strike: '1200' },
+          { id: 112, strike: '1300' },
+          { id: 113, strike: '1400' },
+          { id: 114, strike: '1500' },
+          { id: 115, strike: '1600' },
+          { id: 116, strike: '1700' },
+          { id: 117, strike: '1800' },
+          { id: 118, strike: '1900' },
+          { id: 119, strike: '2000' }
+        ]
       });
     }
   };
 
-  getWebsocketsData(){
-    let that=this;
+  getWebsocketsData() {
+    let that = this;
     return new Promise(function(resolve, reject) {
-      let RestClient = require("deribit-api").RestClient;
-      let restClient = new RestClient(that.state.keys.api_pubkey, that.state.keys.api_privkey, deribit_http);
+      let RestClient = require('deribit-api').RestClient;
+      let restClient = new RestClient(
+        that.state.keys.api_pubkey,
+        that.state.keys.api_privkey,
+        deribit_http
+      );
 
       const WebSocket = require('ws');
       const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
 
       ws.on('open', function open() {
         var args = {
-          "instrument": ["futures"],
-          "event": ["order_book"]
+          instrument: ['futures'],
+          event: ['order_book']
         };
         var obj = {
-          "id": 5230,
-          "action": "/api/v1/private/subscribe",
-          "arguments": args,
-          sig: restClient.generateSignature("/api/v1/private/subscribe", args)
+          id: 5230,
+          action: '/api/v1/private/subscribe',
+          arguments: args,
+          sig: restClient.generateSignature('/api/v1/private/subscribe', args)
         };
-        console.log('Request object', obj);
+        // console.log('Request object', obj);
         resolve(ws.send(JSON.stringify(obj)));
       });
 
       ws.on('message', function incoming(data) {
         // console.log('on message');
-        if(data.length > 0)
-        {
+        if (data.length > 0) {
           var obj = JSON.parse(data);
           // console.log("Data ", obj.notifications);
 
-          if (typeof obj.notifications !== "undefined"){
-            that.setState({["ws_"+obj.notifications[0].result.instrument]: obj});
+          if (typeof obj.notifications !== 'undefined') {
+            that.setState({
+              ['ws_' + obj.notifications[0].result.instrument]: obj
+            });
           }
         }
       });
-    })
+    });
   }
 
-  computeReturns(){
+  computeReturns() {
     // console.log("Hello");
-    for (let item of this.state.instruments){
+    for (let item of this.state.instruments) {
       // console.log("Hello", this.state["ws_"+item.instrumentName]);
-      if (typeof this.state["ws_"+item.instrumentName] !== "undefined") {
-
-        if (item.instrumentName !== "BTC-PERPETUAL" && item.instrumentName.substring(0, 3) === "BTC") {
-          const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+      if (typeof this.state['ws_' + item.instrumentName] !== 'undefined') {
+        if (
+          item.instrumentName !== 'BTC-PERPETUAL' &&
+          item.instrumentName.substring(0, 3) === 'BTC'
+        ) {
+          const diffTime = Math.abs(
+            new Date(item.expiration).getTime() - Date.now()
+          );
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          let fut_ret = ((parseInt(this.state[item.instrumentName]) / parseInt(this.state["BTC-PERPETUAL"]) - 1)) * (365 / diffDays) * 100;
-          let new_item = "RET-" + item.instrumentName.toString();
+          let fut_ret =
+            (parseInt(this.state[item.instrumentName]) /
+              parseInt(this.state['BTC-PERPETUAL']) -
+              1) *
+            (365 / diffDays) *
+            100;
+          let new_item = 'RET-' + item.instrumentName.toString();
           this.setState({ [new_item]: fut_ret.toFixed(2) });
-          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last.toFixed(2) });
+          this.setState({
+            [item.instrumentName]: this.state[
+              'ws_' + item.instrumentName
+            ].notifications[0].result.last.toFixed(2)
+          });
           // that.setState()
           // console.log("Instrument ", this.state[item.instrumentName], " last ", this.state["ws_" + item.instrumentName].notifications[0].result.last, "Return", this.state[new_item]);
-        } else if (item.instrumentName !== "ETH-PERPETUAL" && item.instrumentName.substring(0, 3) === "ETH") {
-          const diffTime = Math.abs(new Date(item.expiration).getTime() - Date.now());
+        } else if (
+          item.instrumentName !== 'ETH-PERPETUAL' &&
+          item.instrumentName.substring(0, 3) === 'ETH'
+        ) {
+          const diffTime = Math.abs(
+            new Date(item.expiration).getTime() - Date.now()
+          );
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          let fut_ret = (parseInt(this.state[item.instrumentName]) / parseInt(this.state["ETH-PERPETUAL"]) - 1) * (365 / diffDays) * 100;
-          let new_item = "RET-" + item.instrumentName.toString();
+          let fut_ret =
+            (parseInt(this.state[item.instrumentName]) /
+              parseInt(this.state['ETH-PERPETUAL']) -
+              1) *
+            (365 / diffDays) *
+            100;
+          let new_item = 'RET-' + item.instrumentName.toString();
           this.setState({ [new_item]: fut_ret.toFixed(2) });
-          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last.toFixed(2) });
+          this.setState({
+            [item.instrumentName]: this.state[
+              'ws_' + item.instrumentName
+            ].notifications[0].result.last.toFixed(2)
+          });
           // console.log("Instrument ", this.state[item.instrumentName], " last ", this.state["ws_" + item.instrumentName].notifications[0].result.last, "Return", this.state[new_item]);
         } else {
-          let new_item = "RET-" + item.toString();
+          let new_item = 'RET-' + item.toString();
           this.setState({ [new_item]: (0).toFixed(2) });
-          this.setState({ [item.instrumentName]: this.state["ws_" + item.instrumentName].notifications[0].result.last });
+          this.setState({
+            [item.instrumentName]: this.state['ws_' + item.instrumentName]
+              .notifications[0].result.last
+          });
         }
 
         this.getChartFromInstruments();
@@ -375,43 +439,56 @@ class Stat extends Component {
     }
   }
 
-  getChartFromInstruments(){
-    let chartBTC =[];
-    let chartETH =[];
-    for (let item of this.state.instruments){
+  getChartFromInstruments() {
+    let chartBTC = [];
+    let chartETH = [];
+    for (let item of this.state.instruments) {
       let date = new Date();
 
-      if (item.instrumentName === "BTC-PERPETUAL" || item.instrumentName === "ETH-PERPETUAL"){
+      if (
+        item.instrumentName === 'BTC-PERPETUAL' ||
+        item.instrumentName === 'ETH-PERPETUAL'
+      ) {
         date = Date.now();
       } else {
         date = new Date(item.expiration);
       }
 
-      if (item.instrumentName.substring(0,3)==="BTC"){
-        chartBTC.push({"x": date, "y":parseInt(this.state[item.instrumentName]), "label": item.instrumentName, style: {fontSize: 8}})
+      if (item.instrumentName.substring(0, 3) === 'BTC') {
+        chartBTC.push({
+          x: date,
+          y: parseInt(this.state[item.instrumentName]),
+          label: item.instrumentName,
+          style: { fontSize: 8 }
+        });
       }
-      if (item.instrumentName.substring(0,3)==="ETH"){
-        chartETH.push({"x": date, "y":parseInt(this.state[item.instrumentName]), "label": item.instrumentName, style: {fontSize: 8}})
+      if (item.instrumentName.substring(0, 3) === 'ETH') {
+        chartETH.push({
+          x: date,
+          y: parseInt(this.state[item.instrumentName]),
+          label: item.instrumentName,
+          style: { fontSize: 8 }
+        });
       }
     }
-    chartETH.sort( (a, b) => {
-      if (typeof a.x!=='undefined'&&typeof b.x!=='undefined') {
-        return a.x-b.x;
+    chartETH.sort((a, b) => {
+      if (typeof a.x !== 'undefined' && typeof b.x !== 'undefined') {
+        return a.x - b.x;
       }
     });
 
-    chartBTC.sort( (a, b) => {
-      if (typeof a.x!=='undefined'&&typeof b.x!=='undefined') {
-        return a.x-b.x;
+    chartBTC.sort((a, b) => {
+      if (typeof a.x !== 'undefined' && typeof b.x !== 'undefined') {
+        return a.x - b.x;
       }
     });
-    this.setState({chartETH: chartETH});
-    this.setState({chartBTC: chartBTC});
+    this.setState({ chartETH: chartETH });
+    this.setState({ chartBTC: chartBTC });
     // console.log("Chart data", chartBTC, chartETH);
   }
 
-  ws_unsubscribe(){
-    this.setState({...this.state, ws_close: true});
+  ws_unsubscribe() {
+    this.setState({ ...this.state, ws_close: true });
   }
 
   // async plot(){
@@ -449,162 +526,204 @@ class Stat extends Component {
   // }
 
   _onMouseLeave = () => {
-    this.setState({crosshairValues: []});
+    this.setState({ crosshairValues: [] });
   };
 
-  _onNearestX = (value, {index}) => {
-    this.setState({crosshairValues: [this.state.chart_data_current[index]]});
+  _onNearestX = (value, { index }) => {
+    this.setState({ crosshairValues: [this.state.chart_data_current[index]] });
   };
 
-  async get_open_positions(){
-
+  async get_open_positions() {
     function calculate(item, index, arr) {
-      console.log(item);
-      console.log(index);
+      // console.log(item);
+      // console.log(index);
     }
-    this.state.positions.forEach(calculate)
+    this.state.positions.forEach(calculate);
   }
 
-  zoomIn(){
+  zoomIn() {
     let that = this;
     let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom+0.2})));
-      return null
+      resolve(
+        that.setState((prevState, props) => ({ zoom: prevState.zoom + 0.2 }))
+      );
+      return null;
     });
-    promise.then(()=>this.computePnL());
+    promise.then(() => this.computePnL());
   }
-  zoomOut(){
+  zoomOut() {
     let that = this;
     let promise = new Promise(function(resolve, reject) {
-      resolve(that.setState((prevState, props) => ({zoom: prevState.zoom-0.2})));
-      return null
+      resolve(
+        that.setState((prevState, props) => ({ zoom: prevState.zoom - 0.2 }))
+      );
+      return null;
     });
-    promise.then(()=>this.computePnL());
+    promise.then(() => this.computePnL());
   }
 
-  getBtcFuturesContango () {
+  getBtcFuturesContango() {
     let that = this;
-    get_btc_contango(this.props.user.token)
-      .then(data =>{
-        // console.log("BTC futures", data);
-        let btc_3_months_contango = [];
-        let btc_6_months_contango = [];
+    get_btc_contango(this.props.user.token).then(data => {
+      // console.log("BTC futures", data);
+      let btc_3_months_contango = [];
+      let btc_6_months_contango = [];
 
-        for (let i of data.data.json_list){
-          let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
-          let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
-          let date =  new Date(i.timestamp);
-          btc_3_months_contango.push({"x": date, "y":parseInt(diff_3_month)});
-          btc_6_months_contango.push({"x": date, "y":parseInt(diff_6_month)});
-        }
-        that.setState({btc_3_months_contango: btc_3_months_contango});
-        that.setState({btc_6_months_contango: btc_6_months_contango});
-      });
+      for (let i of data.data.json_list) {
+        let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
+        let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
+        let date = new Date(i.timestamp);
+        btc_3_months_contango.push({ x: date, y: parseInt(diff_3_month) });
+        btc_6_months_contango.push({ x: date, y: parseInt(diff_6_month) });
+      }
+      that.setState({ btc_3_months_contango: btc_3_months_contango });
+      that.setState({ btc_6_months_contango: btc_6_months_contango });
+    });
   }
 
-  getEthFuturesContango () {
+  getEthFuturesContango() {
     let that = this;
-    get_eth_contango(this.props.user.token)
-      .then(data =>{
-          // console.log("ETH futures", data);
-        let eth_3_months_contango = [];
-        let eth_6_months_contango = [];
-        for (let i of data.data.json_list){
-          let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
-          let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
-          let date =  new Date(i.timestamp);
-          eth_3_months_contango.push({"x": date, "y":parseInt(diff_3_month)});
-          eth_6_months_contango.push({"x": date, "y":parseInt(diff_6_month)})
-        }
-        that.setState({eth_3_months_contango: eth_3_months_contango});
-        that.setState({eth_6_months_contango: eth_6_months_contango});
-      });
+    get_eth_contango(this.props.user.token).then(data => {
+      // console.log("ETH futures", data);
+      let eth_3_months_contango = [];
+      let eth_6_months_contango = [];
+      for (let i of data.data.json_list) {
+        let diff_3_month = parseInt(i.three_months) - parseInt(i.perpetual);
+        let diff_6_month = parseInt(i.six_months) - parseInt(i.perpetual);
+        let date = new Date(i.timestamp);
+        eth_3_months_contango.push({ x: date, y: parseInt(diff_3_month) });
+        eth_6_months_contango.push({ x: date, y: parseInt(diff_6_month) });
+      }
+      that.setState({ eth_3_months_contango: eth_3_months_contango });
+      that.setState({ eth_6_months_contango: eth_6_months_contango });
+    });
   }
 
   render() {
-    const {classes} = this.props;
-    const {useCanvas} = this.state;
+    const { classes } = this.props;
+    const { useCanvas } = this.state;
     const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
-    let {yDomain} = this.state;
-    let {instrument} = this.state;
-    let {strike_list,expiration_list} = this.state;
+    let { yDomain } = this.state;
+    let { instrument } = this.state;
+    let { strike_list, expiration_list } = this.state;
     let that = this;
     function comp_ret(that, row) {
-      if (typeof that.state[row] !== "undefined"){
+      if (typeof that.state[row] !== 'undefined') {
         let result = that.state[row];
-        console.log("Result ...",result);
-        return result.ret
+        // console.log("Result ...",result);
+        return result.ret;
       } else {
-        return 0
+        return 0;
       }
     }
     return (
-      <div data-tid="container" style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
-        <Paper className={classes.elementPadding}>
-        <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Short Futures Returns</h5>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
-          <Table className={classes.table} style={{maxWidth: "100%"}}>
-            <TableHead>
-              <TableRow>
-                <TableCell align="left">Instrument</TableCell>
-                <TableCell align="left">Last</TableCell>
-                <TableCell align="left">APR %</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {this.state.instruments.map(item => (
-                <TableRow>
-                  <TableCell align="left">
-                    {
-                      item.instrumentName
-                    }
-                  </TableCell>
-                  <TableCell align="left">
-                    {
-                      this.state[item.instrumentName]
-                    }
-                  </TableCell>
-                  <TableCell align="left">
-                    {
-                      this.state["RET-"+item.instrumentName]
-                    }
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/*<Button*/}
-          {/*  className={classes.button}*/}
-          {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
-          {/*  variant="outlined"*/}
-          {/*  // color="primary"*/}
-          {/*>Compute</Button>*/}
-        </div>
-
-        <br/>
-        </Paper>
-
-
-          <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"column"}}>
+      <div
+        data-tid="container"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
+          }}
+        >
           <Paper className={classes.elementPadding}>
-            {/*Main graph*/}
-            <XYPlot width={340} height={200} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
-              <HorizontalGridLines />
-              <VerticalGridLines />
-              <XAxis tickLabelAngle={-45} />
-              <YAxis />
-              <MarkSeries
-                data={this.state.chartBTC}
-              />
-              <LabelSeries animation allowOffsetToBeReversed data={this.state.chartBTC}/>
-            </XYPlot>
+            <h5
+              style={{
+                color: '#152880',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              Short Futures Returns
+            </h5>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexDirection: 'row'
+              }}
+            >
+              <Table className={classes.table} style={{ maxWidth: '100%' }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="left">Instrument</TableCell>
+                    <TableCell align="left">Last</TableCell>
+                    <TableCell align="left">APR %</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {this.state.instruments.map(item => (
+                    <TableRow>
+                      <TableCell align="left">{item.instrumentName}</TableCell>
+                      <TableCell align="left">
+                        {this.state[item.instrumentName]}
+                      </TableCell>
+                      <TableCell align="left">
+                        {this.state['RET-' + item.instrumentName]}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/*<Button*/}
+              {/*  className={classes.button}*/}
+              {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
+              {/*  variant="outlined"*/}
+              {/*  // color="primary"*/}
+              {/*>Compute</Button>*/}
+            </div>
+
+            <br />
           </Paper>
+
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              flexDirection: 'column'
+            }}
+          >
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={340} height={200} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <XYPlot
+                width={340}
+                height={200}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <MarkSeries data={this.state.chartBTC} />
+                <LabelSeries
+                  animation
+                  allowOffsetToBeReversed
+                  data={this.state.chartBTC}
+                />
+              </XYPlot>
+            </Paper>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot
+                width={340}
+                height={200}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
@@ -615,8 +734,11 @@ class Stat extends Component {
                   sizeRange={[5, 15]}
                   data={this.state.chartETH}
                 />
-                <LabelSeries animation allowOffsetToBeReversed data={this.state.chartETH}/>
-
+                <LabelSeries
+                  animation
+                  allowOffsetToBeReversed
+                  data={this.state.chartETH}
+                />
               </XYPlot>
             </Paper>
             {/*<Button*/}
@@ -634,54 +756,110 @@ class Stat extends Component {
           </div>
         </div>
 
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
+          }}
+        >
           <div>
-            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC three months contango</h5>
-          <Paper className={classes.elementPadding}>
-            {/*Main graph*/}
-            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
-              <HorizontalGridLines />
-              <VerticalGridLines />
-              <XAxis tickLabelAngle={-45} />
-              <YAxis />
-              <LineSeries
-                className="btc-contango"
-                strokeWidth={2}
-                sizeRange={[5, 15]}
-                data={this.state.btc_3_months_contango}
-              />
-              {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
-            </XYPlot>
-          </Paper>
+            <h5
+              style={{
+                color: '#152880',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              BTC three months contango
+            </h5>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot
+                width={340}
+                height={220}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <LineSeries
+                  className="btc-contango"
+                  strokeWidth={2}
+                  sizeRange={[5, 15]}
+                  data={this.state.btc_3_months_contango}
+                />
+                {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+              </XYPlot>
+            </Paper>
           </div>
 
           <div>
-            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>BTC six months contango</h5>
-          <Paper className={classes.elementPadding}>
-            {/*Main graph*/}
-            <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
-              <HorizontalGridLines />
-              <VerticalGridLines />
-              <XAxis tickLabelAngle={-45} />
-              <YAxis />
-              <LineSeries
-                className="btc-contango"
-                strokeWidth={2}
-                sizeRange={[5, 15]}
-                data={this.state.btc_6_months_contango}
-              />
-              {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
-            </XYPlot>
-          </Paper>
+            <h5
+              style={{
+                color: '#152880',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              BTC six months contango
+            </h5>
+            <Paper className={classes.elementPadding}>
+              {/*Main graph*/}
+              <XYPlot
+                width={340}
+                height={220}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
+                <HorizontalGridLines />
+                <VerticalGridLines />
+                <XAxis tickLabelAngle={-45} />
+                <YAxis />
+                <LineSeries
+                  className="btc-contango"
+                  strokeWidth={2}
+                  sizeRange={[5, 15]}
+                  data={this.state.btc_6_months_contango}
+                />
+                {/*<LabelSeries animation allowOffsetToBeReversed data={this.state.btc_contango}/>*/}
+              </XYPlot>
+            </Paper>
           </div>
         </div>
 
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection:"row"}}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
+          }}
+        >
           <div>
-            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>ETH three months contango</h5>
+            <h5
+              style={{
+                color: '#152880',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              ETH three months contango
+            </h5>
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <XYPlot
+                width={340}
+                height={220}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
@@ -698,10 +876,24 @@ class Stat extends Component {
           </div>
 
           <div>
-            <h5 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>ETH six months contango</h5>
+            <h5
+              style={{
+                color: '#152880',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              ETH six months contango
+            </h5>
             <Paper className={classes.elementPadding}>
               {/*Main graph*/}
-              <XYPlot width={340} height={220} xType="time" margin={{bottom: 50, left: 50, right: 10, top: 20}}>
+              <XYPlot
+                width={340}
+                height={220}
+                xType="time"
+                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+              >
                 <HorizontalGridLines />
                 <VerticalGridLines />
                 <XAxis tickLabelAngle={-45} />
@@ -717,18 +909,13 @@ class Stat extends Component {
             </Paper>
           </div>
         </div>
-
-
-
       </div>
-
     );
   }
 }
 
-
 Stat.propTypes = {
-  classes: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired
 };
 
 export default withStyles(styles)(Stat);

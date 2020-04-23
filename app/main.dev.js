@@ -60,12 +60,15 @@ app.on('window-all-closed', () => {
 });
 
 // SSL/TSL: this is the self signed certificate support
-app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
-  // On certificate error we disable default behaviour (stop loading the page)
-  // and we then say "it is all fine - true" to the callback
-  event.preventDefault();
-  callback(true);
-});
+app.on(
+  'certificate-error',
+  (event, webContents, url, error, certificate, callback) => {
+    // On certificate error we disable default behaviour (stop loading the page)
+    // and we then say "it is all fine - true" to the callback
+    event.preventDefault();
+    callback(true);
+  }
+);
 
 app.on('ready', async () => {
   if (
@@ -79,7 +82,8 @@ app.on('ready', async () => {
     show: false,
     width: 1024,
     height: 728,
-    resizable: false
+    resizable: false,
+    backgroundColor: '#000'
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
