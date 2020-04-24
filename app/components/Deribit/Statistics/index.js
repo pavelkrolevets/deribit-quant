@@ -467,7 +467,8 @@ class Stat extends Component {
           x: date,
           y: parseInt(this.state[item.instrumentName]),
           label: item.instrumentName,
-          style: { fontSize: 8 }
+          style: { fontSize: 8, textAnchor: 'middle' },
+          color: '#dc6b02'
         });
       }
     }
@@ -624,7 +625,8 @@ class Stat extends Component {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          backgroundColor: 'black'
         }}
       >
         <div
@@ -635,58 +637,64 @@ class Stat extends Component {
             flexDirection: 'row'
           }}
         >
-          <Paper className={classes.elementPadding}>
-            <h5
-              style={{
-                color: '#152880',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
-              Short Futures Returns
-            </h5>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'row'
-              }}
-            >
-              <Table className={classes.table} style={{ maxWidth: '100%' }}>
-                <TableHead>
+          {/*<h5*/}
+          {/*  style={{*/}
+          {/*    color: '#dc6b02',*/}
+          {/*    display: 'flex',*/}
+          {/*    justifyContent: 'center',*/}
+          {/*    alignItems: 'center'*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  Short Futures Returns*/}
+          {/*</h5>*/}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              flexDirection: 'row'
+            }}
+          >
+            <Table className={classes.table} style={{ maxWidth: '100%' }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="left" style={{ color: '#FFF' }}>
+                    Instrument
+                  </TableCell>
+                  <TableCell align="left" style={{ color: '#FFF' }}>
+                    Last
+                  </TableCell>
+                  <TableCell align="left" style={{ color: '#FFF' }}>
+                    APR %
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.state.instruments.map(item => (
                   <TableRow>
-                    <TableCell align="left">Instrument</TableCell>
-                    <TableCell align="left">Last</TableCell>
-                    <TableCell align="left">APR %</TableCell>
+                    <TableCell align="left" style={{ color: '#dc6b02' }}>
+                      {item.instrumentName}
+                    </TableCell>
+                    <TableCell align="left" style={{ color: '#dc6b02' }}>
+                      {this.state[item.instrumentName]}
+                    </TableCell>
+                    <TableCell align="left" style={{ color: '#dc6b02' }}>
+                      {this.state['RET-' + item.instrumentName]}
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {this.state.instruments.map(item => (
-                    <TableRow>
-                      <TableCell align="left">{item.instrumentName}</TableCell>
-                      <TableCell align="left">
-                        {this.state[item.instrumentName]}
-                      </TableCell>
-                      <TableCell align="left">
-                        {this.state['RET-' + item.instrumentName]}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                ))}
+              </TableBody>
+            </Table>
 
-              {/*<Button*/}
-              {/*  className={classes.button}*/}
-              {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
-              {/*  variant="outlined"*/}
-              {/*  // color="primary"*/}
-              {/*>Compute</Button>*/}
-            </div>
+            {/*<Button*/}
+            {/*  className={classes.button}*/}
+            {/*  onClick={()=>this.getWebsocketsData(instrument)}*/}
+            {/*  variant="outlined"*/}
+            {/*  // color="primary"*/}
+            {/*>Compute</Button>*/}
+          </div>
 
-            <br />
-          </Paper>
+          <br />
 
           <div
             style={{
@@ -696,51 +704,53 @@ class Stat extends Component {
               flexDirection: 'column'
             }}
           >
-            <Paper className={classes.elementPadding}>
-              {/*Main graph*/}
-              <XYPlot
-                width={340}
-                height={200}
-                xType="time"
-                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
-              >
-                <HorizontalGridLines />
-                <VerticalGridLines />
-                <XAxis tickLabelAngle={-45} />
-                <YAxis />
-                <MarkSeries data={this.state.chartBTC} />
-                <LabelSeries
-                  animation
-                  allowOffsetToBeReversed
-                  data={this.state.chartBTC}
-                />
-              </XYPlot>
-            </Paper>
-            <Paper className={classes.elementPadding}>
-              {/*Main graph*/}
-              <XYPlot
-                width={340}
-                height={200}
-                xType="time"
-                margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
-              >
-                <HorizontalGridLines />
-                <VerticalGridLines />
-                <XAxis tickLabelAngle={-45} />
-                <YAxis />
-                <MarkSeries
-                  className="mark-series-example"
-                  strokeWidth={2}
-                  sizeRange={[5, 15]}
-                  data={this.state.chartETH}
-                />
-                <LabelSeries
-                  animation
-                  allowOffsetToBeReversed
-                  data={this.state.chartETH}
-                />
-              </XYPlot>
-            </Paper>
+            {/*<Paper className={classes.elementPadding}>*/}
+            {/*Main graph*/}
+            <XYPlot
+              width={340}
+              height={200}
+              xType="time"
+              margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+            >
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis tickLabelAngle={-45} />
+              <YAxis />
+              <MarkSeries data={this.state.chartBTC} color="#ba4fb9" />
+              <LabelSeries
+                animation
+                allowOffsetToBeReversed
+                data={this.state.chartBTC}
+                color="#dc6b02"
+              />
+            </XYPlot>
+            {/*</Paper>*/}
+            {/*<Paper className={classes.elementPadding}>*/}
+            {/*Main graph*/}
+            <XYPlot
+              width={340}
+              height={200}
+              xType="time"
+              margin={{ bottom: 50, left: 50, right: 10, top: 20 }}
+            >
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis tickLabelAngle={-45} />
+              <YAxis />
+              <MarkSeries
+                className="mark-series-example"
+                strokeWidth={2}
+                sizeRange={[5, 15]}
+                data={this.state.chartETH}
+                color="#ba4fb9"
+              />
+              <LabelSeries
+                animation
+                allowOffsetToBeReversed
+                data={this.state.chartETH}
+              />
+            </XYPlot>
+            {/*</Paper>*/}
             {/*<Button*/}
             {/*  className={classes.button}*/}
             {/*  onClick={()=>this.getBtcFuturesContango()}*/}
@@ -767,7 +777,7 @@ class Stat extends Component {
           <div>
             <h5
               style={{
-                color: '#152880',
+                color: '#dc6b02',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -801,7 +811,7 @@ class Stat extends Component {
           <div>
             <h5
               style={{
-                color: '#152880',
+                color: '#dc6b02',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -844,7 +854,7 @@ class Stat extends Component {
           <div>
             <h5
               style={{
-                color: '#152880',
+                color: '#dc6b02',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -878,7 +888,7 @@ class Stat extends Component {
           <div>
             <h5
               style={{
-                color: '#152880',
+                color: '#dc6b02',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
