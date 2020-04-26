@@ -90,6 +90,7 @@ class Vola extends Component {
       timeframe: '1d',
       instrument: 'BTC'
     };
+    this.update_interval = null;
   }
 
   async componentWillMount() {
@@ -98,7 +99,7 @@ class Vola extends Component {
       this.setState({ keys: result.data });
     });
 
-    await await this.updateVola();
+    await this.updateVola();
     // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
     // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
     // this.web3.eth.getAccounts(function (error, res) {
@@ -111,7 +112,7 @@ class Vola extends Component {
   }
 
   async componentDidMount() {
-    setInterval(
+    this.update_interval = setInterval(
       async function() {
         await this.updateVola();
       }.bind(this),
@@ -123,6 +124,11 @@ class Vola extends Component {
     //   this.updateData();
     //   this.setState({time: new Date().toLocaleTimeString()})
     // }, 30000);
+  }
+
+  componentWillUnmount() {
+    console.log('Component unmounting...');
+    if (this.update_interval) clearInterval(this.update_interval);
   }
 
   async updateVola() {

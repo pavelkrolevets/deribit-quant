@@ -153,7 +153,10 @@ class Simulate extends Component {
   }
 
   componentWillUnmount() {
-    // this.setState({...this.state, ws_close: true});
+    const WebSocket = require('ws');
+    const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
+    console.log('Component unmounting...');
+    ws.close();
   }
 
   async updateData() {

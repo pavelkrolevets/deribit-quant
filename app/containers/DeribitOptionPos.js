@@ -1,7 +1,7 @@
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import DeribitOptionPos from '../components/Deribit/OptionsPos/index';
-import {saveAccount} from '../actions/account';
+import { storeDeribitAccount } from '../actions/account';
 
 function mapStateToProps(state) {
   return {
@@ -11,7 +11,7 @@ function mapStateToProps(state) {
 }
 
 const mapDispatchToProps = {
-  dispatchKeys: (pk, prk) => saveAccount(pk, prk),
+  dispatchKeys: (pk, prk) => storeDeribitAccount(pk, prk)
 };
 
 export default connect(

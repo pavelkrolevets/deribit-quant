@@ -71,9 +71,20 @@ class Chart extends Component {
     super(props);
     this.state = {
       isShow: true,
-      chart_data_current: this.props.chart.chart_data_current
+      chart_data_current: this.props.chart.chart_data_current,
+      account: [{ equity: 0, delta_total: 0 }]
     };
   }
+
+  componentWillMount() {
+    this.setState({
+      chart_data_current: this.props.chart.chart_data_current
+    });
+  }
+
+  // componentWillReceiveProps(nextProps: Props, nextContext: *){
+  //   console.log("Got props",  this.props.chart.chart_data_current);
+  // }
 
   _onMouseLeave = () => {
     this.setState({ crosshairValues: [] });
@@ -110,7 +121,7 @@ class Chart extends Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {this.props.chart.account.map((row, i) => (
+              {this.state.account.map((row, i) => (
                 <TableRow key={i}>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
                     {parseFloat(row.equity).toFixed(2)}

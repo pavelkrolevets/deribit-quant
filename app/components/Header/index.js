@@ -25,6 +25,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as actionCreators from '../actions/auth';
+import { initializeSocket } from '../../actions/socket';
 
 const styles = theme => ({
   root: {
@@ -106,25 +107,35 @@ const styles = theme => ({
     padding: '0 30px'
   }
 });
-function mapStateToProps(state) {
-  return {
-    token: state.auth.token,
-    userName: state.auth.userName,
-    isAuthenticated: state.auth.isAuthenticated
-  };
-}
 
-function mapDispatchToProps(dispatch) {
-  return bindActionCreators(actionCreators, dispatch);
-}
+// function mapStateToProps(state) {
+//   return {
+//     token: state.auth.token,
+//     userName: state.auth.userName,
+//     isAuthenticated: state.auth.isAuthenticated
+//   };
+// }
 
-@connect(
-  mapStateToProps,
-  mapDispatchToProps
-)
+// function mapDispatchToProps(dispatch) {
+//   return bindActionCreators(actionCreators, dispatch);
+// }
+
+// @connect(
+//   mapStateToProps,
+//   mapDispatchToProps
+// )
+
 class Header extends Component {
   constructor(props) {
     super(props);
+  }
+
+  componentWillMount() {
+    this.props.initializeSocket();
+  }
+
+  componentDidMount() {
+    console.log(this.props.socket.connected);
   }
 
   state = {
@@ -292,7 +303,7 @@ class Header extends Component {
               color="inherit"
               noWrap
             >
-              DQaunt Terminal
+              Periscope Terminal
             </Typography>
             <div className={classes.search}>
               <div className={classes.searchIcon}>
@@ -349,7 +360,9 @@ Header.propTypes = {
   classes: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired,
   logoutAndRedirect: PropTypes.func,
-  isAuthenticated: PropTypes.bool
+  isAuthenticated: PropTypes.bool,
+  socket: PropTypes.object.isRequired,
+  initializeSocket: PropTypes.func.isRequired
 };
 
 export default withRouter(withStyles(styles, { withTheme: true })(Header));

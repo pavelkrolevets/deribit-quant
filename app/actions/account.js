@@ -1,9 +1,8 @@
+export const STORE_DERIBIT_KEYS = 'STORE_DERIBIT_KEYS';
 
-export const SAVE_KEYS = 'SAVE_KEYS';
-
-export function saveAccount(pubkey, privkey) {
+export function storeDeribitAccount(pubkey, privkey) {
   return {
-    type: SAVE_KEYS,
+    type: STORE_DERIBIT_KEYS,
     publicKey: pubkey,
     privateKey: privkey
   };

@@ -1,7 +1,6 @@
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import DeribitDeltaHedger from '../components/Deribit/DeltaHedger/index';
-import {saveAccount} from '../actions/account';
 
 function mapStateToProps(state) {
   return {
@@ -10,6 +9,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(
-  mapStateToProps,
-)(DeribitDeltaHedger);
+export default connect(mapStateToProps)(DeribitDeltaHedger);

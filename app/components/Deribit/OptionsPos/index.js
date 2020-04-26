@@ -20,6 +20,7 @@ import Typography from '@material-ui/core/Typography';
 import Toolbar from '@material-ui/core/Toolbar';
 import { BlackScholes } from '../Simulate/bsm';
 import Chart from './ChartContainer/index';
+import { deribit_api } from './requests';
 
 import {
   XYPlot,
@@ -78,7 +79,7 @@ TabContainer.propTypes = {
 };
 
 const WebSocket = require('ws');
-var ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
+let ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
 
 class DeribitOptionPos extends Component {
   constructor(props) {
@@ -126,10 +127,17 @@ class DeribitOptionPos extends Component {
 
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
     this.eventHandler = this.eventHandler.bind(this);
+    this.update_interval = null;
   }
 
   updateWindowDimensions() {
     this.setState({ width: window.innerWidth, height: window.innerHeight });
+  }
+
+  componentWillUnmount() {
+    console.log('Component unmounting...');
+    if (this.update_interval) clearInterval(this.update_interval);
+    ws.close();
   }
 
   async componentWillMount() {
@@ -138,7 +146,7 @@ class DeribitOptionPos extends Component {
       this.setState({ keys: result.data });
     });
 
-    var auth = {
+    let auth = {
       jsonrpc: '2.0',
       id: 9929,
       method: 'public/auth',
@@ -151,77 +159,40 @@ class DeribitOptionPos extends Component {
 
     ws.onopen = function() {
       ws.send(JSON.stringify(auth));
+      // await ws.send(JSON.stringify(get_index))
     };
 
     ws.onmessage = e => {
       this.eventHandler(JSON.parse(e.data));
     };
 
-    setInterval(() => {
+    this.update_interval = setInterval(() => {
+      console.log('Start timer');
       this.getData();
     }, 2000);
   }
 
-  getData() {
-    var index = {
-      jsonrpc: '2.0',
-      method: 'public/get_index',
-      id: 42,
-      params: {
-        currency: this.state.currency
-      }
-    };
+  async getData() {
+    let get_index = await deribit_api(this.state.currency, 'index', 42);
+    let fut_positions = await deribit_api(
+      this.state.currency,
+      'fut_positions',
+      2236
+    );
+    let opt_positions = await deribit_api(
+      this.state.currency,
+      'opt_positions',
+      2237
+    );
+    let account = await deribit_api(this.state.currency, 'account', 2515);
+    let positions = await deribit_api(this.state.currency, 'positions', 2238);
+    let all_instruments = await deribit_api(
+      this.state.currency,
+      'all_instruments',
+      7617
+    );
 
-    var fut_positions = {
-      jsonrpc: '2.0',
-      id: 2236,
-      method: 'private/get_positions',
-      params: {
-        currency: this.state.currency,
-        kind: 'future'
-      }
-    };
-
-    var opt_positions = {
-      jsonrpc: '2.0',
-      id: 2237,
-      method: 'private/get_positions',
-      params: {
-        currency: this.state.currency,
-        kind: 'option'
-      }
-    };
-
-    var positions = {
-      jsonrpc: '2.0',
-      id: 2238,
-      method: 'private/get_positions',
-      params: {
-        currency: this.state.currency
-      }
-    };
-
-    var account = {
-      jsonrpc: '2.0',
-      id: 2515,
-      method: 'private/get_account_summary',
-      params: {
-        currency: this.state.currency
-        // "extended" : true
-      }
-    };
-
-    var all_instruments = {
-      jsonrpc: '2.0',
-      id: 7617,
-      method: 'public/get_instruments',
-      params: {
-        currency: this.state.currency,
-        expired: false
-      }
-    };
-
-    ws.send(JSON.stringify(index));
+    ws.send(JSON.stringify(get_index));
     ws.send(JSON.stringify(fut_positions));
     ws.send(JSON.stringify(opt_positions));
     ws.send(JSON.stringify(account));
@@ -313,7 +284,7 @@ class DeribitOptionPos extends Component {
 
       this.setState({ ...this.state, chart_data_current: current_value_chart });
       this.setState({ ...this.state, chart_data_at_zero: value_at_zero_chart });
-      this.setState({ yDomain: [-5000, 5000] });
+      this.setState({ yDomain: [-10000, 10000] });
     }
 
     if (this.state.currency === 'ETH') {
@@ -336,7 +307,7 @@ class DeribitOptionPos extends Component {
       }
       this.setState({ ...this.state, chart_data_current: current_value_chart });
       this.setState({ ...this.state, chart_data_at_zero: value_at_zero_chart });
-      this.setState({ yDomain: [-500, 500] });
+      this.setState({ yDomain: [-1000, 1000] });
     }
 
     // console.log("Current value chart", current_value_chart);

@@ -9,11 +9,15 @@ import Paper from '@material-ui/core/Paper';
 import * as actionCreators from '../actions/auth';
 import { validateEmail } from '../../utils/misc';
 import PropTypes from 'prop-types';
+import { initializeSocket } from '../../actions/socket.js';
+import { getDeribitAccount } from '../../actions/account.js';
 
 function mapStateToProps(state) {
   return {
     isAuthenticating: state.auth.isAuthenticating,
     statusText: state.auth.statusText,
+    email: state.auth.userName,
+    user: state.auth
   };
 }
 
@@ -21,19 +25,20 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actionCreators, dispatch);
 }
 
-
 const style = {
   marginTop: 50,
   paddingBottom: 50,
   paddingTop: 25,
   width: '100%',
   textAlign: 'center',
-  display: 'inline-block',
+  display: 'inline-block'
 };
 
-@connect(mapStateToProps, mapDispatchToProps)
+@connect(
+  mapStateToProps,
+  mapDispatchToProps
+)
 export default class LoginView extends React.Component {
-
   constructor(props) {
     super(props);
     const redirectRoute = '/login';
@@ -43,7 +48,7 @@ export default class LoginView extends React.Component {
       email_error_text: null,
       password_error_text: null,
       redirectTo: redirectRoute,
-      disabled: true,
+      disabled: true
     };
   }
 
@@ -53,42 +58,39 @@ export default class LoginView extends React.Component {
 
     if (this.state.email === '') {
       this.setState({
-        email_error_text: null,
+        email_error_text: null
       });
     } else if (validateEmail(this.state.email)) {
       email_is_valid = true;
       this.setState({
-        email_error_text: null,
+        email_error_text: null
       });
-
     } else {
       this.setState({
-        email_error_text: 'Sorry, this is not a valid email',
+        email_error_text: 'Sorry, this is not a valid email'
       });
     }
 
     if (this.state.password === '' || !this.state.password) {
       this.setState({
-        password_error_text: null,
+        password_error_text: null
       });
     } else if (this.state.password.length >= 6) {
       password_is_valid = true;
       this.setState({
-        password_error_text: null,
+        password_error_text: null
       });
     } else {
       this.setState({
-        password_error_text: 'Your password must be at least 6 characters',
+        password_error_text: 'Your password must be at least 6 characters'
       });
-
     }
 
     if (email_is_valid && password_is_valid) {
       this.setState({
-        disabled: false,
+        disabled: false
       });
     }
-
   }
 
   changeValue(e, type) {
@@ -102,22 +104,23 @@ export default class LoginView extends React.Component {
 
   login(e) {
     e.preventDefault();
-    this.props.loginUser(this.state.email, this.state.password, this.props.history);
+    this.props.loginUser(
+      this.state.email,
+      this.state.password,
+      this.props.history
+    );
   }
 
   render() {
     return (
-      <div className="col-md-6 col-md-offset-3" >
+      <div className="col-md-6 col-md-offset-3">
         <Paper style={style}>
           <form role="form">
             <div className="text-center">
               <h1>Login to options trader!</h1>
-              {
-                this.props.statusText &&
-                <div className="alert alert-info">
-                  {this.props.statusText}
-                </div>
-              }
+              {this.props.statusText && (
+                <div className="alert alert-info">{this.props.statusText}</div>
+              )}
 
               <div className="col-md-12">
                 <TextField
@@ -128,7 +131,7 @@ export default class LoginView extends React.Component {
                   autoComplete="email"
                   margin="normal"
                   variant="outlined"
-                  onChange={(e) => this.changeValue(e, 'email')}
+                  onChange={e => this.changeValue(e, 'email')}
                 />
               </div>
               <div className="col-md-12">
@@ -139,30 +142,28 @@ export default class LoginView extends React.Component {
                   autoComplete="current-password"
                   margin="normal"
                   variant="outlined"
-                  onChange={(e) => this.changeValue(e, 'password')}
+                  onChange={e => this.changeValue(e, 'password')}
                 />
               </div>
 
               <RaisedButton
                 style={{ marginTop: 50 }}
-                onClick={(e) => this.login(e)}
+                onClick={e => this.login(e)}
                 variant="contained"
                 color="primary"
               >
                 Submit
               </RaisedButton>
-
             </div>
           </form>
         </Paper>
-
       </div>
     );
-
   }
 }
 
 LoginView.propTypes = {
   loginUser: PropTypes.func,
   statusText: PropTypes.string,
+  initializeSocket: PropTypes.func
 };

@@ -1,8 +1,8 @@
 {
-  "name": "dquant_terminal",
-  "productName": "DQuant Terminal",
+  "name": "peroscope",
+  "productName": "Periscope Cryptocurrency Terminal",
   "version": "0.0.5",
-  "description": "Cryptocurrency derivatives quant terminal",
+  "description": "Cryptocurrency research terminal",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -57,7 +57,7 @@
   },
   "main": "./app/main.prod.js",
   "build": {
-    "productName": "DQuant",
+    "productName": "Periscope",
     "appId": "org.develar.ElectronReact",
     "files": [
       "app/dist/",
@@ -280,11 +280,11 @@
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-hot-loader": "^4.3.12",
-    "react-redux": "^5.1.1",
+    "react-redux": "^5.1.2",
     "react-router": "^5.0.0",
     "react-router-dom": "^5.0.0",
     "react-vis": "^1.11.7",
-    "redux": "^4.0.1",
+    "redux": "^4.0.5",
     "redux-persist": "^5.10.0",
     "redux-thunk": "^2.3.0",
     "request": "^2.88.0",

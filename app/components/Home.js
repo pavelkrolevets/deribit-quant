@@ -2,8 +2,6 @@
 import React, { Component } from 'react';
 import styles from './Home.css';
 
-
-
 type Props = {};
 
 export default class Home extends Component<Props> {
@@ -21,11 +19,10 @@ export default class Home extends Component<Props> {
   //   });
   // }
 
-
   render() {
     return (
       <div className={styles.container} data-tid="container">
-        <h1 style={{color:"#152880"}}>Welcome to DQ Terminal!</h1>
+        <h1 style={{ color: '#152880' }}>Welcome to Lightsaber Terminal!</h1>
       </div>
     );
   }

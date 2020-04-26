@@ -1,7 +1,6 @@
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Vola from '../components/Deribit/Vola/index';
-import {saveAccount} from '../actions/account';
 
 function mapStateToProps(state) {
   return {
@@ -10,7 +9,4 @@ function mapStateToProps(state) {
   };
 }
 
-
-export default connect(
-  mapStateToProps,
-)(Vola);
+export default connect(mapStateToProps)(Vola);
