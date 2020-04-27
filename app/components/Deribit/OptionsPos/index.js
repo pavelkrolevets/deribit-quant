@@ -140,11 +140,11 @@ class DeribitOptionPos extends Component {
     ws.close();
   }
 
+  // componentDidMount() {
+  //   this.props.getTime();
+  // }
+
   async componentWillMount() {
-    await get_api_keys(this.props.user.token, this.props.email).then(result => {
-      // console.log(result);
-      this.setState({ keys: result.data });
-    });
 
     let auth = {
       jsonrpc: '2.0',
@@ -152,8 +152,8 @@ class DeribitOptionPos extends Component {
       method: 'public/auth',
       params: {
         grant_type: 'client_credentials',
-        client_id: this.state.keys.api_pubkey,
-        client_secret: this.state.keys.api_privkey
+        client_id: this.props.api_pubkey,
+        client_secret: this.props.api_privkey
       }
     };
 
@@ -598,7 +598,11 @@ class DeribitOptionPos extends Component {
 }
 
 DeribitOptionPos.propTypes = {
-  classes: PropTypes.object.isRequired
+  classes: PropTypes.object.isRequired,
+  getTime: PropTypes.func,
+  time: PropTypes.object,
+  api_pubkey: PropTypes.string,
+  api_privkey: PropTypes.string
 };
 
 export default withStyles(styles)(DeribitOptionPos);

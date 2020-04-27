@@ -22,7 +22,7 @@ export default class Home extends Component<Props> {
   render() {
     return (
       <div className={styles.container} data-tid="container">
-        <h1 style={{ color: '#152880' }}>Welcome to Lightsaber Terminal!</h1>
+        <h1 style={{ color: '#152880' }}>Welcome to Periscope Terminal!</h1>
       </div>
     );
   }

@@ -6,11 +6,10 @@ import { connect } from 'react-redux';
 import TextField from '@material-ui/core/TextField';
 import RaisedButton from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
-import * as actionCreators from '../actions/auth';
+import * as actionCreators from '../../redux/actions/auth';
 import { validateEmail } from '../../utils/misc';
 import PropTypes from 'prop-types';
-import { initializeSocket } from '../../actions/socket.js';
-import { getDeribitAccount } from '../../actions/account.js';
+import { initializeSocket } from '../../redux/actions/socket.js';
 
 function mapStateToProps(state) {
   return {
@@ -117,7 +116,7 @@ export default class LoginView extends React.Component {
         <Paper style={style}>
           <form role="form">
             <div className="text-center">
-              <h1>Login to options trader!</h1>
+              <h1>Login to Periscope.</h1>
               {this.props.statusText && (
                 <div className="alert alert-info">{this.props.statusText}</div>
               )}

@@ -8,7 +8,7 @@ import {
     REGISTER_USER_FAILURE,
     REGISTER_USER_REQUEST,
     REGISTER_USER_SUCCESS,
-} from '../components/constants/index';
+    STORE_DERIBIT_KEYS} from '../constants';
 
 const initialState = {
     token: null,
@@ -19,6 +19,8 @@ const initialState = {
     isRegistering: false,
     isRegistered: false,
     registerStatusText: null,
+    publicKey: '',
+    privateKey: ''
 };
 
 export default function Auth (state = initialState, action) {
@@ -77,6 +79,12 @@ export default function Auth (state = initialState, action) {
         token: null,
         userName: null,
         registerStatusText: `Register Error: ${action.payload.status} ${action.payload.statusText}`,
+      };
+    case STORE_DERIBIT_KEYS:
+      return {
+        ...state,
+        publicKey: action.publicKey,
+        privateKey: action.privateKey
       };
     default:
       return state;

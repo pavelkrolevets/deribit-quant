@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
+import { get_api_keys } from '../../utils/http_functions';
 
 import {
   LOGIN_USER_SUCCESS,
@@ -8,11 +9,12 @@ import {
   LOGOUT_USER,
   REGISTER_USER_FAILURE,
   REGISTER_USER_REQUEST,
-  REGISTER_USER_SUCCESS
-} from '../constants/index';
+  REGISTER_USER_SUCCESS,
+  STORE_DERIBIT_KEYS} from '../constants';
 
 import { parseJSON } from '../../utils/misc';
 import { get_token, create_user } from '../../utils/http_functions';
+import jwtDecode from "jwt-decode";
 const Store = require('electron-store');
 
 const schema = {
@@ -31,14 +33,25 @@ const schema = {
 };
 const store = new Store({ schema });
 
+//TODO: TEST login and key storage, handle the errors right way
+
 export function loginUserSuccess(token) {
   store.set('token', token);
-  return {
+  return function (dispatch)  {
+    dispatch({
     type: LOGIN_USER_SUCCESS,
     payload: {
       token
-    }
-  };
+    }});
+  return get_api_keys(token, jwtDecode(token).email)
+    .then(
+      response => {
+        console.log('Deribit Api Keys', response);
+        dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey))
+      },
+      error => console.log('An error occurred.', error)
+    )
+  }
 }
 
 export function loginUserFailure(error) {
@@ -121,12 +134,15 @@ export function registerUserRequest() {
 
 export function registerUserSuccess(token) {
   store.set('token', token);
-  return {
-    type: REGISTER_USER_SUCCESS,
-    payload: {
+
+  return function(dispatch){
+    dispatch({
+      type: REGISTER_USER_SUCCESS,
+        payload: {
       token
     }
-  };
+    });
+  }
 }
 
 export function registerUserFailure(error) {
@@ -170,5 +186,13 @@ export function registerUser(email, password, history) {
           })
         );
       });
+  };
+}
+
+export function storeDeribitAccount(pubkey, privkey) {
+  return {
+    type: STORE_DERIBIT_KEYS,
+    publicKey: pubkey,
+    privateKey: privkey
   };
 }

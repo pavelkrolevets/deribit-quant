@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as actionCreators from '../actions/auth';
+import * as actionCreators from '../../redux/actions/auth';
 import PropTypes from 'prop-types';
 const Store = require('electron-store');
 const store = new Store();
@@ -33,36 +33,60 @@ export function requireAuthentication(Component) {
             this.checkAuth();
         }
 
-
         checkAuth() {
+
             if (!this.props.isAuthenticated) {
+
                 const token = store.get('token');
                 console.log("User token", token);
-                if (!token) {
+
+                // Check redux state token auth
+                if (!this.props.token && !token) {
                   this.props.history.push('/login');
-                } else {
-                  validate_token(token)
-                        .then(res => {
-                            if (res.status === 200) {
-                                this.props.loginUserSuccess(token);
-                                this.setState({
-                                    loaded_if_needed: true,
-                                })
-                                  .catch(error => {
-                                    console.log(error.response);
-                                    this.props.history.push('/login');
-                                    this.setState({
-                                      loaded: true,
-                                    });
-                                  });
+                } else if (this.props.token) {
+                  validate_token(this.props.token)
+                    .then(res => {
+                      if (res.status === 200) {
+                        this.props.loginUserSuccess(this.props.token);
+                        this.setState({
+                          loaded_if_needed: true,
+                        })
+                          .catch(error => {
+                            console.log(error.response);
+                            this.props.history.push('/login');
+                            this.setState({
+                              loaded: true,
+                            });
+                          });
 
-                            } else {
+                      } else {
+                        this.props.history.push('/login');
+                      }
+                    });
+                } else if (token) {
+                  // Check electron store token auth to not login each time
+                    validate_token(token)
+                      .then(res => {
+                        if (res.status === 200) {
+                          this.props.loginUserSuccess(token);
+                          this.setState({
+                            loaded_if_needed: true,
+                          })
+                            .catch(error => {
+                              console.log(error.response);
                               this.props.history.push('/login');
-                            }
+                              this.setState({
+                                loaded: true,
+                              });
+                            });
 
-                        });
+                        } else {
+                          this.props.history.push('/login');
+                        }
+                      });
+                    }
 
-                }
+
             } else {
                 this.setState({
                     loaded_if_needed: true,

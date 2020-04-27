@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { browserHistory } from 'react-router';
-import * as actionCreators from '../actions/auth';
+import * as actionCreators from '../../redux/actions/auth';
 import PropTypes from 'prop-types';
 const Store = require('electron-store');
 const store = new Store();
@@ -28,7 +28,7 @@ export function requireNoAuthentication(Component) {
         constructor(props) {
             super(props);
             this.state = {
-                loaded: false,
+                // loaded: false,
             };
         }
 
@@ -37,51 +37,44 @@ export function requireNoAuthentication(Component) {
         }
 
         checkAuth() {
-            if (this.props.isAuthenticated) {
-                this.props.history.push('/main');
+          const token = store.get('token');
+          console.log("token", token);
 
-            } else {
-                const token = store.get('token');
-                console.log("token", token);
-                if (token) {
-                  validate_token(token)
-                        .then(res => {
-                          console.log("Response", res);
-                            if (res.status === 200) {
-                                this.props.loginUserSuccess(token);
-                                this.props.history.push('/main');
+          if (token) {
+            validate_token(token)
+              .then(res => {
+                // console.log("Response", res);
+                if (res.status === 200) {
+                  this.props.loginUserSuccess(token);
+                  this.props.history.push('/main');
 
-                            } else {
-                              this.props.history.push('/login');
-                                this.setState({
-                                    loaded: true,
-                                });
-                            }
-                        })
-                        .catch(error => {
-                          console.log(error.response);
-                          // this.props.history.push('/');
-                          this.setState({
-                            loaded: true,
-                          });
-                        });
                 } else {
-                  // this.props.history.push('/');
-                    this.setState({
-                        loaded: true,
-                    });
+                  this.props.history.push('/login');
+                  this.setState({
+                    loaded: true,
+                  });
                 }
-            }
+              })
+              .catch(error => {
+                console.log(error.response);
+                // this.props.history.push('/');
+                this.setState({
+                  loaded: true,
+                });
+              });
+          }
         }
+
 
         render() {
             return (
-                <div>
-                    {!this.props.isAuthenticated && this.state.loaded
-                        ? <Component {...this.props} />
-                        : null
-                    }
-                </div>
+                // <div>
+                //     {!this.props.isAuthenticated && this.state.loaded
+                //         ? <Component {...this.props} />
+                //         : null
+                //     }
+                // </div>
+              <Component {...this.props} />
             );
 
         }

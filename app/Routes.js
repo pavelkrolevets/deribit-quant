@@ -10,7 +10,7 @@ import Simulate from './containers/Simulate'
 import Vola from './containers/Vola'
 import LoginView from './components/Login'
 import RegisterView from './components/Register'
-import ProtectedView from './components/Main';
+import Main from './components/Main';
 import Stat from './containers/Statistics'
 import { requireAuthentication } from './components/Auth/AuthenticatedComponent';
 import { requireNoAuthentication } from './components/Auth/notAuthenticatedComponent';
@@ -29,7 +29,7 @@ export default () => (
       <Route path="/profile" component={requireAuthentication(Profile)} />
       <Route path="/simulate" component={requireAuthentication(Simulate)} />
       <Route path="/analyze" component={requireAuthentication(Analize)} />
-      <Route path="/main" component={requireAuthentication(ProtectedView)} />
+      <Route path="/main" component={requireNoAuthentication(Main)} />
       <Route path="/" component={requireNoAuthentication(HomePage)} />
     </Switch>
   </App>

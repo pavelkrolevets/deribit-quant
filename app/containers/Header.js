@@ -1,9 +1,8 @@
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Header from '../components/Header';
-// import * as CounterActions from '../actions/counter';
-import { initializeSocket } from '../actions/socket.js';
-import { logoutAndRedirect } from '../components/actions/auth';
+import { initializeSocket } from '../redux/actions/socket.js';
+import { logoutAndRedirect } from '../redux/actions/auth';
 
 function mapStateToProps(state) {
   return {

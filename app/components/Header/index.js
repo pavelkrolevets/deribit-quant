@@ -24,8 +24,8 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as actionCreators from '../actions/auth';
-import { initializeSocket } from '../../actions/socket';
+import * as actionCreators from '../../redux/actions/auth';
+import { initializeSocket } from '../../redux/actions/socket';
 
 const styles = theme => ({
   root: {
@@ -165,10 +165,11 @@ class Header extends Component {
     this.setState({ anchorEl: event.currentTarget });
   };
 
-  handleMenuClose = () => {
+  handleMenuClose = value => event => {
     this.setState({ anchorEl: null });
-    this.props.history.push('/profile');
+    this.setState({ DrowerOpen: false });
     this.handleMobileMenuClose();
+    this.props.history.push(value);
   };
 
   handleMobileMenuOpen = event => {
@@ -200,9 +201,19 @@ class Header extends Component {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={isMenuOpen}
         onClose={this.handleMenuClose}
-      >
-        <MenuItem onClick={this.handleMenuClose}>Profile</MenuItem>
-        {/*<MenuItem onClick={this.handleMenuClose}>My account</MenuItem>*/}
+      >{!this.props.isAuthenticated ? (
+        <div>
+            <MenuItem onClick={this.handleMenuClose("/login")}>Login</MenuItem>
+            <MenuItem onClick={this.handleMenuClose("/register")}>Register</MenuItem>
+        </div>
+        )
+        :
+        ( <div>
+            <MenuItem onClick={this.handleMenuClose("/profile")}>Profile</MenuItem>
+            <MenuItem onClick={e => this.logout(e)}>Logout</MenuItem>
+          </div>
+        )
+      }
       </Menu>
     );
 
@@ -253,37 +264,30 @@ class Header extends Component {
           </div>
           {!this.props.isAuthenticated ? (
             <div>
-              <MenuItem onClick={() => this.dispatchNewRoute('/login')}>
-                Login
-              </MenuItem>
-              <MenuItem onClick={() => this.dispatchNewRoute('/register')}>
-                Register
+              <MenuItem onClick={this.handleMenuClose("/")}>
+                Home
               </MenuItem>
             </div>
           ) : (
             <div>
-              <MenuItem onClick={() => this.props.history.push('/stat')}>
+              <MenuItem onClick={this.handleMenuClose('/stat')}>
                 Stats
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/simulate')}>
+              <MenuItem onClick={this.handleMenuClose('/simulate')}>
                 Single
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/analyze')}>
+              <MenuItem onClick={this.handleMenuClose('/analyze')}>
                 Strategy
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/deltahedger')}>
+              <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/options')}>
+              <MenuItem onClick={this.handleMenuClose('/options')}>
                 Position
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/vola')}>
+              <MenuItem onClick={this.handleMenuClose('/vola')}>
                 Vola
               </MenuItem>
-              <MenuItem onClick={() => this.props.history.push('/')}>
-                Home
-              </MenuItem>
-              <MenuItem onClick={e => this.logout(e)}>Logout</MenuItem>
             </div>
           )}
         </Drawer>

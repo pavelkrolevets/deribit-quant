@@ -8,7 +8,7 @@ import RaisedButton from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 
-import * as actionCreators from '../actions/auth';
+import * as actionCreators from '../../redux/actions/auth';
 
 import { validateEmail } from '../../utils/misc';
 
@@ -110,7 +110,7 @@ export default class RegisterView extends React.Component {
     return (
       <div className="col-md-6 col-md-offset-3">
         <Paper style={style}>
-          <h1>Register to view protected content!</h1>
+          <h1>Register to Periscope terminal.</h1>
           <div className="text-center">
             {
               this.props.registerStatusText &&
