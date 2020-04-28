@@ -14,3 +14,9 @@ export const STORE_DERIBIT_KEYS = 'STORE_DERIBIT_KEYS';
 export const FETCH = 'FETCH';
 export const FETCH_SUCCESS = 'FETCH_SUCCESS';
 export const FETCH_FAILURE = 'FETCH_FAILURE';
+
+
+export const START_CHANNEL = 'START_CHANNEL';
+export const STOP_CHANNEL = 'STOP_CHANNEL';
+export const WS_DATA = 'WS_DATA';
+

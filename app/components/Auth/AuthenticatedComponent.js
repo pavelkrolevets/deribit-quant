@@ -55,7 +55,7 @@ export function requireAuthentication(Component) {
                             console.log(error.response);
                             this.props.history.push('/login');
                             this.setState({
-                              loaded: true,
+                              loaded_if_needed: false,
                             });
                           });
 
@@ -76,7 +76,7 @@ export function requireAuthentication(Component) {
                               console.log(error.response);
                               this.props.history.push('/login');
                               this.setState({
-                                loaded: true,
+                                loaded_if_needed: false,
                               });
                             });
 

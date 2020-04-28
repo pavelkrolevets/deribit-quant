@@ -131,11 +131,11 @@ class Header extends Component {
   }
 
   componentWillMount() {
-    this.props.initializeSocket();
+    // this.props.initializeSocket();
   }
 
   componentDidMount() {
-    console.log(this.props.socket.connected);
+    // console.log(this.props.socket.connected);
   }
 
   state = {

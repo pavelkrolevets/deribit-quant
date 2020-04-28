@@ -83,8 +83,8 @@ export default function Auth (state = initialState, action) {
     case STORE_DERIBIT_KEYS:
       return {
         ...state,
-        publicKey: action.publicKey,
-        privateKey: action.privateKey
+        api_pubkey: action.api_pubkey,
+        api_privkey: action.api_privkey
       };
     default:
       return state;

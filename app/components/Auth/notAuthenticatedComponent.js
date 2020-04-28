@@ -47,20 +47,12 @@ export function requireNoAuthentication(Component) {
                 if (res.status === 200) {
                   this.props.loginUserSuccess(token);
                   this.props.history.push('/main');
-
-                } else {
-                  this.props.history.push('/login');
-                  this.setState({
-                    loaded: true,
-                  });
                 }
+
               })
               .catch(error => {
-                console.log(error.response);
-                // this.props.history.push('/');
-                this.setState({
-                  loaded: true,
-                });
+                console.log("Error of token validation ", error.response);
+                // this.props.history.push('/login');
               });
           }
         }

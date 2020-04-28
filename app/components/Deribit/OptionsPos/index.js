@@ -78,8 +78,8 @@ TabContainer.propTypes = {
   children: PropTypes.node.isRequired
 };
 
-const WebSocket = require('ws');
-let ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
+// const WebSocket = require('ws');
+// let ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
 
 class DeribitOptionPos extends Component {
   constructor(props) {
@@ -137,12 +137,14 @@ class DeribitOptionPos extends Component {
   componentWillUnmount() {
     console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
-    ws.close();
+    this.props.stop_saga_ws();
   }
 
-  // componentDidMount() {
-  //   this.props.getTime();
-  // }
+  componentDidMount() {
+    // console.log("api_pubkey, api_privkey", this.props.api_pubkey, this.props.api_privkey);
+    this.props.start_saga_ws();
+  }
+
 
   async componentWillMount() {
 
@@ -157,19 +159,21 @@ class DeribitOptionPos extends Component {
       }
     };
 
-    ws.onopen = function() {
-      ws.send(JSON.stringify(auth));
-      // await ws.send(JSON.stringify(get_index))
-    };
 
-    ws.onmessage = e => {
-      this.eventHandler(JSON.parse(e.data));
-    };
 
-    this.update_interval = setInterval(() => {
-      console.log('Start timer');
-      this.getData();
-    }, 2000);
+    // ws.onopen = function() {
+    //   ws.send(JSON.stringify(auth));
+    //   // await ws.send(JSON.stringify(get_index))
+    // };
+    //
+    // ws.onmessage = e => {
+    //   this.eventHandler(JSON.parse(e.data));
+    // };
+
+    // this.update_interval = setInterval(() => {
+    //   console.log('Start timer');
+    //   this.getData();
+    // }, 2000);
   }
 
   async getData() {
@@ -602,7 +606,9 @@ DeribitOptionPos.propTypes = {
   getTime: PropTypes.func,
   time: PropTypes.object,
   api_pubkey: PropTypes.string,
-  api_privkey: PropTypes.string
+  api_privkey: PropTypes.string,
+  start_saga_ws: PropTypes.func,
+  stop_saga_ws: PropTypes.func
 };
 
 export default withStyles(styles)(DeribitOptionPos);

@@ -18,16 +18,16 @@ import jwtDecode from "jwt-decode";
 const Store = require('electron-store');
 
 const schema = {
-  ethAddr: {
-    type: 'string'
-  },
-  ethPrivKey: {
-    type: 'string'
-  },
   token: {
     type: 'string'
   },
   email: {
+    type: 'string'
+  },
+  api_pubkey: {
+    type: 'string'
+  },
+  api_privkey: {
     type: 'string'
   }
 };
@@ -43,11 +43,18 @@ export function loginUserSuccess(token) {
     payload: {
       token
     }});
+
   return get_api_keys(token, jwtDecode(token).email)
     .then(
       response => {
         console.log('Deribit Api Keys', response);
-        dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey))
+        if (response.status === 200) {
+          dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
+          store.set('api_pubkey', response.data.api_pubkey);
+          store.set('api_privkey', response.data.api_privkey);
+        } else {
+          console.log("error getting Deribit keys")
+        }
       },
       error => console.log('An error occurred.', error)
     )
@@ -189,10 +196,10 @@ export function registerUser(email, password, history) {
   };
 }
 
-export function storeDeribitAccount(pubkey, privkey) {
+export function storeDeribitAccount(api_pubkey, api_privkey) {
   return {
     type: STORE_DERIBIT_KEYS,
-    publicKey: pubkey,
-    privateKey: privkey
+    api_pubkey: api_pubkey,
+    api_privkey: api_privkey
   };
 }
