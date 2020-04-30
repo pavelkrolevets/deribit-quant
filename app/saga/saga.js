@@ -1,38 +1,29 @@
 import {eventChannel} from 'redux-saga';
-import {all, takeEvery, put, call, take, fork, race, select} from 'redux-saga/effects'
-import {fetchSuccess} from '../redux/actions/fetch'
+import {all, takeEvery, put, call, take, fork, race, select, cancel, cancelled, delay} from 'redux-saga/effects'
 import axios from 'axios';
-import {START_CHANNEL, STOP_CHANNEL} from "../redux/constants/index"
-import {updateMarketData} from '../redux/actions/saga_ws'
+import {
+  DERIBIT_AUTH,
+  START_CHANNEL,
+  STOP_CHANNEL } from '../redux/reducers/saga_ws';
+
+import {saga_hist_vola} from './saga_hist_vola'
+import {updateMarketData,
+  start_deribit_priv_sync,
+  stop_deribit_priv_sync } from '../redux/actions/saga_ws'
 const Store = require('electron-store');
 const store = new Store();
-
 import { deribit_api } from '../components/Deribit/OptionsPos/requests';
 
-export function* helloSaga() {
-  console.log('Hello Sagas!')
-}
 
-const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-export function *fetchSaga() {
-  while (true) {
-    const result = yield call(axios.get, 'http://worldtimeapi.org/api/ip');
-    console.log(result);
-    yield delay(10000);
-    yield put(fetchSuccess(result.data));
-  }
-}
+
 function createEventChannel(ws, state) {
-
   return eventChannel(emit => {
-
-
     ws.onopen = () => {
       console.log("Opening Websocket");
       // return emit({data: JSON.parse(e.data)})
       // ws.send(JSON.stringify(auth_msg))
-      authWsMsg(ws, state).then(()=> wsMessages(ws))
+      authDeribitWs(ws, state)
     };
 
     ws.onerror = error => {
@@ -55,7 +46,7 @@ function createEventChannel(ws, state) {
     };
 
     return () => {
-      console.log("Closing Websocket");
+      console.log("Closing Websocket from channel");
       ws.close();
     };
   });
@@ -66,27 +57,25 @@ function * initializeWebSocketsChannel(ws) {
   console.log("going to connect to WS");
   let state = yield select();
   const channel = yield call(createEventChannel, ws, state);
-
-  // const message_chan = yield call(authWsMessage, ws);
-  // yield fork(wsMessages, ws);
-
   while (true) {
     const {data} = yield take(channel);
     yield put(updateMarketData(data));
   }
 }
 
-function wsMessages(ws){
-    setInterval(() =>  {
-      console.log("Sending request to ws");
+function * wsMessages(ws){
+      console.log("Start sending requests to deribit ws");
       let get_index = deribit_api('BTC', 'index', 42);
       console.log("Index msg", get_index);
       ws.send(JSON.stringify(get_index));
 
-      }, 5000);
+      // setInterval(() =>  {
+      //
+      // }, 5000);
+
 }
 
-async function authWsMsg (ws, state) {
+function authDeribitWs (ws, state) {
   let api_pubkey = '';
   let api_privkey = '';
   if (typeof state.auth.api_pubkey === 'undefined' || state.auth.api_pubkey === '') {
@@ -108,29 +97,53 @@ async function authWsMsg (ws, state) {
       client_secret: api_privkey
     }
   };
-  return await ws.send(JSON.stringify(auth_msg));
+  return ws.send(JSON.stringify(auth_msg));
 }
 
 export function * startStopChannel() {
   //Subscribe to websocket
   const ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
-
+  yield fork(startDeribitSync, ws);
   while (true) {
     yield take(START_CHANNEL);
-
     yield race({
       task: call(initializeWebSocketsChannel, ws),
       cancel: take(STOP_CHANNEL),
     });
-
     //if cancel wins the race we can close socket
     console.log("Closing Websocket");
     ws.close();
   }
 }
 
+function* deribitMsgSync(ws) {
+  try {
+    while (true) {
+      yield put(start_deribit_priv_sync);
+      yield call(wsMessages, ws);
+      yield delay(5000)
+    }
+  } finally {
+    if (yield cancelled())
+      console.log('Sync cancelled!');
+      yield put(stop_deribit_priv_sync)
+  }
+}
+
+function* startDeribitSync(ws) {
+  while ( yield take(DERIBIT_AUTH) ) {
+    // starts the task in the background
+    const bgSyncTask = yield fork(deribitMsgSync,ws);
+    // wait for the user stop action
+    yield take(STOP_CHANNEL);
+    // user clicked stop. cancel the background task
+    yield cancel(bgSyncTask)
+  }
+}
+
+///// ROOOT SAGA
 export default function* rootSaga() {
   yield all ([
-    startStopChannel()
+    startStopChannel(), saga_hist_vola()
   ]);
 }

@@ -93,78 +93,41 @@ class Vola extends Component {
     this.update_interval = null;
   }
 
-  async componentWillMount() {
-    await get_api_keys(this.props.user.token, this.props.email).then(result => {
-      console.log(result);
-      this.setState({ keys: result.data });
-    });
-
-    await this.updateVola();
-    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-    // this.web3.eth.getAccounts(function (error, res) {
-    //   if (!error) {
-    //     console.log(res);
-    //   } else {
-    //     console.log(error);
-    //   }
-    // });
-  }
-
   async componentDidMount() {
-    this.update_interval = setInterval(
-      async function() {
-        await this.updateVola();
-      }.bind(this),
-      5000
-    );
-
-    // setInterval(() => {
-    //   this.plot();
-    //   this.updateData();
-    //   this.setState({time: new Date().toLocaleTimeString()})
-    // }, 30000);
+    this.props.start_hist_vola()
   }
 
   componentWillUnmount() {
     console.log('Component unmounting...');
-    if (this.update_interval) clearInterval(this.update_interval);
+    this.props.stop_hist_vola()
   }
 
-  async updateVola() {
-    await get_hist_vola(
-      this.props.user.token,
-      this.props.email,
-      this.state.window,
-      this.state.timeframe,
-      this.state.instrument
-    ).then(result => {
-      console.log(result);
-      // let vola = [];
-      // for (let i of result.data.hist_vola){
-      //   console.log(JSON.parse(JSON.stringify(i)).x);
-      //   // console.log(i.x);
-      //   let date = new Date(parseInt(i.x) * 1000);
-      //   vola.push({"x": date, "y": parseInt(i.y)});
-      //   // console.log({"x": date, "y": parseInt(i.y)});
-      // }
-      // // console.log(vola);
-      this.setState({ hist_vola: result.data.hist_vola });
-    });
-  }
 
   _onMouseLeave = () => {
     this.setState({ crosshairValues: [] });
   };
 
   _onNearestX = (value, { index }) => {
-    this.setState({ crosshairValues: [this.state.hist_vola[index]] });
+    this.setState({ crosshairValues: [this.props.hist_vola_data.data.hist_vola[index]] });
   };
 
   handleChange = name => event => {
     console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
-    this.updateVola();
+
+  };
+
+  handleWindowChange = name => event => {
+    // this.setState({ [name]: event.target.value });
+    this.props.set_hist_vola_window(parseInt(event.target.value))
+  };
+  handleTimeframeChange = name => event => {
+    // this.setState({ [name]: event.target.value });
+    this.props.set_hist_vola_timeframe(event.target.value)
+  };
+  handleCurrencyChange = name => event => {
+    // this.setState({ [name]: event.target.value });
+    this.props.set_hist_vola_currency(event.target.value)
   };
 
   render() {
@@ -195,8 +158,8 @@ class Vola extends Component {
           <FormControl variant="outlined" className={classes.formControl}>
             <InputLabel htmlFor="age-simple">Instrument</InputLabel>
             <Select
-              value={this.state.instrument}
-              onChange={this.handleChange('instrument')}
+              value={this.props.hist_vola_currency}
+              onChange={this.handleCurrencyChange('instrument')}
               inputProps={{
                 name: 'instrument',
                 id: 'instruemnt-simple'
@@ -206,11 +169,12 @@ class Vola extends Component {
               <MenuItem value={'ETH'}>ETH</MenuItem>
             </Select>
           </FormControl>
+
           <TextField
             id="outlined-name"
             label="Window"
             className={classes.textField}
-            onChange={this.handleChange('window')}
+            onChange={this.handleWindowChange('window')}
             margin="normal"
             variant="outlined"
             defaultValue={21}
@@ -219,8 +183,8 @@ class Vola extends Component {
           <FormControl variant="outlined" className={classes.formControl}>
             <InputLabel htmlFor="timeframe-simple">Timeframe</InputLabel>
             <Select
-              value={this.state.timeframe}
-              onChange={this.handleChange('timeframe')}
+              value={this.props.hist_vola_timeframe}
+              onChange={this.handleTimeframeChange('timeframe')}
               inputProps={{
                 name: 'timeframe',
                 id: 'timeframe-simple'
@@ -272,7 +236,8 @@ class Vola extends Component {
             <LineSeries
               className="first-series"
               onNearestX={this._onNearestX}
-              data={this.state.hist_vola}
+              // data={this.state.hist_vola}
+              data={this.props.hist_vola_data.data.hist_vola}
             />
             {/*<LineSeries data={this.state.chart_data_at_zero} />*/}
             <Crosshair
@@ -291,7 +256,19 @@ class Vola extends Component {
 }
 
 Vola.propTypes = {
-  classes: PropTypes.object.isRequired
+  classes: PropTypes.object.isRequired,
+  email: PropTypes.string,
+  user: PropTypes.object,
+  token: PropTypes.string,
+  hist_vola_currency: PropTypes.string,
+  hist_vola_window: PropTypes.number,
+  hist_vola_timeframe: PropTypes.string,
+  start_hist_vola: PropTypes.func,
+  stop_hist_vola: PropTypes.func,
+  set_hist_vola_currency: PropTypes.func,
+  set_hist_vola_timeframe: PropTypes.func,
+  set_hist_vola_window: PropTypes.func,
+  hist_vola_data: PropTypes.object
 };
 
 export default withStyles(styles)(Vola);

@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 const Store = require('electron-store');
 const store = new Store();
 import { validate_token } from '../../utils/http_functions';
+import { error } from 'electron-log';
 
 function mapStateToProps(state) {
     return {
@@ -69,21 +70,15 @@ export function requireAuthentication(Component) {
                       .then(res => {
                         if (res.status === 200) {
                           this.props.loginUserSuccess(token);
-                          this.setState({
-                            loaded_if_needed: true,
-                          })
-                            .catch(error => {
-                              console.log(error.response);
-                              this.props.history.push('/login');
-                              this.setState({
-                                loaded_if_needed: false,
-                              });
-                            });
-
+                          this.setState({ loaded_if_needed: true });
                         } else {
                           this.props.history.push('/login');
                         }
-                      });
+                      },
+                        error => {
+                        console.log("Error receved from the server when verifying the token: ", error)
+                        }
+                      );
                     }
 
 

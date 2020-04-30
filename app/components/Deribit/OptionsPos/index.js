@@ -141,12 +141,13 @@ class DeribitOptionPos extends Component {
   }
 
   componentDidMount() {
-    // console.log("api_pubkey, api_privkey", this.props.api_pubkey, this.props.api_privkey);
+    // console.log("api_pubkey, api_privkey", this.props.api_pubkey, this.props.api_privkey)
     this.props.start_saga_ws();
   }
 
 
   async componentWillMount() {
+
 
     let auth = {
       jsonrpc: '2.0',

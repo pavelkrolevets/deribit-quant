@@ -22,10 +22,6 @@ import Drawer from '@material-ui/core/Drawer';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import * as actionCreators from '../../redux/actions/auth';
-import { initializeSocket } from '../../redux/actions/socket';
 
 const styles = theme => ({
   root: {
@@ -365,8 +361,6 @@ Header.propTypes = {
   theme: PropTypes.object.isRequired,
   logoutAndRedirect: PropTypes.func,
   isAuthenticated: PropTypes.bool,
-  socket: PropTypes.object.isRequired,
-  initializeSocket: PropTypes.func.isRequired
 };
 
 export default withRouter(withStyles(styles, { withTheme: true })(Header));

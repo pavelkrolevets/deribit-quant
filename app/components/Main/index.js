@@ -5,7 +5,6 @@ import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
 import { get_api_keys } from '../../utils/http_functions';
-import { initializeSocket } from '../../redux/actions/socket';
 
 function mapStateToProps(state) {
   return {

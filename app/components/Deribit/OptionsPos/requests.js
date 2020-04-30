@@ -59,5 +59,5 @@ export function deribit_api(currency, method, id) {
     }
   };
 
-  return Promise.resolve(request[method]);
+  return request[method]
 }

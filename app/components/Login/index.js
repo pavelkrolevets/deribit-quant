@@ -9,7 +9,6 @@ import Paper from '@material-ui/core/Paper';
 import * as actionCreators from '../../redux/actions/auth';
 import { validateEmail } from '../../utils/misc';
 import PropTypes from 'prop-types';
-import { initializeSocket } from '../../redux/actions/socket.js';
 
 function mapStateToProps(state) {
   return {
