@@ -77,14 +77,15 @@ function * initializeWebSocketsChannel() {
     socket = yield call(createWebSocketConnection);
     ws = yield (socket);
     ws_channel = yield call(createEventChannel, ws, state);
-
     yield put(WS_live.connectionSuccess());
     yield call(authDeribitWs, ws, state );
+    yield fork(startDeribitSync, ws);
 
     while (true) {
       // try {
         const { data } = yield take(ws_channel);
         yield put(WS_live.updateMarketData(data));
+
       // } finally {
       //   console.error('socket error: reconnecting');
       //   yield put(WS_DISCONNECTED);
@@ -127,7 +128,6 @@ function * authDeribitWs (ws, state) {
     api_privkey = state.auth.api_privkey;
   }
   console.log("Keys ", api_pubkey, api_privkey);
-
   let auth_msg = {
     jsonrpc: '2.0',
     id: 777,
@@ -139,11 +139,6 @@ function * authDeribitWs (ws, state) {
     }
   };
   ws.send(JSON.stringify(auth_msg));
-
-  // return new Promise((resolve, reject)=> {
-  //   resolve();
-  //   reject("Error")
-  // })
 }
 
 // export function * startStopChannel() {
@@ -172,25 +167,24 @@ export function * startStopChannel() {
 }
 
 
-function* deribitMsgSync() {
+function* deribitMsgSync(ws) {
   try {
     while (true) {
-      yield put(start_deribit_priv_sync);
-      yield call(wsMessages);
+      yield put(WS_live.start_deribit_priv_sync());
+      yield call(wsMessages, ws);
       yield delay(5000)
     }
   } finally {
     if (yield cancelled())
       console.log('Sync cancelled!');
-      yield put(stop_deribit_priv_sync)
+      yield put(WS_live.stop_deribit_priv_sync())
   }
 }
 
-function* startDeribitSync() {
-
+function* startDeribitSync(ws) {
   while ( yield take(DERIBIT_AUTH) ) {
     // starts the task in the background
-    const WsMsgTask = yield fork(deribitMsgSync);
+    const WsMsgTask = yield call(deribitMsgSync, ws);
     // wait for the user stop action
     yield take(STOP_CHANNEL);
     // user clicked stop. cancel the background task
