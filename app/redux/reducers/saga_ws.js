@@ -4,6 +4,9 @@ export const WS_DATA = 'WS_DATA';
 export const DERIBIT_AUTH = 'DERIBIT_AUTH';
 export const DERIBIT_PRIV_SYNC_ON = 'DERIBIT_PRIV_SYNC_ON';
 export const DERIBIT_PRIV_SYNC_OFF = 'DERIBIT_PRIV_SYNC_OFF';
+export const WS_CONNECTED = 'WS_CONNECTED';
+export const WS_DISCONNECTED = 'WS_DISCONNECTED';
+export const WS_ERROR = 'WS_ERROR';
 
 const initialState = {
   connected: false,
@@ -12,7 +15,9 @@ const initialState = {
   data: null,
   sagas_channel_run: false,
   deribit_auth: false,
-  deribit_priv_sync: false
+  deribit_priv_sync: false,
+  ws_connected: false,
+  ws_error: ''
 };
 
 export default function saga (state = initialState, action) {
@@ -51,6 +56,22 @@ export default function saga (state = initialState, action) {
       return {
         ...state,
         deribit_priv_sync: false,
+      };
+    case WS_CONNECTED:
+      return {
+        ...state,
+        ws_connected: true,
+      };
+    case WS_DISCONNECTED:
+      return {
+        ...state,
+        ws_connected: false,
+      };
+
+    case WS_ERROR:
+      return {
+        ...state,
+        ws_error: action.error,
       };
 
     default:

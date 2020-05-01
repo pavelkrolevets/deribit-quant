@@ -4,7 +4,7 @@ import {
   WS_DATA,
   DERIBIT_AUTH,
   DERIBIT_PRIV_SYNC_ON,
-  DERIBIT_PRIV_SYNC_OFF
+  DERIBIT_PRIV_SYNC_OFF, WS_ERROR, WS_CONNECTED
 } from '../reducers/saga_ws';
 
 
@@ -46,4 +46,17 @@ export function stop_deribit_priv_sync() {
   };
 }
 
+export function ws_error(error) {
+  return {
+    type: WS_ERROR,
+    error
+  };
+}
+
+export function connectionSuccess() {
+  // console.log("Connection success");
+  return {
+    type: WS_CONNECTED,
+  };
+}
 

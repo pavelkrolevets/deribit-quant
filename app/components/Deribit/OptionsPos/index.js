@@ -136,30 +136,29 @@ class DeribitOptionPos extends Component {
 
   componentWillUnmount() {
     console.log('Component unmounting...');
-    if (this.update_interval) clearInterval(this.update_interval);
+    // if (this.update_interval) clearInterval(this.update_interval);
     this.props.stop_saga_ws();
   }
 
   componentDidMount() {
     // console.log("api_pubkey, api_privkey", this.props.api_pubkey, this.props.api_privkey)
-    this.props.start_saga_ws();
   }
 
 
   async componentWillMount() {
+    this.props.start_saga_ws();
 
-
-    let auth = {
-      jsonrpc: '2.0',
-      id: 9929,
-      method: 'public/auth',
-      params: {
-        grant_type: 'client_credentials',
-        client_id: this.props.api_pubkey,
-        client_secret: this.props.api_privkey
-      }
-    };
-
+    // let auth = {
+    //   jsonrpc: '2.0',
+    //   id: 9929,
+    //   method: 'public/auth',
+    //   params: {
+    //     grant_type: 'client_credentials',
+    //     client_id: this.props.api_pubkey,
+    //     client_secret: this.props.api_privkey
+    //   }
+    // };
+    //
 
 
     // ws.onopen = function() {
@@ -177,36 +176,36 @@ class DeribitOptionPos extends Component {
     // }, 2000);
   }
 
-  async getData() {
-    let get_index = await deribit_api(this.state.currency, 'index', 42);
-    let fut_positions = await deribit_api(
-      this.state.currency,
-      'fut_positions',
-      2236
-    );
-    let opt_positions = await deribit_api(
-      this.state.currency,
-      'opt_positions',
-      2237
-    );
-    let account = await deribit_api(this.state.currency, 'account', 2515);
-    let positions = await deribit_api(this.state.currency, 'positions', 2238);
-    let all_instruments = await deribit_api(
-      this.state.currency,
-      'all_instruments',
-      7617
-    );
+  // async getData() {
+  //   let get_index = await deribit_api(this.state.currency, 'index', 42);
+  //   let fut_positions = await deribit_api(
+  //     this.state.currency,
+  //     'fut_positions',
+  //     2236
+  //   );
+  //   let opt_positions = await deribit_api(
+  //     this.state.currency,
+  //     'opt_positions',
+  //     2237
+  //   );
+  //   let account = await deribit_api(this.state.currency, 'account', 2515);
+  //   let positions = await deribit_api(this.state.currency, 'positions', 2238);
+  //   let all_instruments = await deribit_api(
+  //     this.state.currency,
+  //     'all_instruments',
+  //     7617
+  //   );
 
-    ws.send(JSON.stringify(get_index));
-    ws.send(JSON.stringify(fut_positions));
-    ws.send(JSON.stringify(opt_positions));
-    ws.send(JSON.stringify(account));
-    ws.send(JSON.stringify(positions));
-    ws.send(JSON.stringify(all_instruments));
+    // ws.send(JSON.stringify(get_index));
+    // ws.send(JSON.stringify(fut_positions));
+    // ws.send(JSON.stringify(opt_positions));
+    // ws.send(JSON.stringify(account));
+    // ws.send(JSON.stringify(positions));
+    // ws.send(JSON.stringify(all_instruments));
 
     // Update time
-    this.setState({ time: new Date().toLocaleTimeString() });
-  }
+    // this.setState({ time: new Date().toLocaleTimeString() });
+  // }
 
   eventHandler(msg) {
     console.log('received from server : ', msg);
