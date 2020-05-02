@@ -26,6 +26,8 @@ import {
   LineSeriesCanvas,
   Crosshair
 } from 'react-vis';
+import { connect } from "react-redux";
+import { start_saga_ws, stop_saga_ws } from '../../../../redux/actions/saga_ws';
 
 function TabContainer(props) {
   return (
@@ -66,6 +68,23 @@ const styles = theme => ({
   }
 });
 
+// function mapStateToProps(state) {
+//   return {
+//     isAuthenticating: state.auth.isAuthenticating,
+//     email: state.auth.userName,
+//     user: state.auth,
+//     deribit_BTC_index: state.sagas.deribit_BTC_index,
+//   };
+// }
+//
+// const mapDispatchToProps = dispatch => ({
+//   start_saga_ws: () => dispatch(start_saga_ws()),
+//   stop_saga_ws: () => dispatch(stop_saga_ws())
+// });
+//
+// @connect(
+//   mapStateToProps,
+//   mapDispatchToProps)
 class Chart extends Component {
   constructor(props) {
     super(props);
@@ -83,7 +102,7 @@ class Chart extends Component {
   }
 
   // componentWillReceiveProps(nextProps: Props, nextContext: *){
-  //   console.log("Got props",  this.props.chart.chart_data_current);
+  //   console.log("Got props account",  this.props.chart.account);
   // }
 
   _onMouseLeave = () => {
@@ -91,7 +110,7 @@ class Chart extends Component {
   };
 
   _onNearestX = (value, { index }) => {
-    this.setState({ crosshairValues: [this.state.chart_data_current[index]] });
+    this.setState({ crosshairValues: [this.props.chart.chart_data_current[index]] });
   };
 
   render() {
@@ -121,7 +140,7 @@ class Chart extends Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {this.state.account.map((row, i) => (
+              {this.props.chart.account.map((row, i) => (
                 <TableRow key={i}>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
                     {parseFloat(row.equity).toFixed(2)}
@@ -174,13 +193,14 @@ class Chart extends Component {
         >
           {/*Main graph*/}
           <XYPlot
-            width={700}
-            height={500}
+            height={480}
+            width={window.innerWidth * 0.85}
+            margin={{left: 100}}
             onMouseLeave={this._onMouseLeave}
             {...{ yDomain }}
           >
-            <HorizontalGridLines />
-            <VerticalGridLines />
+            {/*<HorizontalGridLines />*/}
+            {/*<VerticalGridLines />*/}
             <XAxis on0={true} />
             <YAxis on0={true} />
             <ChartLabel
@@ -209,7 +229,7 @@ class Chart extends Component {
             />
             <LineSeries data={this.props.chart.chart_data_at_zero} />
             <Crosshair
-              values={this.props.chart.crosshairValues}
+              values={this.state.crosshairValues}
               className={'test-class-name'}
             />
             {/*<Crosshair*/}

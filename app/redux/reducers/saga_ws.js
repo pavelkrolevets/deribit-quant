@@ -7,6 +7,12 @@ export const DERIBIT_PRIV_SYNC_OFF = 'DERIBIT_PRIV_SYNC_OFF';
 export const WS_CONNECTED = 'WS_CONNECTED';
 export const WS_DISCONNECTED = 'WS_DISCONNECTED';
 export const WS_ERROR = 'WS_ERROR';
+export const DERIBIT_BTC_INDEX = 'DERIBIT_BTC_INDEX';
+export const DERIBIT_BTC_FUTURES_POS = 'DERIBIT_BTC_FUTURES_POS';
+export const DERIBIT_BTC_OPTIONS_POS = 'DERIBIT_BTC_OPTIONS_POS';
+export const DERIBIT_ACCOUNT_STATE = 'DERIBIT_ACCOUNT_STATE';
+export const DERIBIT_OPEN_POSITIONS = 'DERIBIT_OPEN_POSITIONS';
+export const DERIBIT_BTC_ALL_INSTRUMENTS = 'DERIBIT_BTC_ALL_INSTRUMENTS';
 
 const initialState = {
   connected: false,
@@ -17,7 +23,13 @@ const initialState = {
   deribit_auth: false,
   deribit_priv_sync: false,
   ws_connected: false,
-  ws_error: ''
+  ws_error: '',
+  deribit_BTC_index: 0,
+  deribit_BTC_futures_pos: [],
+  deribit_BTC_options_pos: [],
+  deribit_account_state: [],
+  deribit_open_pos: [],
+  deribit_btc_all_instruments: []
 };
 
 export default function saga (state = initialState, action) {
@@ -72,6 +84,42 @@ export default function saga (state = initialState, action) {
       return {
         ...state,
         ws_error: action.error,
+      };
+
+    case DERIBIT_BTC_INDEX:
+      return {
+        ...state,
+        deribit_BTC_index: action.data.result.edp,
+      };
+
+    case DERIBIT_BTC_FUTURES_POS:
+      return {
+        ...state,
+        deribit_BTC_futures_pos: action.data.result,
+      };
+
+    case DERIBIT_BTC_OPTIONS_POS:
+      return {
+        ...state,
+        deribit_BTC_options_pos: action.data.result,
+      };
+
+    case DERIBIT_ACCOUNT_STATE:
+      return {
+        ...state,
+        deribit_account_state: [action.data.result],
+      };
+
+    case DERIBIT_OPEN_POSITIONS:
+      return {
+        ...state,
+        deribit_open_pos: action.data.result,
+      };
+
+    case DERIBIT_BTC_ALL_INSTRUMENTS:
+      return {
+        ...state,
+        deribit_btc_all_instruments: action.data.result,
       };
 
     default:

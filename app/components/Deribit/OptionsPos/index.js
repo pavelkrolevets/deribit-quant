@@ -126,7 +126,7 @@ class DeribitOptionPos extends Component {
     };
 
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
-    this.eventHandler = this.eventHandler.bind(this);
+    // this.eventHandler = this.eventHandler.bind(this);
     this.update_interval = null;
   }
 
@@ -136,7 +136,7 @@ class DeribitOptionPos extends Component {
 
   componentWillUnmount() {
     console.log('Component unmounting...');
-    // if (this.update_interval) clearInterval(this.update_interval);
+    if (this.update_interval) clearInterval(this.update_interval);
     this.props.stop_saga_ws();
   }
 
@@ -144,9 +144,19 @@ class DeribitOptionPos extends Component {
     // console.log("api_pubkey, api_privkey", this.props.api_pubkey, this.props.api_privkey)
   }
 
+  // componentWillReceiveProps() {
+  //   console.log("Get props update");
+  // }
 
   async componentWillMount() {
     this.props.start_saga_ws();
+    this.update_interval = setInterval(() => {
+      console.log('Start timer');
+      this.prepareClientPositions();
+      this.computeTotalPnl();
+      // Update time
+      this.setState({ time: new Date().toLocaleTimeString() });
+    }, 3000);
 
     // let auth = {
     //   jsonrpc: '2.0',
@@ -207,40 +217,38 @@ class DeribitOptionPos extends Component {
     // this.setState({ time: new Date().toLocaleTimeString() });
   // }
 
-  eventHandler(msg) {
-    console.log('received from server : ', msg);
-    if (msg.id === 42) {
-      this.setState({ index: msg.result.edp });
-      console.log('Index : ', msg.result.edp);
-    }
-    if (msg.id === 2236) {
-      this.setState({ fut_positions: msg.result });
-      console.log('Fut_pos : ', msg.result);
-    }
-    if (msg.id === 2237) {
-      this.setState({ opt_positions: msg.result });
-      console.log('Opt_pos : ', msg.result);
-    }
-    if (msg.id === 2238) {
-      this.setState({ positions: msg.result });
-      console.log('Positions : ', msg.result);
-    }
-    if (msg.id === 2515) {
-      this.setState({ account: [msg.result] });
-      console.log('Account : ', msg.result);
-    }
-    if (msg.id === 7617) {
-      this.setState({ all_instruments: msg.result });
-      console.log('Instruments : ', msg.result);
-      this.prepareClientPositions();
-      this.computeTotalPnl();
-    }
-  }
+  // eventHandler(msg) {
+  //   console.log('received from server : ', msg);
+  //   if (msg.id === 42) {
+  //     this.setState({ index: msg.result.edp });
+  //     console.log('Index : ', msg.result.edp);
+  //   }
+  //   if (msg.id === 2236) {
+  //     this.setState({ fut_positions: msg.result });
+  //     console.log('Fut_pos : ', msg.result);
+  //   }
+  //   if (msg.id === 2237) {
+  //     this.setState({ opt_positions: msg.result });
+  //     console.log('Opt_pos : ', msg.result);
+  //   }
+  //   if (msg.id === 2238) {
+  //     this.setState({ positions: msg.result });
+  //     console.log('Positions : ', msg.result);
+  //   }
+  //   if (msg.id === 2515) {
+  //     this.setState({ account: [msg.result] });
+  //     console.log('Account : ', msg.result);
+  //   }
+  //   if (msg.id === 7617) {
+  //     this.setState({ all_instruments: msg.result });
+  //     console.log('Instruments : ', msg.result);
+  //   }
+  // }
 
   prepareClientPositions() {
     let client_positions = [];
-    for (let position of this.state.positions) {
-      for (let instruments of this.state.all_instruments) {
+    for (let position of this.props.deribit_open_pos) {
+      for (let instruments of this.props.deribit_btc_all_instruments) {
         if (
           position.instrument_name === instruments.instrument_name &&
           position.direction !== 'zero'
@@ -262,7 +270,7 @@ class DeribitOptionPos extends Component {
       }
     }
     // console.log("Client positions: ", client_positions);
-    this.setState({ client_positions: client_positions });
+    this.setState({ client_positions: client_positions});
   }
 
   async computeTotalPnl() {
@@ -273,9 +281,10 @@ class DeribitOptionPos extends Component {
       for (let i = 1000; i <= 20000; i += 200) {
         let current_value = 0;
         let value_at_zero = 0;
-
+        // console.log("Client positions: ", this.state.client_positions);
         for (let instrument of this.state.client_positions) {
           if (instrument.kind === 'option') {
+            // console.log("Calcul instrument: ", instrument);
             let opt_val = await this.computeBtcOptPnl(instrument, i);
             current_value += opt_val[0];
             value_at_zero += opt_val[1];
@@ -329,85 +338,85 @@ class DeribitOptionPos extends Component {
     const timeToExp = diffDays / 365;
 
     // console.log("Time to exp", timeToExp);
+    // console.log("Index BTC", this.props.deribit_BTC_index);
 
     if (instrument.direction === 'buy') {
-      let current_value =
+      current_value =
         (BlackScholes(
           instrument.option_type,
           S_price,
           instrument.strike,
           timeToExp,
           0.01,
-          this.state.volatility_btc
-        ) -
+          this.state.volatility_eth
+          ) -
           BlackScholes(
             instrument.option_type,
-            this.state.index,
+            this.props.deribit_BTC_index,
             instrument.strike,
             timeToExp,
             0.01,
-            this.state.volatility_btc
+            this.state.volatility_eth
           )) *
         S_price;
-      // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-      let value_at_zero =
+
+      value_at_zero =
         (BlackScholes(
           instrument.option_type,
           S_price,
           instrument.strike,
           0.00001,
           0.01,
-          this.state.volatility_btc
-        ) -
+          this.state.volatility_eth
+          ) -
           BlackScholes(
             instrument.option_type,
-            this.state.index,
+            this.props.deribit_BTC_index,
             instrument.strike,
             timeToExp,
             0.01,
-            this.state.volatility
+            this.state.volatility_eth
           )) *
         S_price;
-    } else if (instrument.direction === 'Sell') {
-      let current_value =
+    } else if (instrument.direction === 'sell') {
+      current_value =
         (BlackScholes(
           instrument.option_type,
-          this.state.index,
+          this.props.deribit_BTC_index,
           instrument.strike,
           timeToExp,
           0.01,
-          this.state.volatility_btc
-        ) -
+          this.state.volatility_eth
+          ) -
           BlackScholes(
             instrument.option_type,
             S_price,
             instrument.strike,
             timeToExp,
             0.01,
-            this.state.volatility_btc
+            this.state.volatility_eth
           )) *
         S_price;
-      // let value_at_zero = BlackScholes("call", parseInt(that.state.indexBtc), 10000, 0.00001, 0.01, 0.6);
-      let value_at_zero =
+
+      value_at_zero =
         (BlackScholes(
           instrument.option_type,
-          this.state.index,
+          this.props.deribit_BTC_index,
           instrument.strike,
           timeToExp,
           0.01,
-          this.state.volatility_btc
-        ) -
+          this.state.volatility_eth
+          ) -
           BlackScholes(
             instrument.option_type,
             S_price,
             instrument.strike,
             0.00001,
             0.01,
-            this.state.volatility_btc
+            this.state.volatility_eth
           )) *
         S_price;
     }
-
     return [current_value, value_at_zero];
 
     // console.log('Value current:', current_values);
@@ -566,8 +575,8 @@ class DeribitOptionPos extends Component {
         {TabValue === 'BTC' && (
           <Chart
             chart={{
-              account: this.state.account,
-              index: this.state.index,
+              account: this.props.deribit_account_state,
+              index: this.props.deribit_BTC_index,
               time: this.state.time,
               yDomain: this.state.yDomain,
               chart_data_current: this.state.chart_data_current,
@@ -608,7 +617,13 @@ DeribitOptionPos.propTypes = {
   api_pubkey: PropTypes.string,
   api_privkey: PropTypes.string,
   start_saga_ws: PropTypes.func,
-  stop_saga_ws: PropTypes.func
+  stop_saga_ws: PropTypes.func,
+  deribit_BTC_index: PropTypes.number,
+  deribit_BTC_futures_pos: PropTypes.array,
+  deribit_BTC_options_pos: PropTypes.array,
+  deribit_account_state: PropTypes.array,
+  deribit_open_pos: PropTypes.array,
+  deribit_btc_all_instruments: PropTypes.array,
 };
 
 export default withStyles(styles)(DeribitOptionPos);

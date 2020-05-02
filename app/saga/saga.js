@@ -31,14 +31,13 @@ function createEventChannel(ws, state) {
       if (e.code === 1005) {
         console.log("WebSocket: safely closed");
       } else {
-        console.log('Socket is closed Unexpectedly. Reconnect will be attempted in 5 second.', e.reason);
+        console.log('Socket is closed Unexpectedly. Reconnect in 5 second.', e.reason);
         return emit(END)
         // setTimeout(() =>  {
-        //   createEventChannel();
+        //
         // }, 5000);
       }
     };
-
     const unsubscribe = () => {
       ws.onmessage = null;
     };
@@ -47,10 +46,10 @@ function createEventChannel(ws, state) {
   });
 }
 
+// Connect to ws: if success return open instance
 function * createWebSocketConnection() {
-
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket('wss://www.deribit.com/ws/api/v2/');
+    const socket = new WebSocket('wss://test.deribit.com/ws/api/v2/');
     socket.onopen = function () {
       resolve(socket);
     };
@@ -61,7 +60,7 @@ function * createWebSocketConnection() {
 }
 
 
-
+// Open ws channel, authinticate and start sending msgs
 function * initializeWebSocketsChannel() {
   console.log("going to connect to WS");
   // if (ws.readyState === WebSocket.OPEN){
@@ -82,15 +81,8 @@ function * initializeWebSocketsChannel() {
     yield fork(startDeribitSync, ws);
 
     while (true) {
-      // try {
         const { data } = yield take(ws_channel);
         yield put(WS_live.updateMarketData(data));
-
-      // } finally {
-      //   console.error('socket error: reconnecting');
-      //   yield put(WS_DISCONNECTED);
-      //   yield delay(5000);
-      // }
     }
 
   } catch (error) {
@@ -100,7 +92,6 @@ function * initializeWebSocketsChannel() {
       // close the channel
       ws_channel.close();
       // close the WebSocket connection
-      console.log("WS",ws);
       ws.close()
     } else {
       yield put(WS_live.ws_error('WebSocket disconnected'));
@@ -110,13 +101,27 @@ function * initializeWebSocketsChannel() {
 
 }
 
-function wsMessages(ws){
+// Messages requests to ws deribit
+function wsDeribitMessages(ws){
       console.log("Start sending requests to deribit ws");
-      let get_index = deribit_api('BTC', 'index', 42);
-      console.log("Index msg", get_index);
-      ws.send(JSON.stringify(get_index))
+
+      /// send BTC requests
+      let get_index = deribit_api('BTC', 'index', 1001);
+      let fut_positions = deribit_api('BTC', 'fut_positions', 1002);
+      let opt_positions = deribit_api('BTC', 'opt_positions', 1003);
+      let account = deribit_api('BTC', 'account', 1004);
+      let positions = deribit_api('BTC', 'positions', 1005);
+      let all_instruments = deribit_api('BTC', 'all_instruments', 1006);
+
+      ws.send(JSON.stringify(get_index));
+      ws.send(JSON.stringify(fut_positions));
+      ws.send(JSON.stringify(opt_positions));
+      ws.send(JSON.stringify(account));
+      ws.send(JSON.stringify(positions));
+      ws.send(JSON.stringify(all_instruments));
 }
 
+// Auth message to ws deribit server
 function * authDeribitWs (ws, state) {
   let api_pubkey = '';
   let api_privkey = '';
@@ -141,20 +146,6 @@ function * authDeribitWs (ws, state) {
   ws.send(JSON.stringify(auth_msg));
 }
 
-// export function * startStopChannel() {
-//   //Subscribe to websocket
-//   while (true) {
-//     yield take(START_CHANNEL);
-//     yield race({
-//       task: call(initializeWebSocketsChannel),
-//       cancel: take(STOP_CHANNEL),
-//     });
-//     //if cancel wins the race we can close socket
-//     // console.log("Closing Websocket");
-//     // ws.close();
-//   }
-// }
-
 export function * startStopChannel() {
   while ( yield take(START_CHANNEL) ) {
     // starts the task in the background
@@ -171,7 +162,7 @@ function* deribitMsgSync(ws) {
   try {
     while (true) {
       yield put(WS_live.start_deribit_priv_sync());
-      yield call(wsMessages, ws);
+      yield call(wsDeribitMessages, ws);
       yield delay(5000)
     }
   } finally {
