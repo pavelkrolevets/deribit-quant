@@ -21,7 +21,10 @@ import MoreIcon from '@material-ui/icons/MoreVert';
 import Drawer from '@material-ui/core/Drawer';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+import Switch from '@material-ui/core/Switch';
+import { red, green } from '@material-ui/core/colors';
 
 const styles = theme => ({
   root: {
@@ -71,6 +74,10 @@ const styles = theme => ({
     color: 'inherit',
     width: '100%'
   },
+  formControl: {
+    width: '100%',
+    backgroundColor: '#000',
+  },
   inputInput: {
     paddingTop: theme.spacing.unit,
     paddingRight: theme.spacing.unit,
@@ -104,22 +111,19 @@ const styles = theme => ({
   }
 });
 
-// function mapStateToProps(state) {
-//   return {
-//     token: state.auth.token,
-//     userName: state.auth.userName,
-//     isAuthenticated: state.auth.isAuthenticated
-//   };
-// }
-
-// function mapDispatchToProps(dispatch) {
-//   return bindActionCreators(actionCreators, dispatch);
-// }
-
-// @connect(
-//   mapStateToProps,
-//   mapDispatchToProps
-// )
+const ColorSwitch = withStyles({
+  switchBase: {
+    color: green[500],
+    '&$checked': {
+      color: '#dc6b02',
+    },
+    '&$checked + $track': {
+      backgroundColor: '#000',
+    },
+  },
+  checked: {},
+  track: {},
+})(Switch);
 
 class Header extends Component {
   constructor(props) {
@@ -183,6 +187,14 @@ class Header extends Component {
       open: false
     });
   }
+  handleDeribitNetChange = (event) => {
+    console.log("Checked event", event.target.checked);
+    if(event.target.checked === false){
+      this.props.set_deribit_realnet()
+    } else if (event.target.checked === true) {
+      this.props.set_deribit_testnet()
+    }
+  };
 
   render() {
     const { anchorEl, mobileMoreAnchorEl } = this.state;
@@ -248,6 +260,13 @@ class Header extends Component {
 
     return (
       <div className={classes.root}>
+        <FormGroup>
+          <FormControlLabel
+            control={<ColorSwitch checked={this.props.deribit_testnet} onChange={this.handleDeribitNetChange} aria-label="testnet switch" />}
+            label={this.props.deribit_testnet ? 'Testnet' : 'Realnet'}
+          />
+        </FormGroup>
+
         <Drawer open={this.state.DrowerOpen}>
           <div className={classes.drawerHeader}>
             <IconButton onClick={this.handleDrawerClose}>
@@ -361,6 +380,9 @@ Header.propTypes = {
   theme: PropTypes.object.isRequired,
   logoutAndRedirect: PropTypes.func,
   isAuthenticated: PropTypes.bool,
+  deribit_testnet: PropTypes.bool,
+  set_deribit_testnet: PropTypes.func,
+  set_deribit_realnet: PropTypes.func,
 };
 
 export default withRouter(withStyles(styles, { withTheme: true })(Header));

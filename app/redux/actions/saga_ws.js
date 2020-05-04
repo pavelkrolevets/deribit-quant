@@ -10,9 +10,11 @@ import {
   DERIBIT_BTC_INDEX,
   DERIBIT_BTC_FUTURES_POS,
   DERIBIT_BTC_OPTIONS_POS,
-  DERIBIT_ACCOUNT_STATE,
-  DERIBIT_OPEN_POSITIONS,
+  DERIBIT_BTC_ACCOUNT_STATE,
+  DERIBIT_BTC_OPEN_POSITIONS,
   DERIBIT_BTC_ALL_INSTRUMENTS,
+  DERIBIT_API_TESTNET,
+  DERIBIT_API_REALNET,
 } from '../reducers/saga_ws';
 
 
@@ -51,7 +53,7 @@ export function updateMarketData(data) {
   if (data.id === 1004) {
     // console.log("Deribit account state", data.result);
     return {
-      type: DERIBIT_ACCOUNT_STATE,
+      type: DERIBIT_BTC_ACCOUNT_STATE,
       data
     };
   }
@@ -59,7 +61,7 @@ export function updateMarketData(data) {
   if (data.id === 1005) {
     // console.log("Deribit open pos", data.result);
     return {
-      type: DERIBIT_OPEN_POSITIONS,
+      type: DERIBIT_BTC_OPEN_POSITIONS,
       data
     };
   }
@@ -71,7 +73,6 @@ export function updateMarketData(data) {
       data
     };
   }
-
 
   return {
     type: WS_DATA,
@@ -118,3 +119,14 @@ export function connectionSuccess() {
   };
 }
 
+export function deribit_testnet() {
+  return {
+    type: DERIBIT_API_TESTNET,
+  };
+}
+
+export function deribit_realnet() {
+  return {
+    type: DERIBIT_API_REALNET,
+  };
+}

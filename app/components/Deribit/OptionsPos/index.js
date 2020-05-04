@@ -151,10 +151,8 @@ class DeribitOptionPos extends Component {
   async componentWillMount() {
     this.props.start_saga_ws();
     this.update_interval = setInterval(() => {
-      console.log('Start timer');
       this.prepareClientPositions();
       this.computeTotalPnl();
-      // Update time
       this.setState({ time: new Date().toLocaleTimeString() });
     }, 3000);
 
@@ -247,8 +245,8 @@ class DeribitOptionPos extends Component {
 
   prepareClientPositions() {
     let client_positions = [];
-    for (let position of this.props.deribit_open_pos) {
-      for (let instruments of this.props.deribit_btc_all_instruments) {
+    for (let position of this.props.deribit_BTC_open_pos) {
+      for (let instruments of this.props.deribit_BTC_all_instruments) {
         if (
           position.instrument_name === instruments.instrument_name &&
           position.direction !== 'zero'
@@ -286,8 +284,14 @@ class DeribitOptionPos extends Component {
           if (instrument.kind === 'option') {
             // console.log("Calcul instrument: ", instrument);
             let opt_val = await this.computeBtcOptPnl(instrument, i);
-            current_value += opt_val[0];
-            value_at_zero += opt_val[1];
+            current_value += opt_val[0] * instrument.size;
+            value_at_zero += opt_val[1] * instrument.size;
+          }
+          if (instrument.kind === 'future') {
+            // console.log("Calcul instrument: ", instrument);
+            let fut_val = this.computeBtcFuturePnl(instrument, i);
+            current_value += fut_val;
+            value_at_zero += fut_val;
           }
         }
 
@@ -327,6 +331,17 @@ class DeribitOptionPos extends Component {
     // console.log("Value at zero chart", value_at_zero_chart);
   }
 
+  computeBtcFuturePnl(instrument, S_price){
+    let futures_value = 0;
+    if (instrument.direction === 'buy') {
+      futures_value = (instrument.size / instrument.average_price) * S_price - instrument.size;
+    }
+    if (instrument.direction === 'sell') {
+      futures_value = -instrument.size - ((-instrument.size)/ instrument.average_price) * S_price;
+    }
+    return futures_value
+  }
+
   async computeBtcOptPnl(instrument, S_price) {
     let current_value = 0;
     let value_at_zero = 0;
@@ -357,8 +372,7 @@ class DeribitOptionPos extends Component {
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price - instrument.average_price * S_price;
 
       value_at_zero =
         (BlackScholes(
@@ -376,8 +390,7 @@ class DeribitOptionPos extends Component {
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price - instrument.average_price * S_price;
     } else if (instrument.direction === 'sell') {
       current_value =
         (BlackScholes(
@@ -395,8 +408,7 @@ class DeribitOptionPos extends Component {
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price + instrument.average_price * S_price;
 
       value_at_zero =
         (BlackScholes(
@@ -414,8 +426,7 @@ class DeribitOptionPos extends Component {
             0.00001,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price + instrument.average_price * S_price;
     }
     return [current_value, value_at_zero];
 
@@ -575,7 +586,7 @@ class DeribitOptionPos extends Component {
         {TabValue === 'BTC' && (
           <Chart
             chart={{
-              account: this.props.deribit_account_state,
+              account: this.props.deribit_BTC_account_state,
               index: this.props.deribit_BTC_index,
               time: this.state.time,
               yDomain: this.state.yDomain,
@@ -621,9 +632,9 @@ DeribitOptionPos.propTypes = {
   deribit_BTC_index: PropTypes.number,
   deribit_BTC_futures_pos: PropTypes.array,
   deribit_BTC_options_pos: PropTypes.array,
-  deribit_account_state: PropTypes.array,
-  deribit_open_pos: PropTypes.array,
-  deribit_btc_all_instruments: PropTypes.array,
+  deribit_BTC_account_state: PropTypes.array,
+  deribit_BTC_open_pos: PropTypes.array,
+  deribit_BTC_all_instruments: PropTypes.array,
 };
 
 export default withStyles(styles)(DeribitOptionPos);

@@ -10,11 +10,15 @@ export const WS_ERROR = 'WS_ERROR';
 export const DERIBIT_BTC_INDEX = 'DERIBIT_BTC_INDEX';
 export const DERIBIT_BTC_FUTURES_POS = 'DERIBIT_BTC_FUTURES_POS';
 export const DERIBIT_BTC_OPTIONS_POS = 'DERIBIT_BTC_OPTIONS_POS';
-export const DERIBIT_ACCOUNT_STATE = 'DERIBIT_ACCOUNT_STATE';
-export const DERIBIT_OPEN_POSITIONS = 'DERIBIT_OPEN_POSITIONS';
+export const DERIBIT_BTC_ACCOUNT_STATE = 'DERIBIT_BTC_ACCOUNT_STATE';
+export const DERIBIT_BTC_OPEN_POSITIONS = 'DERIBIT_BTC_OPEN_POSITIONS';
 export const DERIBIT_BTC_ALL_INSTRUMENTS = 'DERIBIT_BTC_ALL_INSTRUMENTS';
+export const DERIBIT_API_TESTNET = 'DERIBIT_API_TESTNET';
+export const DERIBIT_API_REALNET = 'DERIBIT_API_REALNET';
 
 const initialState = {
+  deribit_api_url: 'wss://test.deribit.com/ws/api/v2/',
+  deribit_testnet: true,
   connected: false,
   readyState: null,
   socket: null,
@@ -27,9 +31,9 @@ const initialState = {
   deribit_BTC_index: 0,
   deribit_BTC_futures_pos: [],
   deribit_BTC_options_pos: [],
-  deribit_account_state: [],
-  deribit_open_pos: [],
-  deribit_btc_all_instruments: []
+  deribit_BTC_account_state: [],
+  deribit_BTC_open_pos: [],
+  deribit_BTC_all_instruments: []
 };
 
 export default function saga (state = initialState, action) {
@@ -104,22 +108,36 @@ export default function saga (state = initialState, action) {
         deribit_BTC_options_pos: action.data.result,
       };
 
-    case DERIBIT_ACCOUNT_STATE:
+    case DERIBIT_BTC_ACCOUNT_STATE:
       return {
         ...state,
-        deribit_account_state: [action.data.result],
+        deribit_BTC_account_state: [action.data.result],
       };
 
-    case DERIBIT_OPEN_POSITIONS:
+    case DERIBIT_BTC_OPEN_POSITIONS:
       return {
         ...state,
-        deribit_open_pos: action.data.result,
+        deribit_BTC_open_pos: action.data.result,
       };
 
     case DERIBIT_BTC_ALL_INSTRUMENTS:
       return {
         ...state,
-        deribit_btc_all_instruments: action.data.result,
+        deribit_BTC_all_instruments: action.data.result,
+      };
+
+    case DERIBIT_API_TESTNET:
+      return {
+        ...state,
+        deribit_testnet: true,
+        deribit_api_url: 'wss://test.deribit.com/ws/api/v2/',
+      };
+
+    case DERIBIT_API_REALNET:
+      return {
+        ...state,
+        deribit_testnet: false,
+        deribit_api_url: 'wss://www.deribit.com/ws/api/v2/',
       };
 
     default:

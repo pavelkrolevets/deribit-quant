@@ -48,7 +48,8 @@ const styles = theme => ({
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 100
+    width: 100,
+    backgroundColor: '#FF9A00',
   },
   dense: {
     marginTop: 19
@@ -58,7 +59,8 @@ const styles = theme => ({
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 120
+    minWidth: 120,
+    backgroundColor: '#FF9A00',
   },
   selectEmpty: {
     marginTop: theme.spacing(2)
@@ -90,11 +92,32 @@ class Vola extends Component {
       timeframe: '1d',
       instrument: 'BTC'
     };
-    this.update_interval = null;
   }
 
   async componentDidMount() {
-    this.props.start_hist_vola()
+    this.props.start_hist_vola();
+    // this.computeyDomain(this.props.hist_vola_data.data.hist_vola)
+  }
+
+  componentWillReceiveProps(nextProps: Props) {
+    this.computeyDomain(this.props.hist_vola_data.data.hist_vola);
+    this.setState({hist_vola: this.props.hist_vola_data.data.hist_vola})
+  }
+
+
+  computeyDomain(array){
+    let yDomain =[];
+    let ySeries = [];
+    for (let i of array) {
+      // console.log("Y", i.y);
+      if (typeof i.y === 'number'){
+        ySeries.push(i.y)
+      }
+    }
+    let min = ()=> {if (Math.min(...ySeries) !==Infinity){return Math.min(...ySeries)}else{return 0}};
+    let max = ()=> {if (Math.max(...ySeries) !==-Infinity){return Math.max(...ySeries)}else{return 2}};
+    yDomain = [min(), max()];
+    this.setState({yDomain: yDomain})
   }
 
   componentWillUnmount() {
@@ -108,7 +131,7 @@ class Vola extends Component {
   };
 
   _onNearestX = (value, { index }) => {
-    this.setState({ crosshairValues: [this.props.hist_vola_data.data.hist_vola[index]] });
+    this.setState({ crosshairValues: [this.state.hist_vola[index]] });
   };
 
   handleChange = name => event => {
@@ -136,6 +159,7 @@ class Vola extends Component {
     const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
     const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let { yDomain } = this.state;
+
     return (
       <div
         data-tid="container"
@@ -143,10 +167,11 @@ class Vola extends Component {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          backgroundColor: 'black',
         }}
       >
-        <h4 style={{ color: '#152880' }}>Historical volatility</h4>
+        <h4 style={{ color: '#FFF' }}>Historical volatility</h4>
         <div
           style={{
             display: 'flex',
@@ -176,7 +201,7 @@ class Vola extends Component {
             className={classes.textField}
             onChange={this.handleWindowChange('window')}
             margin="normal"
-            variant="outlined"
+            variant="filled"
             defaultValue={21}
           />
 
@@ -205,13 +230,14 @@ class Vola extends Component {
         >
           {/*Main graph*/}
           <XYPlot
-            width={700}
-            height={500}
+            height={480}
+            width={window.innerWidth * 0.85}
+            margin={{left: 100, bottom: 100}}
             onMouseLeave={this._onMouseLeave}
             {...{ yDomain }}
           >
-            <HorizontalGridLines />
-            <VerticalGridLines />
+            {/*<HorizontalGridLines />*/}
+            {/*<VerticalGridLines />*/}
             <XAxis on0={true} />
             <YAxis on0={true} />
             <ChartLabel
@@ -237,7 +263,7 @@ class Vola extends Component {
               className="first-series"
               onNearestX={this._onNearestX}
               // data={this.state.hist_vola}
-              data={this.props.hist_vola_data.data.hist_vola}
+              data={this.state.hist_vola}
             />
             {/*<LineSeries data={this.state.chart_data_at_zero} />*/}
             <Crosshair

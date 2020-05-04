@@ -13,9 +13,9 @@ function mapStateToProps(state) {
     deribit_BTC_index: state.sagas.deribit_BTC_index,
     deribit_BTC_futures_pos: state.sagas.deribit_BTC_futures_pos,
     deribit_BTC_options_pos: state.sagas.deribit_BTC_options_pos,
-    deribit_account_state: state.sagas.deribit_account_state,
-    deribit_open_pos: state.sagas.deribit_open_pos,
-    deribit_btc_all_instruments: state.sagas.deribit_btc_all_instruments
+    deribit_BTC_account_state: state.sagas.deribit_BTC_account_state,
+    deribit_BTC_open_pos: state.sagas.deribit_BTC_open_pos,
+    deribit_BTC_all_instruments: state.sagas.deribit_BTC_all_instruments
   };
 }
 

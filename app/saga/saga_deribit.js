@@ -33,9 +33,6 @@ function createEventChannel(ws, state) {
       } else {
         console.log('Socket is closed Unexpectedly. Reconnect in 5 second.', e.reason);
         return emit(END)
-        // setTimeout(() =>  {
-        //
-        // }, 5000);
       }
     };
     const unsubscribe = () => {
@@ -48,8 +45,11 @@ function createEventChannel(ws, state) {
 
 // Connect to ws: if success return open instance
 function * createWebSocketConnection() {
+  let state = yield select();
+
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket('wss://test.deribit.com/ws/api/v2/');
+    // console.log("API url", state.sagas.deribit_api_url);
+    const socket = new WebSocket(state.sagas.deribit_api_url);
     socket.onopen = function () {
       resolve(socket);
     };
@@ -94,7 +94,7 @@ function * initializeWebSocketsChannel() {
       // close the WebSocket connection
       ws.close()
     } else {
-      yield put(WS_live.ws_error('WebSocket disconnected'));
+      yield put(WS_live.ws_error('WebSocket disconnected, reconnecting...' ));
     }
   }
 
@@ -103,7 +103,8 @@ function * initializeWebSocketsChannel() {
 
 // Messages requests to ws deribit
 function wsDeribitMessages(ws){
-      console.log("Start sending requests to deribit ws");
+
+    console.log("Start sending requests to deribit ws");
 
       /// send BTC requests
       let get_index = deribit_api('BTC', 'index', 1001);
@@ -119,6 +120,9 @@ function wsDeribitMessages(ws){
       ws.send(JSON.stringify(account));
       ws.send(JSON.stringify(positions));
       ws.send(JSON.stringify(all_instruments));
+
+      /// send ETH requests
+
 }
 
 // Auth message to ws deribit server

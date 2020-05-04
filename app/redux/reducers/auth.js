@@ -20,7 +20,8 @@ const initialState = {
     isRegistered: false,
     registerStatusText: null,
     publicKey: '',
-    privateKey: ''
+    privateKey: '',
+    deribit_api: ''
 };
 
 export default function Auth (state = initialState, action) {

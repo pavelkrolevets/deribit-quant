@@ -5,7 +5,7 @@ import { createHashHistory } from 'history';
 import { routerMiddleware, routerActions } from 'connected-react-router';
 import { createLogger } from 'redux-logger';
 import createRootReducer from '../redux/reducers/index';
-import rootSaga from '../saga/saga';
+import rootSaga from '../saga/saga_deribit';
 
 const history = createHashHistory();
 
