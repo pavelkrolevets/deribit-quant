@@ -107,22 +107,30 @@ function wsDeribitMessages(ws){
     console.log("Start sending requests to deribit ws");
 
       /// send BTC requests
-      let get_index = deribit_api('BTC', 'index', 1001);
-      let fut_positions = deribit_api('BTC', 'fut_positions', 1002);
-      let opt_positions = deribit_api('BTC', 'opt_positions', 1003);
-      let account = deribit_api('BTC', 'account', 1004);
-      let positions = deribit_api('BTC', 'positions', 1005);
-      let all_instruments = deribit_api('BTC', 'all_instruments', 1006);
+      let get_index_btc = deribit_api('BTC', 'index', 1001);
+      let fut_positions_btc = deribit_api('BTC', 'fut_positions', 1002);
+      let opt_positions_btc = deribit_api('BTC', 'opt_positions', 1003);
+      let account_btc = deribit_api('BTC', 'account', 1004);
+      let positions_btc = deribit_api('BTC', 'positions', 1005);
+      let all_instruments_btc = deribit_api('BTC', 'all_instruments', 1006);
 
-      ws.send(JSON.stringify(get_index));
-      ws.send(JSON.stringify(fut_positions));
-      ws.send(JSON.stringify(opt_positions));
-      ws.send(JSON.stringify(account));
-      ws.send(JSON.stringify(positions));
-      ws.send(JSON.stringify(all_instruments));
+      ws.send(JSON.stringify(get_index_btc));
+      ws.send(JSON.stringify(fut_positions_btc));
+      ws.send(JSON.stringify(opt_positions_btc));
+      ws.send(JSON.stringify(account_btc));
+      ws.send(JSON.stringify(positions_btc));
+      ws.send(JSON.stringify(all_instruments_btc));
 
       /// send ETH requests
+    let get_index_eth = deribit_api('ETH', 'index', 2001);
+    let account_eth = deribit_api('ETH', 'account', 2004);
+    let positions_eth = deribit_api('ETH', 'positions', 2005);
+    let all_instruments_eth = deribit_api('ETH', 'all_instruments', 2006);
 
+    ws.send(JSON.stringify(get_index_eth));
+    ws.send(JSON.stringify(account_eth));
+    ws.send(JSON.stringify(positions_eth));
+    ws.send(JSON.stringify(all_instruments_eth));
 }
 
 // Auth message to ws deribit server

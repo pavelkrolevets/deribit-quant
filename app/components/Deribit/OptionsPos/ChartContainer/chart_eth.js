@@ -85,13 +85,13 @@ const styles = theme => ({
 // @connect(
 //   mapStateToProps,
 //   mapDispatchToProps)
-class Chart extends Component {
+class Chart_eth extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isShow: true,
       chart_data_current: this.props.chart.chart_data_current,
-      account: [{ equity: 0, delta_total: 0 }]
+      account: [{ equity: 0, delta_total: 0 }],
     };
   }
 
@@ -194,7 +194,7 @@ class Chart extends Component {
           {/*Main graph*/}
           <XYPlot
             height={480}
-            width={window.innerWidth * 0.85}
+            width={window.innerWidth * 0.7}
             margin={{left: 100}}
             onMouseLeave={this._onMouseLeave}
             {...{ yDomain }}
@@ -303,8 +303,8 @@ class Chart extends Component {
     );
   }
 }
-Chart.propTypes = {
+Chart_eth.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(Chart);
+export default withStyles(styles)(Chart_eth);

@@ -15,6 +15,10 @@ import {
   DERIBIT_BTC_ALL_INSTRUMENTS,
   DERIBIT_API_TESTNET,
   DERIBIT_API_REALNET,
+  DERIBIT_ETH_ACCOUNT_STATE,
+  DERIBIT_ETH_ALL_INSTRUMENTS,
+  DERIBIT_ETH_INDEX,
+  DERIBIT_ETH_OPEN_POSITIONS,
 } from '../reducers/saga_ws';
 
 
@@ -25,6 +29,39 @@ export function updateMarketData(data) {
       type: DERIBIT_AUTH,
     };
   }
+
+  if (data.id === 2001) {
+    // console.log("ETH index", data.result.edp);
+    return {
+      type: DERIBIT_ETH_INDEX,
+      data
+    };
+  }
+
+  if (data.id === 2004) {
+    // console.log("Deribit ETH account state", data.result);
+    return {
+      type: DERIBIT_ETH_ACCOUNT_STATE,
+      data
+    };
+  }
+
+  if (data.id === 2005) {
+    // console.log("Deribit ETH open pos", data.result);
+    return {
+      type: DERIBIT_ETH_OPEN_POSITIONS,
+      data
+    };
+  }
+
+  if (data.id === 2006) {
+    // console.log("Deribit ETH all instruments", data.result);
+    return {
+      type: DERIBIT_ETH_ALL_INSTRUMENTS,
+      data
+    };
+  }
+
 
   if (data.id === 1001) {
     // console.log("BTC index", data.result.edp);
@@ -51,7 +88,7 @@ export function updateMarketData(data) {
   }
 
   if (data.id === 1004) {
-    // console.log("Deribit account state", data.result);
+    // console.log("Deribit BTC account state", data.result);
     return {
       type: DERIBIT_BTC_ACCOUNT_STATE,
       data
@@ -59,7 +96,7 @@ export function updateMarketData(data) {
   }
 
   if (data.id === 1005) {
-    // console.log("Deribit open pos", data.result);
+    // console.log("Deribit BTC open pos", data.result);
     return {
       type: DERIBIT_BTC_OPEN_POSITIONS,
       data
@@ -67,7 +104,7 @@ export function updateMarketData(data) {
   }
 
   if (data.id === 1006) {
-    // console.log("Deribit btc all instruments", data.result);
+    // console.log("Deribit BTC all instruments", data.result);
     return {
       type: DERIBIT_BTC_ALL_INSTRUMENTS,
       data

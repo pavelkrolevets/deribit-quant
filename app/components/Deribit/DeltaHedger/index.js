@@ -58,30 +58,61 @@ class DeribitDeltaHedger extends Component {
       tasks:[],
       selected:[],
       setSelected:[],
-      instrument:"BTC"
-
+      instrument: "None",
+      instrument_list: [],
+      currency: "BTC",
     };
+    this.update_interval = null;
   }
   async componentWillMount(){
-    this.get_delta_hedger_tasks()
-    // this.web3 = new Web3(new Web3.providers.WebsocketProvider('ws://104.129.16.66:8546'));
-    // this.web3.eth.getBlock('latest').then(console.log).catch(console.log);
-    // this.web3.eth.getAccounts(function (error, res) {
-    //   if (!error) {
-    //     console.log(res);
-    //   } else {
-    //     console.log(error);
-    //   }
-    // });
-
+    this.update_interval = setInterval(() => {
+      this.get_delta_hedger_tasks();
+      this.get_instruemnt_list(this.state.currency);
+    }, 1000);
   }
+
+  componentWillUnmount() {
+    console.log('Component unmounting...');
+    if (this.update_interval) clearInterval(this.update_interval);
+    // this.props.stop_saga_ws();
+  }
+
+  get_instruemnt_list(currency){
+    let futures_list = [];
+    if (currency === "BTC") {
+      // console.log("All instruments: ", this.props.deribit_BTC_all_instruments);
+      for (let i of this.props.deribit_BTC_all_instruments){
+        if (i.kind === 'future'){
+          futures_list.push(i.instrument_name)
+        }
+      }
+      this.setState({instrument_list: futures_list});
+      // console.log("Instrument list: ", futures_list);
+    }
+    if (currency === "ETH") {
+      // console.log("All instruments: ", this.props.deribit_ETH_all_instruments);
+      for (let i of this.props.deribit_ETH_all_instruments){
+        if (i.kind === 'future'){
+          futures_list.push(i.instrument_name)
+        }
+      }
+      this.setState({instrument_list: futures_list});
+      // console.log("Instrument list: ", futures_list);
+    }
+  }
+
+
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
+    // update instruemnt list depends on the currency
+    if (name === 'currency'){
+      this.get_instruemnt_list(event.target.value)
+    }
   };
 
   async start_hedger(){
     console.log(this.props.user.token, this.props.email);
-    start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.instrument)
+    start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.currency, this.state.instrument)
       .then(result=> {console.log(result);
       this.get_delta_hedger_tasks()})
   }
@@ -112,12 +143,12 @@ class DeribitDeltaHedger extends Component {
     return (
       <div data-tid="container">
         <h1 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Delta Hedger</h1>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection: 'row'}}>
           <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
+            <InputLabel htmlFor="age-simple">Currency</InputLabel>
             <Select
-              value={this.state.instrument}
-              onChange={this.handleChange("instrument")}
+              value={this.state.currency}
+              onChange={this.handleChange("currency")}
               inputProps={{
                 name: 'instrument',
                 id: 'instruemnt-simple',
@@ -125,6 +156,28 @@ class DeribitDeltaHedger extends Component {
             >
               <MenuItem value={"BTC"}>BTC</MenuItem>
               <MenuItem value={"ETH"}>ETH</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl>
+            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
+            <Select
+              value={this.state.instrument}
+              onChange={this.handleChange('instrument')}
+              inputProps={{
+                name: 'hedging_instrument',
+                id: 'hedging_instrument-simple'
+              }}
+            >
+              <MenuItem value="None">
+                <em>None</em>
+              </MenuItem>
+              {this.state.instrument_list.map((item, i) => {
+                return (
+                  <MenuItem value={item} key={i}>
+                    {item}
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
         </div>
@@ -234,6 +287,26 @@ class DeribitDeltaHedger extends Component {
 
 DeribitDeltaHedger.propTypes = {
   classes: PropTypes.object.isRequired,
+  email: PropTypes.string,
+  user: PropTypes.object,
+  token: PropTypes.string,
+
+  api_pubkey: PropTypes.string,
+  api_privkey: PropTypes.string,
+  start_saga_ws: PropTypes.func,
+  stop_saga_ws: PropTypes.func,
+
+  deribit_BTC_index: PropTypes.number,
+  deribit_BTC_futures_pos: PropTypes.array,
+  deribit_BTC_options_pos: PropTypes.array,
+  deribit_BTC_account_state: PropTypes.array,
+  deribit_BTC_open_pos: PropTypes.array,
+  deribit_BTC_all_instruments: PropTypes.array,
+
+  deribit_ETH_index: PropTypes.number,
+  deribit_ETH_account_state: PropTypes.array,
+  deribit_ETH_open_pos: PropTypes.array,
+  deribit_ETH_all_instruments: PropTypes.array,
 };
 
 export default withStyles(styles)(DeribitDeltaHedger);

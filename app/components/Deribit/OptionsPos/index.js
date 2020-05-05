@@ -19,8 +19,8 @@ import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Toolbar from '@material-ui/core/Toolbar';
 import { BlackScholes } from '../Simulate/bsm';
-import Chart from './ChartContainer/index';
-import { deribit_api } from './requests';
+import Chart_eth from './ChartContainer/chart_eth';
+import Chart_btc from './ChartContainer/chart_btc';
 
 import {
   XYPlot,
@@ -85,10 +85,15 @@ class DeribitOptionPos extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      chart_data_current: [],
-      chart_data_at_zero: [],
+
+      chart_data_current_btc: [],
+      chart_data_at_zero_btc: [],
+      chart_data_current_eth: [],
+      chart_data_at_zero_eth: [],
+
       crosshairValues: [],
-      yDomain: [-7000, 7000],
+      yDomain_btc: [-10000, 10000],
+      yDomain_eth: [-10000, 10000],
       keys: {},
       positions: [],
       index: 0,
@@ -107,7 +112,21 @@ class DeribitOptionPos extends Component {
       fut_positions: [],
       opt_positions: [],
       all_instruments: [],
-      client_positions: [
+      client_positions_btc: [
+        {
+          instrument_name: '',
+          expiration: 0,
+          size: 0,
+          average_price: 0,
+          kind: '',
+          direction: '',
+          option_type: '',
+          strike: 0,
+          delta: 0,
+          total_profit_loss: 0
+        }
+      ],
+      client_positions_eth: [
         {
           instrument_name: '',
           expiration: 0,
@@ -124,20 +143,14 @@ class DeribitOptionPos extends Component {
       volatility_btc: 0.8,
       volatility_eth: 0.8
     };
-
-    this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
-    // this.eventHandler = this.eventHandler.bind(this);
     this.update_interval = null;
   }
 
-  updateWindowDimensions() {
-    this.setState({ width: window.innerWidth, height: window.innerHeight });
-  }
 
   componentWillUnmount() {
     console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
-    this.props.stop_saga_ws();
+    // this.props.stop_saga_ws();
   }
 
   componentDidMount() {
@@ -149,12 +162,13 @@ class DeribitOptionPos extends Component {
   // }
 
   async componentWillMount() {
-    this.props.start_saga_ws();
+    // this.props.start_saga_ws();
     this.update_interval = setInterval(() => {
-      this.prepareClientPositions();
+      this.prepareClientPositions_btc();
+      this.prepareClientPositions_eth();
       this.computeTotalPnl();
       this.setState({ time: new Date().toLocaleTimeString() });
-    }, 3000);
+    }, 1000);
 
     // let auth = {
     //   jsonrpc: '2.0',
@@ -243,7 +257,7 @@ class DeribitOptionPos extends Component {
   //   }
   // }
 
-  prepareClientPositions() {
+  prepareClientPositions_btc() {
     let client_positions = [];
     for (let position of this.props.deribit_BTC_open_pos) {
       for (let instruments of this.props.deribit_BTC_all_instruments) {
@@ -267,8 +281,36 @@ class DeribitOptionPos extends Component {
         }
       }
     }
-    // console.log("Client positions: ", client_positions);
-    this.setState({ client_positions: client_positions});
+    // console.log("Client positions btc: ", client_positions);
+    this.setState({ client_positions_btc: client_positions});
+  }
+
+  prepareClientPositions_eth() {
+    let client_positions = [];
+    for (let position of this.props.deribit_ETH_open_pos) {
+      for (let instruments of this.props.deribit_ETH_all_instruments) {
+        if (
+          position.instrument_name === instruments.instrument_name &&
+          position.direction !== 'zero'
+        ) {
+          let exp = new Date(parseInt(instruments.expiration_timestamp));
+          client_positions.push({
+            instrument_name: position.instrument_name,
+            expiration: exp,
+            size: position.size,
+            average_price: position.average_price,
+            kind: position.kind,
+            direction: position.direction,
+            option_type: instruments.option_type,
+            strike: instruments.strike,
+            delta: position.delta,
+            total_profit_loss: position.total_profit_loss
+          });
+        }
+      }
+    }
+    // console.log("Client positions eth: ", client_positions);
+    this.setState({ client_positions_eth: client_positions});
   }
 
   async computeTotalPnl() {
@@ -280,7 +322,7 @@ class DeribitOptionPos extends Component {
         let current_value = 0;
         let value_at_zero = 0;
         // console.log("Client positions: ", this.state.client_positions);
-        for (let instrument of this.state.client_positions) {
+        for (let instrument of this.state.client_positions_btc) {
           if (instrument.kind === 'option') {
             // console.log("Calcul instrument: ", instrument);
             let opt_val = await this.computeBtcOptPnl(instrument, i);
@@ -289,7 +331,7 @@ class DeribitOptionPos extends Component {
           }
           if (instrument.kind === 'future') {
             // console.log("Calcul instrument: ", instrument);
-            let fut_val = this.computeBtcFuturePnl(instrument, i);
+            let fut_val = this.computeFuturesPnl(instrument, i);
             current_value += fut_val;
             value_at_zero += fut_val;
           }
@@ -299,39 +341,45 @@ class DeribitOptionPos extends Component {
         value_at_zero_chart.push({ x: i, y: value_at_zero });
       }
 
-      this.setState({ ...this.state, chart_data_current: current_value_chart });
-      this.setState({ ...this.state, chart_data_at_zero: value_at_zero_chart });
-      this.setState({ yDomain: [-10000, 10000] });
+      this.setState({ ...this.state, chart_data_current_btc: current_value_chart });
+      this.setState({ ...this.state, chart_data_at_zero_btc: value_at_zero_chart });
+      this.setState({ yDomain_btc: [-10000, 10000] });
     }
 
     if (this.state.currency === 'ETH') {
-      for (let i = 50; i <= 400; i += 10) {
+      for (let i = 20; i <= 600; i += 10) {
         let current_value = 0;
         let value_at_zero = 0;
 
-        for (let instrument of this.state.client_positions) {
+        for (let instrument of this.state.client_positions_eth) {
           if (instrument.kind === 'option') {
             // console.log("Computing instr", instrument.instrument_name);
             let opt_val = await this.computeEthOptPnl(instrument, i);
-
             current_value += opt_val[0];
             value_at_zero += opt_val[1];
+          }
+          if (instrument.kind === 'future') {
+            // console.log("Calcul instrument: ", instrument);
+            let fut_val = this.computeFuturesPnl(instrument, i);
+            current_value += fut_val;
+            value_at_zero += fut_val;
           }
         }
 
         current_value_chart.push({ x: i, y: current_value });
         value_at_zero_chart.push({ x: i, y: value_at_zero });
       }
-      this.setState({ ...this.state, chart_data_current: current_value_chart });
-      this.setState({ ...this.state, chart_data_at_zero: value_at_zero_chart });
-      this.setState({ yDomain: [-1000, 1000] });
+
+      this.setState({ ...this.state, chart_data_current_eth: current_value_chart });
+      this.setState({ ...this.state, chart_data_at_zero_eth: value_at_zero_chart });
+      this.setState({ yDomain_eth: [-10000, 10000] });
     }
 
     // console.log("Current value chart", current_value_chart);
     // console.log("Value at zero chart", value_at_zero_chart);
   }
 
-  computeBtcFuturePnl(instrument, S_price){
+  computeFuturesPnl(instrument, S_price){
     let futures_value = 0;
     if (instrument.direction === 'buy') {
       futures_value = (instrument.size / instrument.average_price) * S_price - instrument.size;
@@ -363,7 +411,7 @@ class DeribitOptionPos extends Component {
           instrument.strike,
           timeToExp,
           0.01,
-          this.state.volatility_eth
+          this.state.volatility_btc
           ) -
           BlackScholes(
             instrument.option_type,
@@ -371,7 +419,7 @@ class DeribitOptionPos extends Component {
             instrument.strike,
             timeToExp,
             0.01,
-            this.state.volatility_eth
+            this.state.volatility_btc
           )) * S_price - instrument.average_price * S_price;
 
       value_at_zero =
@@ -459,13 +507,12 @@ class DeribitOptionPos extends Component {
         ) -
           BlackScholes(
             instrument.option_type,
-            this.state.index,
+            this.props.deribit_ETH_index,
             instrument.strike,
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price - instrument.average_price * S_price;
 
       value_at_zero =
         (BlackScholes(
@@ -478,18 +525,17 @@ class DeribitOptionPos extends Component {
         ) -
           BlackScholes(
             instrument.option_type,
-            this.state.index,
+            this.props.deribit_ETH_index,
             instrument.strike,
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price - instrument.average_price * S_price;
     } else if (instrument.direction === 'sell') {
       current_value =
         (BlackScholes(
           instrument.option_type,
-          this.state.index,
+          this.props.deribit_ETH_index,
           instrument.strike,
           timeToExp,
           0.01,
@@ -502,13 +548,12 @@ class DeribitOptionPos extends Component {
             timeToExp,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price + instrument.average_price * S_price;
 
       value_at_zero =
         (BlackScholes(
           instrument.option_type,
-          this.state.index,
+          this.props.deribit_ETH_index,
           instrument.strike,
           timeToExp,
           0.01,
@@ -521,8 +566,7 @@ class DeribitOptionPos extends Component {
             0.00001,
             0.01,
             this.state.volatility_eth
-          )) *
-        S_price;
+          )) * S_price + instrument.average_price * S_price;
     }
     return [current_value, value_at_zero];
   }
@@ -552,7 +596,6 @@ class DeribitOptionPos extends Component {
     // console.log("TabValue ",TabValue);
     this.setState({ TabValue });
     this.setState({ currency: TabValue });
-    this.getData();
   };
 
   render() {
@@ -584,32 +627,32 @@ class DeribitOptionPos extends Component {
 
         {/*//BTC positions*/}
         {TabValue === 'BTC' && (
-          <Chart
+          <Chart_btc
             chart={{
               account: this.props.deribit_BTC_account_state,
               index: this.props.deribit_BTC_index,
               time: this.state.time,
-              yDomain: this.state.yDomain,
-              chart_data_current: this.state.chart_data_current,
-              chart_data_at_zero: this.state.chart_data_at_zero,
-              crosshairValues: this.state.crosshairValues,
-              client_positions: this.state.client_positions
+              yDomain: this.state.yDomain_btc,
+              chart_data_current: this.state.chart_data_current_btc,
+              chart_data_at_zero: this.state.chart_data_at_zero_btc,
+              // crosshairValues: this.state.crosshairValues_btc,
+              client_positions: this.state.client_positions_btc
             }}
           />
         )}
 
         {/*//ETH positions*/}
         {TabValue === 'ETH' && (
-          <Chart
+          <Chart_eth
             chart={{
-              account: this.state.account,
-              index: this.state.index,
+              account: this.props.deribit_ETH_account_state,
+              index: this.props.deribit_ETH_index,
               time: this.state.time,
-              yDomain: this.state.yDomain,
-              chart_data_current: this.state.chart_data_current,
-              chart_data_at_zero: this.state.chart_data_at_zero,
-              crosshairValues: this.state.crosshairValues,
-              client_positions: this.state.client_positions
+              yDomain: this.state.yDomain_eth,
+              chart_data_current: this.state.chart_data_current_eth,
+              chart_data_at_zero: this.state.chart_data_at_zero_eth,
+              // crosshairValues: this.state.crosshairValues_eth,
+              client_positions: this.state.client_positions_eth
             }}
           />
           // <TabContainer>
@@ -629,12 +672,18 @@ DeribitOptionPos.propTypes = {
   api_privkey: PropTypes.string,
   start_saga_ws: PropTypes.func,
   stop_saga_ws: PropTypes.func,
+
   deribit_BTC_index: PropTypes.number,
   deribit_BTC_futures_pos: PropTypes.array,
   deribit_BTC_options_pos: PropTypes.array,
   deribit_BTC_account_state: PropTypes.array,
   deribit_BTC_open_pos: PropTypes.array,
   deribit_BTC_all_instruments: PropTypes.array,
+
+  deribit_ETH_index: PropTypes.number,
+  deribit_ETH_account_state: PropTypes.array,
+  deribit_ETH_open_pos: PropTypes.array,
+  deribit_ETH_all_instruments: PropTypes.array,
 };
 
 export default withStyles(styles)(DeribitOptionPos);

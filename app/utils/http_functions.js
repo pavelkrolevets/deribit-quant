@@ -86,6 +86,7 @@ export function start_delta_hedger(
   interval_min,
   interval_max,
   time_period,
+  currency,
   instrument
 ) {
   return axios.post(backend + '/api/start_delta_hedger', {
@@ -94,6 +95,7 @@ export function start_delta_hedger(
     interval_min,
     interval_max,
     time_period,
+    currency,
     instrument
   });
 }

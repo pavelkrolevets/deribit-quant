@@ -13,6 +13,12 @@ export const DERIBIT_BTC_OPTIONS_POS = 'DERIBIT_BTC_OPTIONS_POS';
 export const DERIBIT_BTC_ACCOUNT_STATE = 'DERIBIT_BTC_ACCOUNT_STATE';
 export const DERIBIT_BTC_OPEN_POSITIONS = 'DERIBIT_BTC_OPEN_POSITIONS';
 export const DERIBIT_BTC_ALL_INSTRUMENTS = 'DERIBIT_BTC_ALL_INSTRUMENTS';
+export const DERIBIT_ETH_INDEX = 'DERIBIT_ETH_INDEX';
+export const DERIBIT_ETH_ACCOUNT_STATE = 'DERIBIT_ETH_ACCOUNT_STATE';
+export const DERIBIT_ETH_OPEN_POSITIONS = 'DERIBIT_ETH_OPEN_POSITIONS';
+export const DERIBIT_ETH_ALL_INSTRUMENTS = 'DERIBIT_ETH_ALL_INSTRUMENTS';
+
+
 export const DERIBIT_API_TESTNET = 'DERIBIT_API_TESTNET';
 export const DERIBIT_API_REALNET = 'DERIBIT_API_REALNET';
 
@@ -28,12 +34,18 @@ const initialState = {
   deribit_priv_sync: false,
   ws_connected: false,
   ws_error: '',
+
   deribit_BTC_index: 0,
   deribit_BTC_futures_pos: [],
   deribit_BTC_options_pos: [],
   deribit_BTC_account_state: [],
   deribit_BTC_open_pos: [],
-  deribit_BTC_all_instruments: []
+  deribit_BTC_all_instruments: [],
+
+  deribit_ETH_index: 0,
+  deribit_ETH_account_state: [],
+  deribit_ETH_open_pos: [],
+  deribit_ETH_all_instruments: []
 };
 
 export default function saga (state = initialState, action) {
@@ -138,6 +150,30 @@ export default function saga (state = initialState, action) {
         ...state,
         deribit_testnet: false,
         deribit_api_url: 'wss://www.deribit.com/ws/api/v2/',
+      };
+
+    case DERIBIT_ETH_INDEX:
+      return {
+        ...state,
+        deribit_ETH_index: action.data.result.edp,
+      };
+
+    case DERIBIT_ETH_ACCOUNT_STATE:
+      return {
+        ...state,
+        deribit_ETH_account_state: [action.data.result],
+      };
+
+    case DERIBIT_ETH_OPEN_POSITIONS:
+      return {
+        ...state,
+        deribit_ETH_open_pos: action.data.result,
+      };
+
+    case DERIBIT_ETH_ALL_INSTRUMENTS:
+      return {
+        ...state,
+        deribit_ETH_all_instruments: action.data.result,
       };
 
     default:

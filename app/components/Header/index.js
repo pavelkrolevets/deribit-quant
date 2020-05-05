@@ -260,12 +260,12 @@ class Header extends Component {
 
     return (
       <div className={classes.root}>
-        <FormGroup>
-          <FormControlLabel
-            control={<ColorSwitch checked={this.props.deribit_testnet} onChange={this.handleDeribitNetChange} aria-label="testnet switch" />}
-            label={this.props.deribit_testnet ? 'Testnet' : 'Realnet'}
-          />
-        </FormGroup>
+        {/*<FormGroup>*/}
+        {/*  <FormControlLabel*/}
+        {/*    control={<ColorSwitch checked={this.props.deribit_testnet} onChange={this.handleDeribitNetChange} aria-label="testnet switch" />}*/}
+        {/*    label={this.props.deribit_testnet ? 'Testnet' : 'Realnet'}*/}
+        {/*  />*/}
+        {/*</FormGroup>*/}
 
         <Drawer open={this.state.DrowerOpen}>
           <div className={classes.drawerHeader}>
