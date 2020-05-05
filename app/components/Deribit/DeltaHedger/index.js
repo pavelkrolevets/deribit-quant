@@ -67,7 +67,7 @@ class DeribitDeltaHedger extends Component {
   async componentWillMount(){
     this.update_interval = setInterval(() => {
       this.get_delta_hedger_tasks();
-      this.get_instruemnt_list(this.state.currency);
+      this.get_instrument_list(this.state.currency);
     }, 1000);
   }
 
@@ -77,7 +77,7 @@ class DeribitDeltaHedger extends Component {
     // this.props.stop_saga_ws();
   }
 
-  get_instruemnt_list(currency){
+  get_instrument_list(currency){
     let futures_list = [];
     if (currency === "BTC") {
       // console.log("All instruments: ", this.props.deribit_BTC_all_instruments);
@@ -112,9 +112,15 @@ class DeribitDeltaHedger extends Component {
 
   async start_hedger(){
     console.log(this.props.user.token, this.props.email);
-    start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.currency, this.state.instrument)
-      .then(result=> {console.log(result);
-      this.get_delta_hedger_tasks()})
+    if (this.state.instrument!=='None') {
+      start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.currency, this.state.instrument)
+        .then(result => {
+          console.log(result);
+          this.get_delta_hedger_tasks()
+        })
+    } else {
+      alert("Please pick active instrument")
+    }
   }
   async get_delta_hedger_tasks(){
     get_tasks(this.props.user.token, this.props.email)
@@ -232,12 +238,13 @@ class DeribitDeltaHedger extends Component {
               <TableHead>
                 <TableRow>
                   <TableCell align="center">Edit</TableCell>
-                  <TableCell align="center">PID</TableCell>
-                  <TableCell align="center">Timestamp</TableCell>
+                  <TableCell align="center">Instrument</TableCell>
                   <TableCell align="center">Interval</TableCell>
                   <TableCell align="center">Dmin</TableCell>
                   <TableCell align="center">Dmax</TableCell>
-                  <TableCell align="center">Instrument</TableCell>
+                  <TableCell align="center">is_running</TableCell>
+                  <TableCell align="center">PID</TableCell>
+                  <TableCell align="center">Timestamp</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -256,10 +263,7 @@ class DeribitDeltaHedger extends Component {
                       </IconButton>
                     </TableCell>
                     <TableCell align="center">
-                      {row.pid}
-                    </TableCell>
-                    <TableCell align="center">
-                      {row.timestamp}
+                      {row.instrument}
                     </TableCell>
                     <TableCell align="center">
                       {row.timeinterval}
@@ -271,8 +275,16 @@ class DeribitDeltaHedger extends Component {
                       {row.delta_max}
                     </TableCell>
                     <TableCell align="center">
-                      {row.instrument}
+                      {row.is_run.toString()}
                     </TableCell>
+                    <TableCell align="center">
+                      {row.pid}
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.timestamp}
+                    </TableCell>
+
+
                   </TableRow>
                 ))}
               </TableBody>

@@ -285,12 +285,12 @@ class Header extends Component {
             </div>
           ) : (
             <div>
-              <MenuItem onClick={this.handleMenuClose('/stat')}>
-                Stats
-              </MenuItem>
-              <MenuItem onClick={this.handleMenuClose('/simulate')}>
-                Single
-              </MenuItem>
+              {/*<MenuItem onClick={this.handleMenuClose('/stat')}>*/}
+              {/*  Stats*/}
+              {/*</MenuItem>*/}
+              {/*<MenuItem onClick={this.handleMenuClose('/simulate')}>*/}
+              {/*  Single*/}
+              {/*</MenuItem>*/}
               <MenuItem onClick={this.handleMenuClose('/analyze')}>
                 Strategy
               </MenuItem>

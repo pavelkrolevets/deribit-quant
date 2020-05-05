@@ -48,7 +48,7 @@ const styles = theme => ({
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 100,
+    width: 120,
     backgroundColor: '#FF9A00',
   },
   dense: {
@@ -174,7 +174,7 @@ class Vola extends Component {
         <h4 style={{ color: '#FFF' }}>Historical volatility</h4>
         <div
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'row'
@@ -201,7 +201,7 @@ class Vola extends Component {
             className={classes.textField}
             onChange={this.handleWindowChange('window')}
             margin="normal"
-            variant="filled"
+            variant="outlined"
             defaultValue={21}
           />
 
