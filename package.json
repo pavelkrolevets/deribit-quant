@@ -1,8 +1,8 @@
 {
-  "name": "periscope",
-  "productName": "Periscope Cryptocurrency Terminal",
+  "name": "deltahedger",
+  "productName": "Deribit Deltahedger",
   "version": "0.0.5",
-  "description": "Cryptocurrency research terminal",
+  "description": "Deltahedger and analytial tool for Deribit exchange",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",

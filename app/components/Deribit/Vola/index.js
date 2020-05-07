@@ -29,7 +29,11 @@ import {
 
 const styles = theme => ({
   root: {
-    width: '100%'
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
   },
   grow: {
     flexGrow: 1
@@ -46,10 +50,10 @@ const styles = theme => ({
   },
   chart: {},
   textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 120,
-    backgroundColor: '#FF9A00',
+    textAlign: "center",
+    width: 150,
+    minHeight: 50,
+    marginLeft: 10,
   },
   dense: {
     marginTop: 19
@@ -64,7 +68,41 @@ const styles = theme => ({
   },
   selectEmpty: {
     marginTop: theme.spacing(2)
-  }
+  },
+  inputGroup:{
+    display: 'inline-block',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column'
+  },
+
+  filledRoot:{
+    '&:hover': {
+      backgroundColor: '#FB8D28',
+    },
+    '&$focused': {
+      backgroundColor: '#FB8D28',
+    },
+    backgroundColor: '#dc6b02',
+    '&$input ':{
+      color: '#000',
+      textAlign: 'center'
+    }
+  },
+  input:{
+  },
+  focused:{
+  },
+
+  filledLabelRoot:{
+    '&$focused': {
+      color:'red',
+      borderColor: 'green',
+      borderWidth: 1,
+    },
+    color:'#000'
+  },
+
 });
 
 class Vola extends Component {
@@ -155,72 +193,98 @@ class Vola extends Component {
 
   render() {
     const { classes } = this.props;
-    const { useCanvas } = this.state;
-    const content = useCanvas ? 'TOGGLE TO SVG' : 'TOGGLE TO CANVAS';
-    const Line = useCanvas ? LineSeriesCanvas : LineSeries;
     let { yDomain } = this.state;
 
     return (
       <div
-        data-tid="container"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-          backgroundColor: 'black',
-        }}
+        className={classes.root}
       >
         <h4 style={{ color: '#FFF' }}>Historical volatility</h4>
-        <div
-          style={{
-            display: 'inline-flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row'
-          }}
-        >
-          <FormControl variant="outlined" className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
-            <Select
-              value={this.props.hist_vola_currency}
-              onChange={this.handleCurrencyChange('instrument')}
-              inputProps={{
-                name: 'instrument',
-                id: 'instruemnt-simple'
-              }}
-            >
-              <MenuItem value={'BTC'}>BTC</MenuItem>
-              <MenuItem value={'ETH'}>ETH</MenuItem>
-            </Select>
-          </FormControl>
+
+        <div className={classes.inputGroup}>
+
+          <TextField
+            value={this.props.hist_vola_currency}
+            label="Currency"
+            className={classes.textField}
+            onChange={this.handleCurrencyChange('instrument')}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select your currency"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem key={"BTC"} value={"BTC"}>BTC</MenuItem>
+            <MenuItem key={"ETH"} value={"ETH"}>ETH</MenuItem>
+          </TextField>
 
           <TextField
             id="outlined-name"
             label="Window"
+            type="number"
             className={classes.textField}
             onChange={this.handleWindowChange('window')}
             margin="normal"
-            variant="outlined"
+            variant="filled"
             defaultValue={21}
+            inputProps={{min: 0, style: { textAlign: 'center' }}}
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              }
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
           />
 
-          <FormControl variant="outlined" className={classes.formControl}>
-            <InputLabel htmlFor="timeframe-simple">Timeframe</InputLabel>
-            <Select
-              value={this.props.hist_vola_timeframe}
-              onChange={this.handleTimeframeChange('timeframe')}
-              inputProps={{
-                name: 'timeframe',
-                id: 'timeframe-simple'
-              }}
-            >
-              <MenuItem value={'1m'}>Minutes</MenuItem>
-              <MenuItem value={'1h'}>Hourly</MenuItem>
-              <MenuItem value={'1d'}>Daily</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            value={this.props.hist_vola_timeframe}
+            label="Currency"
+            className={classes.textField}
+            onChange={this.handleTimeframeChange('timeframe')}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select timeframe"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem value={'1m'}>Minutes</MenuItem>*/}
+            <MenuItem value={'1h'}>Hourly</MenuItem>
+            <MenuItem value={'1d'}>Daily</MenuItem>
+          </TextField>
+
         </div>
+
         <div
           style={{
             display: 'flex',

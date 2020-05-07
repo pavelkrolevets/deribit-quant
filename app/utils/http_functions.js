@@ -100,10 +100,11 @@ export function start_delta_hedger(
   });
 }
 
-export function get_tasks(token, email) {
-  return axios.post(backend + '/api/get_tasks', {
+export function get_runnign_tasks(token, email, is_running) {
+  return axios.post(backend + '/api/get_runnung_tasks', {
     token,
-    email
+    email,
+    is_running
   });
 }
 

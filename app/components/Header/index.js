@@ -291,9 +291,9 @@ class Header extends Component {
               {/*<MenuItem onClick={this.handleMenuClose('/simulate')}>*/}
               {/*  Single*/}
               {/*</MenuItem>*/}
-              <MenuItem onClick={this.handleMenuClose('/analyze')}>
-                Strategy
-              </MenuItem>
+              {/*<MenuItem onClick={this.handleMenuClose('/analyze')}>*/}
+              {/*  Strategy*/}
+              {/*</MenuItem>*/}
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
               </MenuItem>
@@ -322,7 +322,7 @@ class Header extends Component {
               color="inherit"
               noWrap
             >
-              Periscope Terminal
+              Deltahedger
             </Typography>
             <div className={classes.search}>
               <div className={classes.searchIcon}>

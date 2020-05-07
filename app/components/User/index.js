@@ -15,9 +15,13 @@ import { get_api_keys, update_api_keys} from '../../utils/http_functions';
 
 const styles = theme => ({
   root: {
-    width: '100%',
-    marginTop: theme.spacing.unit * 3,
-    overflowX: 'auto',
+    display: 'flex',
+    justifyContent:'flex-start',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
+    width: window.innerWidth,
+    height: window.innerHeight,
   },
   table: {
     minWidth: 700,
@@ -27,6 +31,50 @@ const styles = theme => ({
     margin: 10,
     width: 100,
     height: 100,
+  },
+
+  title: {
+    color:'#dc6b02'
+  },
+  mainText:{
+    color:'#dc6b02',
+    marginBottom: 10
+  },
+  button:{
+    color:'#FFF',
+    backgroundColor: 'red',
+    margin: 20,
+  },
+
+  filledRoot:{
+    '&:hover': {
+      backgroundColor: '#FB8D28',
+    },
+    '&$focused': {
+      backgroundColor: '#FB8D28',
+    },
+    backgroundColor: '#dc6b02',
+    '&$input ':{
+      color: '#000',
+      textAlign: 'center'
+    }
+  },
+  input:{
+  },
+  focused:{
+  },
+
+  filledLabelRoot:{
+    '&$focused': {
+      color:'red',
+    },
+    color:'#000'
+  },
+  inputGroup:{
+    display: 'flex',
+    // justifyContent:'center',
+    alignItems:'flex-start',
+    flexDirection: 'column'
   },
 });
 
@@ -70,28 +118,42 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
   render() {
     const { classes } = this.props;
     return (
-      <div className='rows' >
+      <div className={classes.root}>
 
-        <h1 style={{color: "#152880"}}>Profile</h1>
+        <h1 className={classes.title}>Profile</h1>
+        <Typography variant="body1" gutterBottom color='#FFF'>
+          {this.props.email} </Typography>
+        <h4 className={classes.mainText}>Api keys</h4>
 
-          <Typography variant="body1" gutterBottom color='textPrimary'>
-            Account: {this.props.email} </Typography>
-        <h4 style={{color: "#152880"}}>Api keys</h4>
-          <Typography variant="body1" gutterBottom color='textPrimary'>
+
+          <div className={classes.inputGroup}>
+          <Typography variant="body1" gutterBottom color='#FFF'>
             Pub: {this.state.data.api_pubkey} </Typography>
-          <Typography variant="body1" gutterBottom color='textPrimary'>
+          <Typography variant="body1" gutterBottom color='#FFF'>
             Secret: {this.state.data.api_privkey}</Typography>
-        <div>
+          </div>
+
+        <div >
           <TextField
             id="input-api_pub_key"
             label="Api key"
             className="input-key"
             onChange={this.handleChange('api_pubkey')}
             margin="normal"
-            variant="outlined"
+            variant="filled"
             fullWidth
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
             InputLabelProps={{
-              shrink: true,
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
             }}
           />
           <TextField
@@ -100,16 +162,26 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             className="input-key"
             onChange={this.handleChange('api_privkey')}
             margin="normal"
-            variant="outlined"
+            variant="filled"
             fullWidth
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
             InputLabelProps={{
-              shrink: true,
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
             }}
           />
           <Button
             className={classes.button}
             onClick={()=>this.updateUserKeys()}
-            variant="outlined"
+            variant="filled"
             // color="primary"
           >Update</Button>
         </div>

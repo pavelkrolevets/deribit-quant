@@ -12,20 +12,25 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
-import QuestionIcon from '@material-ui/icons/QueryBuilder';
+// import QuestionAnswer from '@material-ui/icons/QuestionAnswer';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
+import InputBase from '@material-ui/core/InputBase';
 
 
-import { start_delta_hedger, get_tasks, kill_task, get_task_state} from '../../../utils/http_functions';
+import { start_delta_hedger, get_runnign_tasks, kill_task, get_task_state} from '../../../utils/http_functions';
 
 
 
 const styles = theme => ({
   root: {
-    width: '100%',
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
   },
   grow: {
     flexGrow: 1,
@@ -34,17 +39,98 @@ const styles = theme => ({
     marginLeft: -12,
     marginRight: 20,
   },
-  title: {
-    display: 'none',
-    [theme.breakpoints.up('sm')]: {
-      display: 'block',
-    },
-  },
   chart:{
   },
   formControl: {
-    margin: theme.spacing(3),
+    margin: 10,
   },
+  running_tasks: {
+    width: window.innerWidth * 0.9,
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column'
+  },
+  stopped_tasks: {
+    width: window.innerWidth * 0.9,
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column'
+  },
+  title: {
+    color:'#FFF'
+  },
+  mainText:{
+    color:'#FFF',
+    marginBottom: 10
+  },
+  inputGroup:{
+    display: 'inline-block',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'row',
+    marginBottom: 10
+  },
+  textField:{
+    textAlign: "center",
+    width: 150,
+    minHeight: 50,
+    marginLeft: 10,
+  },
+
+  // outlinedRoot: {
+  //   '&:hover $notchedOutline': {
+  //     borderColor: 'red',
+  //   },
+  //   '&$focused $notchedOutline': {
+  //     borderColor: 'green',
+  //     borderWidth: 1,
+  //   },
+  //   '&input': {
+  //     color: '#FFF'
+  //   }
+  // },
+  // notchedOutline: {
+  //   // backgroundColor: '#dc6b02',
+  // },
+  // focused: {
+  // },
+  // input: {
+  //   color: '#000'
+  // },
+
+  filledRoot:{
+    '&:hover': {
+      backgroundColor: '#FB8D28',
+    },
+    '&$focused': {
+      backgroundColor: '#FB8D28',
+    },
+    backgroundColor: '#dc6b02',
+    '&$input ':{
+      color: '#000',
+      textAlign: 'center'
+    }
+  },
+  input:{
+  },
+  focused:{
+  },
+
+  filledLabelRoot:{
+    '&$focused': {
+      color:'red',
+    },
+    color:'#000'
+  },
+
+  start_button:{
+    color:'#FFF',
+    backgroundColor: 'red',
+    margin: 20
+  }
+
 });
 
 
@@ -54,8 +140,11 @@ class DeribitDeltaHedger extends Component {
     this.state = {
       min_delta:'',
       max_delta:'',
+      min_delta_list: [-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, -0.01],
+      max_delta_list: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.01],
       time_interval:'',
-      tasks:[],
+      running_tasks:[],
+      stopped_tasks: [],
       selected:[],
       setSelected:[],
       instrument: "None",
@@ -106,7 +195,7 @@ class DeribitDeltaHedger extends Component {
     this.setState({ [name]: event.target.value });
     // update instruemnt list depends on the currency
     if (name === 'currency'){
-      this.get_instruemnt_list(event.target.value)
+      this.get_instrument_list(event.target.value)
     }
   };
 
@@ -123,12 +212,15 @@ class DeribitDeltaHedger extends Component {
     }
   }
   async get_delta_hedger_tasks(){
-    get_tasks(this.props.user.token, this.props.email)
+    get_runnign_tasks(this.props.user.token, this.props.email, true)
       .then(result=> {console.log(result);
-        this.setState({tasks: result.data});
-        this.forceUpdate();
+        this.setState({running_tasks: result.data});
       });
-
+    get_runnign_tasks(this.props.user.token, this.props.email, false)
+      .then(result=> {console.log(result);
+        this.setState({stopped_tasks: result.data});
+      });
+    this.forceUpdate();
   }
 
   async handleClick(event, name) {
@@ -147,140 +239,230 @@ class DeribitDeltaHedger extends Component {
   render() {
     const {classes} = this.props;
     return (
-      <div data-tid="container">
-        <h1 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Delta Hedger</h1>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', flexDirection: 'row'}}>
-          <FormControl className={classes.formControl}>
-            <InputLabel htmlFor="age-simple">Currency</InputLabel>
-            <Select
-              value={this.state.currency}
-              onChange={this.handleChange("currency")}
-              inputProps={{
-                name: 'instrument',
-                id: 'instruemnt-simple',
+      <div className={classes.root}>
+        <h1 className={classes.title}>Delta Hedger</h1>
+        <div className={classes.inputGroup}>
+
+          <TextField
+            value={this.state.currency}
+            label="Currency"
+            className={classes.textField}
+            onChange={this.handleChange("currency")}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select your currency"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+                <MenuItem key={"BTC"} value={"BTC"}>BTC</MenuItem>
+                <MenuItem key={"ETH"} value={"ETH"}>ETH</MenuItem>
+          </TextField>
+
+          <TextField
+            value={this.state.instrument}
+            label="Instrument"
+            className={classes.textField}
+            onChange={this.handleChange('instrument')}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select hedging instrument"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem value="None">
+              <em>None</em>
+            </MenuItem>
+            {this.state.instrument_list.map((item, i) => {
+              return (
+                <MenuItem value={item} key={i}>
+                  {item}
+                </MenuItem>
+              );
+            })}
+          </TextField>
+        </div>
+
+        <h4 className={classes.mainText}>Select delta bands</h4>
+
+        <div className={classes.inputGroup}>
+            <TextField
+              value={this.state.min_delta}
+              label="Min delta"
+              className={classes.textField}
+              onChange={this.handleChange("min_delta")}
+              variant="filled"
+              margin="normal"
+              select
+              InputProps={{
+                classes: {
+                  root: classes.filledRoot,
+                  input: classes.input,
+                  focused: classes.focused
+                },
               }}
-            >
-              <MenuItem value={"BTC"}>BTC</MenuItem>
-              <MenuItem value={"ETH"}>ETH</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel htmlFor="age-simple">Instrument</InputLabel>
-            <Select
-              value={this.state.instrument}
-              onChange={this.handleChange('instrument')}
-              inputProps={{
-                name: 'hedging_instrument',
-                id: 'hedging_instrument-simple'
+              InputLabelProps={{
+                classes: {
+                  root: classes.filledLabelRoot,
+                  focused: classes.focused
+                },
               }}
             >
               <MenuItem value="None">
                 <em>None</em>
               </MenuItem>
-              {this.state.instrument_list.map((item, i) => {
+              {this.state.min_delta_list.map((item, i) => {
                 return (
                   <MenuItem value={item} key={i}>
                     {item}
                   </MenuItem>
                 );
               })}
-            </Select>
-          </FormControl>
-        </div>
-        <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Select delta bands</h4>
+            </TextField>
 
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+          <div className={classes.inputGroup}>
+            <TextField
+              id="outlined-name"
+              type="number"
+              label="Time interval"
+              className={classes.textField}
+              onChange={this.handleChange('time_interval')}
+              margin="normal"
+              variant="filled"
+              inputProps={{min: 0, style: { textAlign: 'center' }}}
+              InputProps={{
+                classes: {
+                  root: classes.filledRoot,
+                  input: classes.input,
+                  focused: classes.focused
+                }
+              }}
+              InputLabelProps={{
+                classes: {
+                  root: classes.filledLabelRoot,
+                  focused: classes.focused
+                },
+              }}
+
+            />
+          </div>
 
           <TextField
-            id="outlined-name"
-            label="Min"
+            value={this.state.max_delta}
+            label="Max delta"
             className={classes.textField}
-            onChange={this.handleChange('min_delta')}
+            onChange={this.handleChange("max_delta")}
+            variant="filled"
             margin="normal"
-            variant="outlined"
-          />
-          <TextField
-            id="outlined-name"
-            label="Max"
-            className={classes.textField}
-            onChange={this.handleChange('max_delta')}
-            margin="normal"
-            variant="outlined"
-          />
+            select
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem value="None">
+              <em>None</em>
+            </MenuItem>
+            {this.state.max_delta_list.map((item, i) => {
+              return (
+                <MenuItem value={item} key={i}>
+                  {item}
+                </MenuItem>
+              );
+            })}
+          </TextField>
         </div>
-        <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Enter time interval</h4>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
-          <TextField
-            id="outlined-name"
-            label="Time interval"
-            className={classes.textField}
-            onChange={this.handleChange('time_interval')}
-            margin="normal"
-            variant="outlined"
-          />
-        </div>
-        <br/>
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center'}}>
+
+        <div className={classes.inputGroup}>
         <Button
-          className={classes.button}
+          className={classes.start_button}
           onClick={()=>this.start_hedger()}
-          variant="outlined"
+          variant="filled"
           // color="primary"
         >Start</Button>
         </div>
-        <div>
-          <h4 style={{color:"#C0C0C0", display: 'flex',  justifyContent:'center', alignItems:'center'}}>List of running tasks</h4>
-        </div>
-        {/*Create a table to show account list*/}
-        <Paper>
-          <div>
-            <Table className={classes.table} size="small">
+
+          <div className={classes.running_tasks}>
+            <h4 style={{color:"#C0C0C0"}}>List of running tasks</h4>
+            <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell align="center">Edit</TableCell>
-                  <TableCell align="center">Instrument</TableCell>
-                  <TableCell align="center">Interval</TableCell>
-                  <TableCell align="center">Dmin</TableCell>
-                  <TableCell align="center">Dmax</TableCell>
-                  <TableCell align="center">is_running</TableCell>
-                  <TableCell align="center">PID</TableCell>
-                  <TableCell align="center">Timestamp</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Edit</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Instrument</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Interval</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Dmin</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Dmax</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>is_running</TableCell>
+                  {/*<TableCell align="center">PID</TableCell>*/}
+                  <TableCell align="center" style={{ color: '#FFF' }}>Timestamp</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {this.state.tasks.map(row => (
+                {this.state.running_tasks.map(row => (
                   <TableRow key={row.id}
                             // onClick={event => this.handleClick(event, row.pid)}
                             selected
                             hover
                             >
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       <IconButton onClick={()=>this.handleClick(event, row.pid)}>
                         <DeleteIcon color="secondary" />
                       </IconButton>
-                      <IconButton onClick={()=>this.getTaskState(event, row.pid)}>
-                        <QuestionIcon color="primary" />
-                      </IconButton>
+                      {/*<IconButton onClick={()=>this.getTaskState(event, row.pid)}>*/}
+                      {/*  <QuestionAnswer color="primary" />*/}
+                      {/*</IconButton>*/}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.instrument}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.timeinterval}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.delta_min}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.delta_max}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.is_run.toString()}
                     </TableCell>
-                    <TableCell align="center">
-                      {row.pid}
-                    </TableCell>
-                    <TableCell align="center">
+                    {/*<TableCell align="center">*/}
+                    {/*  {row.pid}*/}
+                    {/*</TableCell>*/}
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
                       {row.timestamp}
                     </TableCell>
 
@@ -290,7 +472,59 @@ class DeribitDeltaHedger extends Component {
               </TableBody>
             </Table>
           </div>
-        </Paper>
+
+
+      {/*  List of stopped tasks*/}
+
+          <div className={classes.stopped_tasks}>
+            <h4 style={{color:"#C0C0C0"}}>Task history</h4>
+            <Table className={classes.table} size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Instrument</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Interval</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Dmin</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>Dmax</TableCell>
+                  <TableCell align="center" style={{ color: '#FFF' }}>is_running</TableCell>
+                  {/*<TableCell align="center">PID</TableCell>*/}
+                  <TableCell align="center">Timestamp</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.state.stopped_tasks.map(row => (
+                  <TableRow key={row.id}
+                    // onClick={event => this.handleClick(event, row.pid)}
+                            selected
+                            hover
+                  >
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.instrument}
+                    </TableCell>
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.timeinterval}
+                    </TableCell>
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.delta_min}
+                    </TableCell>
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.delta_max}
+                    </TableCell>
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.is_run.toString()}
+                    </TableCell>
+                    {/*<TableCell align="center">*/}
+                    {/*  {row.pid}*/}
+                    {/*</TableCell>*/}
+                    <TableCell align="center" style={{ color: '#dc6b02' }}>
+                      {row.timestamp}
+                    </TableCell>
+
+
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
       </div>
     );
   }
