@@ -152,8 +152,10 @@ class Vola extends Component {
         ySeries.push(i.y)
       }
     }
-    let min = ()=> {if (Math.min(...ySeries) !==Infinity){return Math.min(...ySeries)}else{return 0}};
-    let max = ()=> {if (Math.max(...ySeries) !==-Infinity){return Math.max(...ySeries)}else{return 2}};
+    let min_value = Math.min(...ySeries);
+    let max_value = Math.max(...ySeries);
+    let min = ()=> {if (Number.isFinite(min_value)) {return Math.min(...ySeries)}else{return 0}};
+    let max = ()=> {if (Number.isFinite(max_value)) {return Math.max(...ySeries)}else{return 2}};
     yDomain = [min(), max()];
     this.setState({yDomain: yDomain})
   }

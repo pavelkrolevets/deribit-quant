@@ -49,10 +49,16 @@ export function loginUserSuccess(token) {
       response => {
         console.log('Deribit Api Keys', response);
         if (response.status === 200) {
-          dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
-          store.set('api_pubkey', response.data.api_pubkey);
-          store.set('api_privkey', response.data.api_privkey);
-          dispatch(start_saga_ws())
+
+          if(response.data.api_pubkey!==''&&response.data.api_privkey!==''){
+            dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
+            store.set('api_pubkey', response.data.api_pubkey);
+            store.set('api_privkey', response.data.api_privkey);
+            dispatch(start_saga_ws())
+          } else {
+            alert("Please provide Deribit api keys");
+            history.push('/profile');
+          }
         } else {
           console.log("error getting Deribit keys")
         }

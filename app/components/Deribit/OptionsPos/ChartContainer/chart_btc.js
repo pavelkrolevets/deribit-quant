@@ -175,10 +175,10 @@ class Chart_btc extends Component {
               alignItems: 'left'
             }}
           >
-            <IconButton onClick={() => this.zoomIn()}>
+            <IconButton onClick={() => this.props.zoomIn()}>
               <ZoomIn color="secondary" />
             </IconButton>
-            <IconButton onClick={() => this.zoomOut()}>
+            <IconButton onClick={() => this.props.zoomOut()}>
               <ZoomOut color="secondary" />
             </IconButton>
           </div>

@@ -78,22 +78,25 @@ TabContainer.propTypes = {
   children: PropTypes.node.isRequired
 };
 
-// const WebSocket = require('ws');
-// let ws = new WebSocket('wss://www.deribit.com/ws/api/v2/');
-
 class DeribitOptionPos extends Component {
   constructor(props) {
     super(props);
     this.state = {
-
       chart_data_current_btc: [],
       chart_data_at_zero_btc: [],
       chart_data_current_eth: [],
       chart_data_at_zero_eth: [],
 
       crosshairValues: [],
+
       yDomain_btc: [-10000, 10000],
       yDomain_eth: [-10000, 10000],
+
+      xDomain_btc_start: 1000,
+      xDomain_btc_stop: 20000,
+      xDomain_eth_start: 20,
+      xDomain_eth_stop: 1000,
+
       keys: {},
       positions: [],
       index: 0,
@@ -168,7 +171,7 @@ class DeribitOptionPos extends Component {
       this.prepareClientPositions_eth();
       this.computeTotalPnl();
       this.setState({ time: new Date().toLocaleTimeString() });
-    }, 1000);
+    }, 2000);
 
     // let auth = {
     //   jsonrpc: '2.0',
@@ -257,6 +260,25 @@ class DeribitOptionPos extends Component {
   //   }
   // }
 
+  computeyDomain(array){
+    let yDomain =[];
+    let ySeries = [];
+    for (let i of array) {
+      // console.log("Y", i.y);
+      if (typeof i.y === 'number'){
+        ySeries.push(i.y)
+      }
+    }
+    let min_value = Math.min(...ySeries);
+    let max_value = Math.max(...ySeries);
+    let min = ()=> {if (Number.isFinite(min_value)&&min_value <= -500) {return Math.min(...ySeries)}else{return -500}};
+    let max = ()=> {if (Number.isFinite(max_value)&&max_value >=  500) {return Math.max(...ySeries)}else{return  500}};
+    yDomain = [min(), max()];
+    let result = new Promise(function(resolve, reject) {resolve(yDomain)});
+    return result
+  }
+
+
   prepareClientPositions_btc() {
     let client_positions = [];
     for (let position of this.props.deribit_BTC_open_pos) {
@@ -318,7 +340,7 @@ class DeribitOptionPos extends Component {
     let value_at_zero_chart = [];
 
     if (this.state.currency === 'BTC') {
-      for (let i = 1000; i <= 20000; i += 200) {
+      for (let i = this.state.xDomain_btc_start; i <= this.state.xDomain_btc_stop; i += 100) {
         let current_value = 0;
         let value_at_zero = 0;
         // console.log("Client positions: ", this.state.client_positions);
@@ -341,13 +363,15 @@ class DeribitOptionPos extends Component {
         value_at_zero_chart.push({ x: i, y: value_at_zero });
       }
 
+      let yDomain = await this.computeyDomain(value_at_zero_chart);
       this.setState({ ...this.state, chart_data_current_btc: current_value_chart });
       this.setState({ ...this.state, chart_data_at_zero_btc: value_at_zero_chart });
-      this.setState({ yDomain_btc: [-10000, 10000] });
+      // this.setState({ yDomain_btc: [-10000, 10000] });
+      this.setState({ yDomain_btc: yDomain});
     }
 
     if (this.state.currency === 'ETH') {
-      for (let i = 20; i <= 600; i += 10) {
+      for (let i = this.state.xDomain_eth_start; i <= this.state.xDomain_eth_stop; i += 10) {
         let current_value = 0;
         let value_at_zero = 0;
 
@@ -369,10 +393,10 @@ class DeribitOptionPos extends Component {
         current_value_chart.push({ x: i, y: current_value });
         value_at_zero_chart.push({ x: i, y: value_at_zero });
       }
-
+      let yDomain = await this.computeyDomain(value_at_zero_chart);
       this.setState({ ...this.state, chart_data_current_eth: current_value_chart });
       this.setState({ ...this.state, chart_data_at_zero_eth: value_at_zero_chart });
-      this.setState({ yDomain_eth: [-10000, 10000] });
+      this.setState({ yDomain_eth: yDomain});
     }
 
     // console.log("Current value chart", current_value_chart);
@@ -571,27 +595,64 @@ class DeribitOptionPos extends Component {
     return [current_value, value_at_zero];
   }
 
-  zoomIn() {
-    let that = this;
-    let promise = new Promise(function(resolve, reject) {
-      resolve(
-        that.setState((prevState, props) => ({ zoom: prevState.zoom + 0.2 }))
-      );
-      return null;
-    });
-    promise.then(() => this.computePnL());
-  }
-  zoomOut() {
-    let that = this;
-    let promise = new Promise(function(resolve, reject) {
-      resolve(
-        that.setState((prevState, props) => ({ zoom: prevState.zoom - 0.2 }))
-      );
-      return null;
-    });
-    promise.then(() => this.computePnL());
-  }
+  zoomInBTC = () => {
+    let start = this.state.xDomain_btc_start;
+    let stop = this.state.xDomain_btc_stop;
+    if (start < stop) {
+      start += 1000;
+      this.setState({xDomain_btc_start: start});
+      console.log("xDomain_btc_start", this.state.xDomain_btc_start)
+    }
+    if (stop > start){
+      stop -= 1000;
+      this.setState({xDomain_btc_stop: stop});
+      console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
+    }
+  };
 
+  zoomOutBTC = () => {
+    let start = this.state.xDomain_btc_start;
+    let stop = this.state.xDomain_btc_stop;
+    if (start - 1000 >= 1000){
+      start -= 1000;
+      this.setState({xDomain_btc_start: start});
+      console.log("xDomain_btc_start", this.state.xDomain_btc_start)
+    }
+    if (stop + 1000<=20000){
+      stop +=1000;
+      this.setState({xDomain_btc_stop: stop});
+      console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
+    }
+  };
+  zoomInETH = () => {
+    let start = this.state.xDomain_eth_start;
+    let stop = this.state.xDomain_eth_stop;
+    if (start < stop) {
+      start += 100;
+      this.setState({xDomain_eth_start: start});
+      console.log("xDomain_eth_start", this.state.xDomain_eth_start)
+    }
+    if (stop > start){
+      stop -= 100;
+      this.setState({xDomain_eth_stop: stop});
+      console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
+    }
+  };
+
+  zoomOutETH = () => {
+    let start = this.state.xDomain_eth_start;
+    let stop = this.state.xDomain_eth_stop;
+    if (start - 100 >= 20){
+      start -= 100;
+      this.setState({xDomain_eth_start: start});
+      console.log("xDomain_eth_start", this.state.xDomain_eth_start)
+    }
+    if (stop + 100<=1000){
+      stop +=100;
+      this.setState({xDomain_eth_stop: stop});
+      console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
+    }
+  };
   handleTabChange = (event, TabValue) => {
     // console.log("TabValue ",TabValue);
     this.setState({ TabValue });
@@ -636,8 +697,10 @@ class DeribitOptionPos extends Component {
               chart_data_current: this.state.chart_data_current_btc,
               chart_data_at_zero: this.state.chart_data_at_zero_btc,
               // crosshairValues: this.state.crosshairValues_btc,
-              client_positions: this.state.client_positions_btc
+              client_positions: this.state.client_positions_btc,
             }}
+            zoomIn={this.zoomInBTC}
+            zoomOut={this.zoomOutBTC}
           />
         )}
 
@@ -652,8 +715,10 @@ class DeribitOptionPos extends Component {
               chart_data_current: this.state.chart_data_current_eth,
               chart_data_at_zero: this.state.chart_data_at_zero_eth,
               // crosshairValues: this.state.crosshairValues_eth,
-              client_positions: this.state.client_positions_eth
+              client_positions: this.state.client_positions_eth,
             }}
+            zoomIn={this.zoomInETH}
+            zoomOut={this.zoomOutETH}
           />
           // <TabContainer>
           //   <h4 style={{color:"#152880", display: 'flex',  justifyContent:'center', alignItems:'center'}}>Option positions </h4>
