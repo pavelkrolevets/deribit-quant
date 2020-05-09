@@ -76,7 +76,7 @@ const styles = theme => ({
   },
   formControl: {
     width: '100%',
-    backgroundColor: '#000',
+    backgroundColor: '#000'
   },
   inputInput: {
     paddingTop: theme.spacing.unit,
@@ -115,14 +115,14 @@ const ColorSwitch = withStyles({
   switchBase: {
     color: green[500],
     '&$checked': {
-      color: '#dc6b02',
+      color: '#dc6b02'
     },
     '&$checked + $track': {
-      backgroundColor: '#000',
-    },
+      backgroundColor: '#000'
+    }
   },
   checked: {},
-  track: {},
+  track: {}
 })(Switch);
 
 class Header extends Component {
@@ -187,12 +187,12 @@ class Header extends Component {
       open: false
     });
   }
-  handleDeribitNetChange = (event) => {
-    console.log("Checked event", event.target.checked);
-    if(event.target.checked === false){
-      this.props.set_deribit_realnet()
+  handleDeribitNetChange = event => {
+    console.log('Checked event', event.target.checked);
+    if (event.target.checked === false) {
+      this.props.set_deribit_realnet();
     } else if (event.target.checked === true) {
-      this.props.set_deribit_testnet()
+      this.props.set_deribit_testnet();
     }
   };
 
@@ -209,19 +209,22 @@ class Header extends Component {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={isMenuOpen}
         onClose={this.handleMenuClose}
-      >{!this.props.isAuthenticated ? (
-        <div>
-            <MenuItem onClick={this.handleMenuClose("/login")}>Login</MenuItem>
-            <MenuItem onClick={this.handleMenuClose("/register")}>Register</MenuItem>
-        </div>
-        )
-        :
-        ( <div>
-            <MenuItem onClick={this.handleMenuClose("/profile")}>Profile</MenuItem>
+      >
+        {!this.props.isAuthenticated ? (
+          <div>
+            <MenuItem onClick={this.handleMenuClose('/login')}>Login</MenuItem>
+            <MenuItem onClick={this.handleMenuClose('/register')}>
+              Register
+            </MenuItem>
+          </div>
+        ) : (
+          <div>
+            <MenuItem onClick={this.handleMenuClose('/profile')}>
+              Profile
+            </MenuItem>
             <MenuItem onClick={e => this.logout(e)}>Logout</MenuItem>
           </div>
-        )
-      }
+        )}
       </Menu>
     );
 
@@ -277,11 +280,9 @@ class Header extends Component {
               )}
             </IconButton>
           </div>
-          {!this.props.isAuthenticated ? (
+          {!this.props.isAuthenticated || !this.props.deribit_auth ? (
             <div>
-              <MenuItem onClick={this.handleMenuClose("/")}>
-                Home
-              </MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
             </div>
           ) : (
             <div>
@@ -300,9 +301,7 @@ class Header extends Component {
               <MenuItem onClick={this.handleMenuClose('/options')}>
                 Position
               </MenuItem>
-              <MenuItem onClick={this.handleMenuClose('/vola')}>
-                Vola
-              </MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/vola')}>Vola</MenuItem>
             </div>
           )}
         </Drawer>
@@ -383,6 +382,7 @@ Header.propTypes = {
   deribit_testnet: PropTypes.bool,
   set_deribit_testnet: PropTypes.func,
   set_deribit_realnet: PropTypes.func,
+  deribit_auth: PropTypes.bool
 };
 
 export default withRouter(withStyles(styles, { withTheme: true })(Header));

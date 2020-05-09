@@ -1,3 +1,4 @@
+import { withRouter } from 'react-router-dom';
 import {
   STOP_CHANNEL,
   START_CHANNEL,
@@ -19,14 +20,24 @@ import {
   DERIBIT_ETH_ALL_INSTRUMENTS,
   DERIBIT_ETH_INDEX,
   DERIBIT_ETH_OPEN_POSITIONS,
+  DERIBIT_AUTH_ERROR
 } from '../reducers/saga_ws';
-
+import { LOGIN_USER_REQUEST } from '../constants';
 
 export function updateMarketData(data) {
-
-  if (data.id === 777) {
+  if (data.id === 777 && data.error === undefined) {
+    console.log('Data auth', data);
     return {
-      type: DERIBIT_AUTH,
+      type: DERIBIT_AUTH
+    };
+  }
+
+  if (data.id === 777 && data.error !== undefined) {
+    console.log('Data auth', data);
+    return dispatch => {
+      alert('Please provide working Deribit API keys');
+      dispatch(loginDeribitError());
+      dispatch(stop_saga_ws());
     };
   }
 
@@ -61,7 +72,6 @@ export function updateMarketData(data) {
       data
     };
   }
-
 
   if (data.id === 1001) {
     // console.log("BTC index", data.result.edp);
@@ -152,18 +162,29 @@ export function ws_error(error) {
 export function connectionSuccess() {
   // console.log("Connection success");
   return {
-    type: WS_CONNECTED,
+    type: WS_CONNECTED
   };
 }
 
 export function deribit_testnet() {
   return {
-    type: DERIBIT_API_TESTNET,
+    type: DERIBIT_API_TESTNET
   };
 }
 
 export function deribit_realnet() {
   return {
-    type: DERIBIT_API_REALNET,
+    type: DERIBIT_API_REALNET
   };
 }
+
+export function loginDeribitError() {
+  return {
+    type: DERIBIT_AUTH_ERROR
+  };
+}
+// export function send_to_profile(history) {
+//   return {
+//     history.push('/');
+//   };
+// }
