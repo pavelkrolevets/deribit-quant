@@ -5,13 +5,48 @@ import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
 import { get_api_keys } from '../../utils/http_functions';
+import { withStyles } from '@material-ui/core/styles/index';
 
 function mapStateToProps(state) {
   return {
     email: state.auth.userName,
-    user: state.auth
+    user: state.auth,
+    isAuthenticated: state.auth.isAuthenticated
   };
 }
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    justifyContent:'start',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+
+  title: {
+    color:'#FFF'
+  },
+  mainText:{
+    color:'#FFF',
+    marginBottom: 10
+  },
+  inputGroup:{
+    display: 'inline-block',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'row',
+    marginBottom: 10
+  },
+  textField:{
+    textAlign: "center",
+    width: 150,
+    minHeight: 50,
+    marginLeft: 10,
+  }
+});
 
 // const mapDispatchToProps = dispatch => ({
 //   storeDeribitAccount: (api_pubkey, api_privkey) => dispatch(storeDeribitAccount(api_pubkey, api_privkey))
@@ -21,30 +56,38 @@ function mapStateToProps(state) {
   mapStateToProps,
   // mapDispatchToProps
 )
-export default class ProtectedView extends React.Component {
-  async componentDidMount() {
-  }
+
+class Main extends React.Component {
 
   render() {
+    const {classes} = this.props;
     return (
-      <div>
-        {/*{!this.props.loaded ? (*/}
-        {/*  <Paper>*/}
-        {/*    <h1>Loading data...</h1>*/}
-        {/*  </Paper>*/}
-        {/*) : (*/}
-          <Paper>
-            <h1>
-              Welcome back, {this.props.userName}!
-            </h1>
-          </Paper>
-        {/*)}*/}
+      <div className={classes.root}>
+        {!this.props.isAuthenticated ? (
+          <div>
+            <h2  className={classes.mainText}>
+              Welcome to Deribit deltahedger.
+            </h2>
+            <h4  className={classes.mainText}>
+              Please login or register to continue.
+            </h4>
+          </div>
+          )
+          :
+          (
+            <div>
+              <h1>
+                Welcome {this.props.userName}!
+              </h1>
+            </div>
+          )
+        }
       </div>
     );
   }
 }
 
-ProtectedView.propTypes = {
+Main.propTypes = {
   fetchProtectedData: PropTypes.func,
   loaded: PropTypes.bool,
   userName: PropTypes.string,
@@ -52,5 +95,8 @@ ProtectedView.propTypes = {
   token: PropTypes.string,
   storeDeribitAccount: PropTypes.func,
   email: PropTypes.string,
-  user: PropTypes.string
+  user: PropTypes.string,
+
 };
+
+export default withStyles(styles)(Main);

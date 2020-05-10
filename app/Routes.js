@@ -1,7 +1,6 @@
 import React from 'react';
 import { Switch, Route } from 'react-router';
 import App from './containers/App';
-import HomePage from './containers/HomePage';
 import Profile from './containers/Profile'
 import DeribitOptionPos from './containers/DeribitOptionPos'
 import DeribitDeltaHedger from './containers/DeribitDeltaHedger'
@@ -30,7 +29,6 @@ export default () => (
       <Route path="/simulate" component={requireAuthentication(Simulate)} />
       <Route path="/analyze" component={requireAuthentication(Analize)} />
       <Route path="/main" component={requireNoAuthentication(Main)} />
-      <Route path="/" component={requireNoAuthentication(HomePage)} />
     </Switch>
   </App>
 );

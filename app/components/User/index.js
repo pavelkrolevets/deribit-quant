@@ -185,6 +185,9 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             // color="primary"
           >Update</Button>
         </div>
+        {/*<div>*/}
+        {/*  <h4 className={classes.mainText}>NOTE: Due to security concerns, API keys are stored only locally. </h4>*/}
+        {/*</div>*/}
 
 
       </div>

@@ -115,7 +115,7 @@ export default class LoginView extends React.Component {
         <Paper style={style}>
           <form role="form">
             <div className="text-center">
-              <h1>Login to Periscope.</h1>
+              <h1>Login to terminal.</h1>
               {this.props.statusText && (
                 <div className="alert alert-info">{this.props.statusText}</div>
               )}

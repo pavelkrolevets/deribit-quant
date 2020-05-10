@@ -282,19 +282,13 @@ class Header extends Component {
           </div>
           {!this.props.isAuthenticated || !this.props.deribit_auth ? (
             <div>
-              <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/main')}>Home</MenuItem>
             </div>
           ) : (
             <div>
-              {/*<MenuItem onClick={this.handleMenuClose('/stat')}>*/}
-              {/*  Stats*/}
-              {/*</MenuItem>*/}
-              {/*<MenuItem onClick={this.handleMenuClose('/simulate')}>*/}
-              {/*  Single*/}
-              {/*</MenuItem>*/}
-              {/*<MenuItem onClick={this.handleMenuClose('/analyze')}>*/}
-              {/*  Strategy*/}
-              {/*</MenuItem>*/}
+              <div>
+                <MenuItem onClick={this.handleMenuClose('/main')}>Home</MenuItem>
+              </div>
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
               </MenuItem>

@@ -96,7 +96,7 @@ export function logoutAndRedirect(history) {
   return dispatch => {
     dispatch(logout());
     dispatch(stop_saga_ws());
-    history.push('/');
+    history.push('/main');
   };
 }
 
