@@ -47,7 +47,7 @@ export function loginUserSuccess(token) {
   return get_api_keys(token, jwtDecode(token).email)
     .then(
       response => {
-        console.log('Deribit Api Keys', response);
+        // console.log('Deribit Api Keys', response);
         if (response.status === 200) {
 
           if(response.data.api_pubkey!==''&&response.data.api_privkey!==''){
@@ -60,10 +60,10 @@ export function loginUserSuccess(token) {
             history.push('/profile');
           }
         } else {
-          console.log("error getting Deribit keys")
+          // console.log("error getting Deribit keys")
         }
       },
-      error => console.log('An error occurred.', error)
+      // error => console.log('An error occurred.', error)
     )
   }
 }
@@ -96,7 +96,7 @@ export function logoutAndRedirect(history) {
   return dispatch => {
     dispatch(logout());
     dispatch(stop_saga_ws());
-    history.push('/main');
+    history.push('/');
   };
 }
 
@@ -114,8 +114,8 @@ export function loginUser(email, password, history) {
       .then(response => {
         try {
           dispatch(loginUserSuccess(response.token));
-          console.log('Login success!!');
-          history.push('/main');
+          // console.log('Login success!!');
+          history.push('/');
         } catch (e) {
           alert(e);
           dispatch(

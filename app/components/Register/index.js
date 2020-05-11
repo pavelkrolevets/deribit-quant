@@ -12,6 +12,63 @@ import * as actionCreators from '../../redux/actions/auth';
 
 import { validateEmail } from '../../utils/misc';
 
+import { withStyles } from '@material-ui/core/styles/index';
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+  title: {
+    color:'#FFF'
+  },
+  mainText:{
+    color:'#FFF',
+    marginBottom: 10
+  },
+  textField:{
+    textAlign: "center",
+    width: 150,
+    minHeight: 50,
+    marginLeft: 10,
+  },
+  filledRoot:{
+    '&:hover': {
+      backgroundColor: '#FB8D28',
+    },
+    '&$focused': {
+      backgroundColor: '#FB8D28',
+    },
+    backgroundColor: '#dc6b02',
+    '&$input ':{
+      color: '#000',
+      textAlign: 'center'
+    }
+  },
+  input:{
+  },
+  focused:{
+  },
+
+  filledLabelRoot:{
+    '&$focused': {
+      color:'red',
+    },
+    color:'#000'
+  },
+
+  button:{
+    color:'#FFF',
+    backgroundColor: 'red',
+    margin: 20
+  }
+});
+
 function mapStateToProps(state) {
   return {
     isRegistering: state.auth.isRegistering,
@@ -23,17 +80,8 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actionCreators, dispatch);
 }
 
-const style = {
-  marginTop: 50,
-  paddingBottom: 50,
-  paddingTop: 25,
-  width: '100%',
-  textAlign: 'center',
-  display: 'inline-block',
-};
-
 @connect(mapStateToProps, mapDispatchToProps)
-export default class RegisterView extends React.Component {
+class RegisterView extends React.Component {
 
   constructor(props) {
     super(props);
@@ -107,10 +155,10 @@ export default class RegisterView extends React.Component {
   }
 
   render() {
+    const {classes} = this.props;
     return (
-      <div className="col-md-6 col-md-offset-3">
-        <Paper style={style}>
-          <h1>Register to terminal.</h1>
+      <div className={classes.root}>
+          <h1 className={classes.title}>Register to terminal.</h1>
           <div className="text-center">
             {
               this.props.registerStatusText &&
@@ -119,42 +167,67 @@ export default class RegisterView extends React.Component {
               </div>
             }
 
-            <div className="col-md-12">
+            <div >
               <TextField
                 id="outlined-email-input"
                 label="Email"
                 type="email"
                 name="email"
                 autoComplete="email"
-                margin="normal"
-                variant="outlined"
                 onChange={(e) => this.changeValue(e, 'email')}
+                variant="filled"
+                margin="normal"
+                helperText="Please provide a valid email address"
+                InputProps={{
+                  classes: {
+                    root: classes.filledRoot,
+                    input: classes.input,
+                    focused: classes.focused
+                  },
+                }}
+                InputLabelProps={{
+                  classes: {
+                    root: classes.filledLabelRoot,
+                    focused: classes.focused
+                  },
+                }}
               />
             </div>
-            <div className="col-md-12">
+            <div >
               <TextField
                 id="outlined-password-input"
                 label="Password"
                 type="password"
                 autoComplete="current-password"
-                margin="normal"
-                variant="outlined"
                 onChange={(e) => this.changeValue(e, 'password')}
+                variant="filled"
+                margin="normal"
+                helperText="Please enter the password"
+                InputProps={{
+                  classes: {
+                    root: classes.filledRoot,
+                    input: classes.input,
+                    focused: classes.focused
+                  },
+                }}
+                InputLabelProps={{
+                  classes: {
+                    root: classes.filledLabelRoot,
+                    focused: classes.focused
+                  },
+                }}
               />
             </div>
 
             <RaisedButton
-              style={{ marginTop: 50 }}
+              className={classes.button}
               onClick={(e) => this.login(e)}
-              variant="contained"
-              color="secondary"
+              variant="filled"
             >
               Submit
             </RaisedButton>
 
           </div>
-        </Paper>
-
       </div>
     );
 
@@ -165,3 +238,5 @@ RegisterView.propTypes = {
   registerUser: PropTypes.func,
   registerStatusText: PropTypes.string,
 };
+
+export default withStyles(styles)(RegisterView);

@@ -28,7 +28,7 @@ export default () => (
       <Route path="/profile" component={requireAuthentication(Profile)} />
       <Route path="/simulate" component={requireAuthentication(Simulate)} />
       <Route path="/analyze" component={requireAuthentication(Analize)} />
-      <Route path="/main" component={requireNoAuthentication(Main)} />
+      <Route path="/" component={requireNoAuthentication(Main)} />
     </Switch>
   </App>
 );

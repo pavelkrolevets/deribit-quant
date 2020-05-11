@@ -151,7 +151,7 @@ class DeribitOptionPos extends Component {
 
 
   componentWillUnmount() {
-    console.log('Component unmounting...');
+    // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
     // this.props.stop_saga_ws();
   }
@@ -601,12 +601,12 @@ class DeribitOptionPos extends Component {
     if (start < stop) {
       start += 1000;
       this.setState({xDomain_btc_start: start});
-      console.log("xDomain_btc_start", this.state.xDomain_btc_start)
+      // console.log("xDomain_btc_start", this.state.xDomain_btc_start)
     }
     if (stop > start){
       stop -= 1000;
       this.setState({xDomain_btc_stop: stop});
-      console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
+      // console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
     }
   };
 
@@ -616,12 +616,12 @@ class DeribitOptionPos extends Component {
     if (start - 1000 >= 1000){
       start -= 1000;
       this.setState({xDomain_btc_start: start});
-      console.log("xDomain_btc_start", this.state.xDomain_btc_start)
+      // console.log("xDomain_btc_start", this.state.xDomain_btc_start)
     }
     if (stop + 1000<=20000){
       stop +=1000;
       this.setState({xDomain_btc_stop: stop});
-      console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
+      // console.log("xDomain_btc_stop", this.state.xDomain_btc_stop)
     }
   };
   zoomInETH = () => {
@@ -630,12 +630,12 @@ class DeribitOptionPos extends Component {
     if (start < stop) {
       start += 100;
       this.setState({xDomain_eth_start: start});
-      console.log("xDomain_eth_start", this.state.xDomain_eth_start)
+      // console.log("xDomain_eth_start", this.state.xDomain_eth_start)
     }
     if (stop > start){
       stop -= 100;
       this.setState({xDomain_eth_stop: stop});
-      console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
+      // console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
     }
   };
 
@@ -645,12 +645,12 @@ class DeribitOptionPos extends Component {
     if (start - 100 >= 20){
       start -= 100;
       this.setState({xDomain_eth_start: start});
-      console.log("xDomain_eth_start", this.state.xDomain_eth_start)
+      // console.log("xDomain_eth_start", this.state.xDomain_eth_start)
     }
     if (stop + 100<=1000){
       stop +=100;
       this.setState({xDomain_eth_stop: stop});
-      console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
+      // console.log("xDomain_eth_stop", this.state.xDomain_eth_stop)
     }
   };
   handleTabChange = (event, TabValue) => {

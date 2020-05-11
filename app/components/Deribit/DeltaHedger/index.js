@@ -161,7 +161,7 @@ class DeribitDeltaHedger extends Component {
   }
 
   componentWillUnmount() {
-    console.log('Component unmounting...');
+    // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
     // this.props.stop_saga_ws();
   }
@@ -200,11 +200,11 @@ class DeribitDeltaHedger extends Component {
   };
 
   async start_hedger(){
-    console.log(this.props.user.token, this.props.email);
+    // console.log(this.props.user.token, this.props.email);
     if (this.state.instrument!=='None') {
       start_delta_hedger(this.props.user.token, this.props.email, this.state.min_delta, this.state.max_delta, this.state.time_interval, this.state.currency, this.state.instrument)
         .then(result => {
-          console.log(result);
+          // console.log(result);
           this.get_delta_hedger_tasks()
         })
     } else {
@@ -213,27 +213,32 @@ class DeribitDeltaHedger extends Component {
   }
   async get_delta_hedger_tasks(){
     get_runnign_tasks(this.props.user.token, this.props.email, true)
-      .then(result=> {console.log(result);
+      .then(result=> {
+        // console.log(result);
         this.setState({running_tasks: result.data});
       });
     get_runnign_tasks(this.props.user.token, this.props.email, false)
-      .then(result=> {console.log(result);
+      .then(result=> {
+        // console.log(result);
         this.setState({stopped_tasks: result.data});
       });
     this.forceUpdate();
   }
 
   async handleClick(event, name) {
-    console.log(name);
+    // console.log(name);
     await kill_task(this.props.user.token, this.props.email, name)
-      .then(result=> {console.log(result);
+      .then(result=> {
+        // console.log(result);
         this.get_delta_hedger_tasks();
         this.forceUpdate();});
   }
 
   async getTaskState(event, name){
     await get_task_state(this.props.user.token, this.props.email, name)
-      .then(result=> {console.log(result);})
+      .then(result=> {
+        // console.log(result);
+      })
   }
 
   render() {

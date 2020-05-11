@@ -39,7 +39,7 @@ export function requireAuthentication(Component) {
             if (!this.props.isAuthenticated) {
 
                 const token = store.get('token');
-                console.log("User token", token);
+                // console.log("User token", token);
 
                 // Check redux state token auth
                 if (!this.props.token && !token) {

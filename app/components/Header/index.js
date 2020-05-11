@@ -172,6 +172,10 @@ class Header extends Component {
     this.props.history.push(value);
   };
 
+  handleMenuClickClose(){
+    this.setState({ anchorEl: null });
+  }
+
   handleMobileMenuOpen = event => {
     this.setState({ mobileMoreAnchorEl: event.currentTarget });
   };
@@ -188,7 +192,7 @@ class Header extends Component {
     });
   }
   handleDeribitNetChange = event => {
-    console.log('Checked event', event.target.checked);
+    // console.log('Checked event', event.target.checked);
     if (event.target.checked === false) {
       this.props.set_deribit_realnet();
     } else if (event.target.checked === true) {
@@ -208,7 +212,7 @@ class Header extends Component {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={isMenuOpen}
-        onClose={this.handleMenuClose}
+        onClose={this.handleMenuClose()}
       >
         {!this.props.isAuthenticated ? (
           <div>
@@ -234,7 +238,7 @@ class Header extends Component {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={isMobileMenuOpen}
-        onClose={this.handleMenuClose}
+        onClose={this.handleMenuClose()}
       >
         <MenuItem onClick={this.handleMobileMenuClose}>
           <IconButton color="inherit">
@@ -270,7 +274,10 @@ class Header extends Component {
         {/*  />*/}
         {/*</FormGroup>*/}
 
-        <Drawer open={this.state.DrowerOpen}>
+        <Drawer
+          open={this.state.DrowerOpen}
+          onClose={this.handleMenuClose()}
+        >
           <div className={classes.drawerHeader}>
             <IconButton onClick={this.handleDrawerClose}>
               {theme.direction === 'ltr' ? (
@@ -282,12 +289,12 @@ class Header extends Component {
           </div>
           {!this.props.isAuthenticated || !this.props.deribit_auth ? (
             <div>
-              <MenuItem onClick={this.handleMenuClose('/main')}>Home</MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
             </div>
           ) : (
             <div>
               <div>
-                <MenuItem onClick={this.handleMenuClose('/main')}>Home</MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
               </div>
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
@@ -315,7 +322,7 @@ class Header extends Component {
               color="inherit"
               noWrap
             >
-              Deltahedger
+              DDelta
             </Typography>
             <div className={classes.search}>
               <div className={classes.searchIcon}>

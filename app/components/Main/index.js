@@ -68,6 +68,7 @@ class Main extends React.Component {
             <h2  className={classes.mainText}>
               Welcome to Deribit deltahedger.
             </h2>
+            <br/>
             <h4  className={classes.mainText}>
               Please login or register to continue.
             </h4>

@@ -140,7 +140,7 @@ class Simulate extends Component {
     let promise = new Promise(function(resolve, reject) {
       resolve(
         get_api_keys(token, email).then(result => {
-          console.log(result);
+          // console.log(result);
           that.setState({ keys: result.data });
           return null;
         })
@@ -155,7 +155,7 @@ class Simulate extends Component {
   componentWillUnmount() {
     const WebSocket = require('ws');
     const ws = new WebSocket('wss://www.deribit.com/ws/api/v1/');
-    console.log('Component unmounting...');
+    // console.log('Component unmounting...');
     ws.close();
   }
 
@@ -171,7 +171,7 @@ class Simulate extends Component {
     restClient
       .index()
       .then(result => {
-        console.log('Index: ', result);
+        // console.log('Index: ', result);
         that.setState({ index: result.result.btc });
         return result;
       })
@@ -181,7 +181,7 @@ class Simulate extends Component {
             let instruments = result.result.sort((a, b) =>
               a['strike'] > b['strike'] ? 1 : -1
             );
-            console.log('Instruments: ', instruments);
+            // console.log('Instruments: ', instruments);
             that.setState({ instruments: instruments });
             resolve(result);
           });
@@ -232,24 +232,24 @@ class Simulate extends Component {
     // result.sort((a,b)=>a.getTime()-b.getTime());
     // console.log("Result:  ", result);
     this.setState({ expiration_list: result });
-    console.log('Expirations', result);
+    // console.log('Expirations', result);
   }
 
   handleChange = name => event => {
-    console.log(name, event.target.value);
+    // console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
   };
 
   handleChangeCheckbox = event => {
-    console.log(event.target.checked);
+    // console.log(event.target.checked);
     this.setState({ manual_index: event.target.checked });
   };
   handleDateChange = name => event => {
-    console.log(name, event);
+    // console.log(name, event);
     this.setState({ [name]: event });
   };
   handleChangeCurrency = name => event => {
-    console.log(name, event.target.value);
+    // console.log(name, event.target.value);
     this.setState({ [name]: event.target.value });
     if (event.target.value === 'BTC') {
       let strikes = [];
@@ -294,12 +294,12 @@ class Simulate extends Component {
           arguments: args,
           sig: restClient.generateSignature('/api/v1/private/subscribe', args)
         };
-        console.log('Request object', obj);
+        // console.log('Request object', obj);
         resolve(ws.send(JSON.stringify(obj)));
       });
 
       ws.on('message', function incoming(data) {
-        console.log('on message');
+        // console.log('on message');
 
         if (data.length > 0) {
           var obj = JSON.parse(data);

@@ -9,6 +9,62 @@ import Paper from '@material-ui/core/Paper';
 import * as actionCreators from '../../redux/actions/auth';
 import { validateEmail } from '../../utils/misc';
 import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles/index';
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'column',
+    backgroundColor: 'black',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+  title: {
+    color:'#FFF'
+  },
+  mainText:{
+    color:'#FFF',
+    marginBottom: 10
+  },
+  textField:{
+    textAlign: "center",
+    width: 150,
+    minHeight: 50,
+    marginLeft: 10,
+  },
+  filledRoot:{
+    '&:hover': {
+      backgroundColor: '#FB8D28',
+    },
+    '&$focused': {
+      backgroundColor: '#FB8D28',
+    },
+    backgroundColor: '#dc6b02',
+    '&$input ':{
+      color: '#000',
+      textAlign: 'center'
+    }
+  },
+  input:{
+  },
+  focused:{
+  },
+
+  filledLabelRoot:{
+    '&$focused': {
+      color:'red',
+    },
+    color:'#000'
+  },
+
+  button:{
+    color:'#FFF',
+    backgroundColor: 'red',
+    margin: 20
+  }
+});
 
 function mapStateToProps(state) {
   return {
@@ -23,20 +79,12 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actionCreators, dispatch);
 }
 
-const style = {
-  marginTop: 50,
-  paddingBottom: 50,
-  paddingTop: 25,
-  width: '100%',
-  textAlign: 'center',
-  display: 'inline-block'
-};
 
 @connect(
   mapStateToProps,
   mapDispatchToProps
 )
-export default class LoginView extends React.Component {
+class LoginView extends React.Component {
   constructor(props) {
     super(props);
     const redirectRoute = '/login';
@@ -110,26 +158,41 @@ export default class LoginView extends React.Component {
   }
 
   render() {
+    const {classes} = this.props;
     return (
-      <div className="col-md-6 col-md-offset-3">
-        <Paper style={style}>
+      <div className={classes.root}>
+        {/*<Paper style={style}>*/}
           <form role="form">
             <div className="text-center">
-              <h1>Login to terminal.</h1>
+              <h1 className={classes.title}>Login to terminal.</h1>
               {this.props.statusText && (
                 <div className="alert alert-info">{this.props.statusText}</div>
               )}
 
-              <div className="col-md-12">
+              <div>
                 <TextField
                   id="outlined-email-input"
                   label="Email"
                   type="email"
                   name="email"
                   autoComplete="email"
-                  margin="normal"
-                  variant="outlined"
                   onChange={e => this.changeValue(e, 'email')}
+                  variant="filled"
+                  margin="normal"
+                  helperText="Please select hedging instrument"
+                  InputProps={{
+                    classes: {
+                      root: classes.filledRoot,
+                      input: classes.input,
+                      focused: classes.focused
+                    },
+                  }}
+                  InputLabelProps={{
+                    classes: {
+                      root: classes.filledLabelRoot,
+                      focused: classes.focused
+                    },
+                  }}
                 />
               </div>
               <div className="col-md-12">
@@ -138,23 +201,36 @@ export default class LoginView extends React.Component {
                   label="Password"
                   type="password"
                   autoComplete="current-password"
-                  margin="normal"
-                  variant="outlined"
                   onChange={e => this.changeValue(e, 'password')}
+                  variant="filled"
+                  margin="normal"
+                  helperText="Please select hedging instrument"
+                  InputProps={{
+                    classes: {
+                      root: classes.filledRoot,
+                      input: classes.input,
+                      focused: classes.focused
+                    },
+                  }}
+                  InputLabelProps={{
+                    classes: {
+                      root: classes.filledLabelRoot,
+                      focused: classes.focused
+                    },
+                  }}
                 />
               </div>
 
               <RaisedButton
-                style={{ marginTop: 50 }}
+                className={classes.button}
                 onClick={e => this.login(e)}
-                variant="contained"
-                color="primary"
+                variant="filled"
               >
                 Submit
               </RaisedButton>
             </div>
           </form>
-        </Paper>
+        {/*</Paper>*/}
       </div>
     );
   }
@@ -165,3 +241,5 @@ LoginView.propTypes = {
   statusText: PropTypes.string,
   initializeSocket: PropTypes.func
 };
+
+export default withStyles(styles)(LoginView);

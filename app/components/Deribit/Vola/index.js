@@ -128,7 +128,8 @@ class Vola extends Component {
       hist_vola: [],
       window: 21,
       timeframe: '1d',
-      instrument: 'BTC'
+      instrument: 'BTC',
+      window_list: [21, 24, 48, 72, 96, 112, 128]
     };
   }
 
@@ -181,7 +182,7 @@ class Vola extends Component {
   };
 
   handleWindowChange = name => event => {
-    // this.setState({ [name]: event.target.value });
+    this.setState({ [name]: event.target.value });
     this.props.set_hist_vola_window(parseInt(event.target.value))
   };
   handleTimeframeChange = name => event => {
@@ -233,14 +234,16 @@ class Vola extends Component {
           </TextField>
 
           <TextField
+            value={this.state.window}
             id="outlined-name"
             label="Window"
-            type="number"
+            // type="number"
             className={classes.textField}
             onChange={this.handleWindowChange('window')}
             margin="normal"
             variant="filled"
-            defaultValue={21}
+            select
+            // defaultValue={21}
             inputProps={{min: 0, style: { textAlign: 'center' }}}
             InputProps={{
               classes: {
@@ -255,7 +258,18 @@ class Vola extends Component {
                 focused: classes.focused
               },
             }}
-          />
+          >
+            <MenuItem value="21">
+              <em>21</em>
+            </MenuItem>
+            {this.state.window_list.map((item, i) => {
+              return (
+                <MenuItem value={item} key={i}>
+                  {item}
+                </MenuItem>
+              );
+            })}
+          </TextField>
 
           <TextField
             value={this.props.hist_vola_timeframe}
