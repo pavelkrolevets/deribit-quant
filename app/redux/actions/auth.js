@@ -47,20 +47,20 @@ export function loginUserSuccess(token) {
   return get_api_keys(token, jwtDecode(token).email)
     .then(
       response => {
-        // console.log('Deribit Api Keys', response);
+        console.log('Deribit Api Keys', response);
         if (response.status === 200) {
-
-          if(response.data.api_pubkey!==''&&response.data.api_privkey!==''){
+          if(response.data.api_pubkey!==null && response.data.api_privkey!==null){
             dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
             store.set('api_pubkey', response.data.api_pubkey);
             store.set('api_privkey', response.data.api_privkey);
             dispatch(start_saga_ws())
-          } else {
-            alert("Please provide Deribit api keys");
-            history.push('/profile');
+          } else if (response.data.api_pubkey === null || response.data.api_privkey === null){
+            alert("Please provide Deribit keys API to continue ");
+            dispatch(stop_saga_ws())
           }
         } else {
-          // console.log("error getting Deribit keys")
+          alert("Please provide working Deribit api keys");
+          dispatch(stop_saga_ws())
         }
       },
       // error => console.log('An error occurred.', error)
@@ -87,6 +87,8 @@ export function loginUserRequest() {
 
 export function logout() {
   store.delete('token');
+  store.delete('api_pubkey');
+  store.delete('api_privkey');
   return {
     type: LOGOUT_USER
   };
@@ -113,7 +115,7 @@ export function loginUser(email, password, history) {
       .then(parseJSON)
       .then(response => {
         try {
-          dispatch(loginUserSuccess(response.token));
+          dispatch(loginUserSuccess(response.token, history));
           // console.log('Login success!!');
           history.push('/');
         } catch (e) {
@@ -149,7 +151,6 @@ export function registerUserRequest() {
 
 export function registerUserSuccess(token) {
   store.set('token', token);
-
   return function(dispatch){
     dispatch({
       type: REGISTER_USER_SUCCESS,
@@ -179,7 +180,7 @@ export function registerUser(email, password, history) {
       .then(response => {
         try {
           dispatch(registerUserSuccess(response.token));
-          history.push('/analyze');
+          history.push('/');
         } catch (e) {
           dispatch(
             registerUserFailure({

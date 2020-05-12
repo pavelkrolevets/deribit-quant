@@ -65,6 +65,14 @@ const styles = theme => ({
     border: 0,
     padding: '0 30px',
     height: '10%'
+  },
+  crosshairCurrent: {
+    color: 'white',
+    fontSize: '13px',
+  },
+  crosshairZero: {
+    color: 'red',
+    fontSize: '13px',
   }
 });
 
@@ -92,6 +100,8 @@ class Chart_eth extends Component {
       isShow: true,
       chart_data_current: this.props.chart.chart_data_current,
       account: [{ equity: 0, delta_total: 0 }],
+      crosshairValuesCurrent: [{x:0, y:0}],
+      crosshairValuesZero: [{x:0, y:0}],
     };
   }
 
@@ -106,11 +116,14 @@ class Chart_eth extends Component {
   // }
 
   _onMouseLeave = () => {
-    this.setState({ crosshairValues: [] });
+    this.setState({ crosshairValuesCurrent: [{x:0, y:0}] });
+    this.setState({ crosshairValuesZero: [{x:0, y:0}] });
   };
 
   _onNearestX = (value, { index }) => {
-    this.setState({ crosshairValues: [this.props.chart.chart_data_current[index]] });
+    // console.log("Crosshair", [this.props.chart.chart_data_current[index]]);
+    this.setState({ crosshairValuesCurrent: [this.props.chart.chart_data_current[index]] });
+    this.setState({ crosshairValuesZero: [this.props.chart.chart_data_at_zero[index]] });
   };
 
   render() {
@@ -229,9 +242,13 @@ class Chart_eth extends Component {
             />
             <LineSeries data={this.props.chart.chart_data_at_zero} />
             <Crosshair
-              values={this.state.crosshairValues}
-              className={'test-class-name'}
-            />
+              values={this.state.crosshairValuesCurrent}
+            >
+              <div style={{background: '#000', width: 120}}>
+                <p className={classes.crosshairCurrent}> PnL curr: ${this.state.crosshairValuesCurrent[0].y.toFixed(2)}</p>
+                <p className={classes.crosshairZero}> PnL exp: ${this.state.crosshairValuesZero[0].y.toFixed(2)}</p>
+              </div>
+            </Crosshair>
             {/*<Crosshair*/}
             {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
             {/*className={'market-class-name'}*/}

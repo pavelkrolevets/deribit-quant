@@ -18,7 +18,7 @@ function mapStateToProps(state) {
 const styles = theme => ({
   root: {
     display: 'flex',
-    justifyContent:'start',
+    justifyContent:'center',
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
@@ -30,7 +30,7 @@ const styles = theme => ({
     color:'#FFF'
   },
   mainText:{
-    color:'#FFF',
+    color:'#d3d3d3',
     marginBottom: 10
   },
   inputGroup:{
@@ -65,9 +65,13 @@ class Main extends React.Component {
       <div className={classes.root}>
         {!this.props.isAuthenticated ? (
           <div>
-            <h2  className={classes.mainText}>
-              Welcome to Deribit deltahedger.
-            </h2>
+            <h1  className={classes.title}>
+              Welcome to terminal.
+            </h1>
+            <br/>
+            <h4  className={classes.mainText}>
+              This is testing version working on Deribit testnet: http://test.deribit.com
+            </h4>
             <br/>
             <h4  className={classes.mainText}>
               Please login or register to continue.
@@ -80,6 +84,11 @@ class Main extends React.Component {
               <h1>
                 Welcome {this.props.userName}!
               </h1>
+              <br/>
+              <br/>
+              <h4  className={classes.mainText}>
+                Please provide testnet Deribit API keys on Profile page.
+              </h4>
             </div>
           )
         }

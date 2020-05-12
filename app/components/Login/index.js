@@ -14,7 +14,7 @@ import { withStyles } from '@material-ui/core/styles/index';
 const styles = theme => ({
   root: {
     display: 'flex',
-    justifyContent:'center',
+    justifyContent:'start',
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
@@ -25,7 +25,7 @@ const styles = theme => ({
     color:'#FFF'
   },
   mainText:{
-    color:'#FFF',
+    color:'#d3d3d3',
     marginBottom: 10
   },
   textField:{
@@ -166,7 +166,7 @@ class LoginView extends React.Component {
             <div className="text-center">
               <h1 className={classes.title}>Login to terminal.</h1>
               {this.props.statusText && (
-                <div className="alert alert-info">{this.props.statusText}</div>
+                <div className={classes.mainText}>{this.props.statusText}</div>
               )}
 
               <div>
@@ -224,7 +224,7 @@ class LoginView extends React.Component {
               <RaisedButton
                 className={classes.button}
                 onClick={e => this.login(e)}
-                variant="filled"
+                variant="contained"
               >
                 Submit
               </RaisedButton>

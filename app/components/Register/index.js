@@ -17,7 +17,7 @@ import { withStyles } from '@material-ui/core/styles/index';
 const styles = theme => ({
   root: {
     display: 'flex',
-    justifyContent:'center',
+    justifyContent:'start',
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
@@ -28,7 +28,7 @@ const styles = theme => ({
     color:'#FFF'
   },
   mainText:{
-    color:'#FFF',
+    color:'#d3d3d3',
     marginBottom: 10
   },
   textField:{
@@ -159,10 +159,10 @@ class RegisterView extends React.Component {
     return (
       <div className={classes.root}>
           <h1 className={classes.title}>Register to terminal.</h1>
-          <div className="text-center">
+          <div className={classes.mainText}>
             {
               this.props.registerStatusText &&
-              <div className="alert alert-info">
+              <div className={classes.mainText}>
                 {this.props.registerStatusText}
               </div>
             }
@@ -222,7 +222,7 @@ class RegisterView extends React.Component {
             <RaisedButton
               className={classes.button}
               onClick={(e) => this.login(e)}
-              variant="filled"
+              variant="contained"
             >
               Submit
             </RaisedButton>

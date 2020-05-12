@@ -102,7 +102,10 @@ const styles = theme => ({
     },
     color:'#000'
   },
-
+  crosshair: {
+    color: 'red',
+    fontSize: '15px',
+  },
 });
 
 class Vola extends Component {
@@ -113,7 +116,7 @@ class Vola extends Component {
       chart_data_current: [],
       chart_data_at_zero: [],
       trade_price: 10,
-      crosshairValues: [],
+      crosshairValues: [{x:0, y:0}],
       yDomain: [0, 2],
       keys: {},
       positions: [],
@@ -129,7 +132,7 @@ class Vola extends Component {
       window: 21,
       timeframe: '1d',
       instrument: 'BTC',
-      window_list: [21, 24, 48, 72, 96, 112, 128]
+      window_list: [21, 24, 48, 72, 96, 112, 128],
     };
   }
 
@@ -139,10 +142,28 @@ class Vola extends Component {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    this.computeyDomain(this.props.hist_vola_data.data.hist_vola);
-    this.setState({hist_vola: this.props.hist_vola_data.data.hist_vola})
+    this.convertUnixToDate()
+      .then((hist_vola) =>{
+        // console.log("Hist vola ",hist_vola);
+        this.setState({hist_vola: hist_vola});
+        this.computeyDomain(hist_vola);
+      });
   }
 
+  convertUnixToDate(){
+    let hist_vola = [];
+    if (typeof this.props.hist_vola_data.data.hist_vola!=='undefined'){
+      for (let i of this.props.hist_vola_data.data.hist_vola){
+        let date = new Date(i.x * 1000);
+        hist_vola.push({x: date, y: i.y})
+      }
+      // console.log("Hist vola ",hist_vola);
+      return new Promise(function(resolve, reject) {
+        resolve(hist_vola)
+      })
+    }
+
+  }
 
   computeyDomain(array){
     let yDomain =[];
@@ -166,9 +187,8 @@ class Vola extends Component {
     this.props.stop_hist_vola()
   }
 
-
   _onMouseLeave = () => {
-    this.setState({ crosshairValues: [] });
+    this.setState({ crosshairValues: [{x:0, y:0}] });
   };
 
   _onNearestX = (value, { index }) => {
@@ -196,8 +216,15 @@ class Vola extends Component {
 
   render() {
     const { classes } = this.props;
-    let { yDomain } = this.state;
+    let { yDomain, crosshairValues, timeframe } = this.state;
+    function show_percent() {
+      if (typeof crosshairValues[0].y !== 'undefined'){
+        return (crosshairValues[0].y * 100).toFixed(0)
+      } else if (typeof crosshairValues[0].y === 'undefined'){
+        return 0
+      }
 
+    }
     return (
       <div
         className={classes.root}
@@ -318,7 +345,18 @@ class Vola extends Component {
           >
             {/*<HorizontalGridLines />*/}
             {/*<VerticalGridLines />*/}
-            <XAxis on0={true} />
+            <XAxis on0={true}
+                   tickFormat={function tickFormat(d){
+                     const date = new Date(d);
+                     return date.toLocaleDateString("en-US");
+                     // if( timeframe === '1d'){
+                     //   return date.toLocaleDateString("en-US")
+                     // } else if (timeframe === '1h' || timeframe === '1m') {
+                     //   return date.toISOString().slice(-13, -5);
+                     // }
+                   }}
+                   tickLabelAngle={-45}
+            />
             <YAxis on0={true} />
             <ChartLabel
               text="Time"
@@ -348,8 +386,11 @@ class Vola extends Component {
             {/*<LineSeries data={this.state.chart_data_at_zero} />*/}
             <Crosshair
               values={this.state.crosshairValues}
-              className={'test-class-name'}
-            />
+            >
+              <div style={{background: '#000', width: 100}}>
+                <p className={classes.crosshair}> Vola: {(crosshairValues[0].y * 100).toFixed(0)}%</p>
+              </div>
+            </Crosshair>
             {/*<Crosshair*/}
             {/*values={[{x: parseInt(this.state.index), y:0}]}*/}
             {/*className={'market-class-name'}*/}

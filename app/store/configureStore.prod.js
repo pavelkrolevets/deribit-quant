@@ -8,8 +8,14 @@ import createRootReducer from '../redux/reducers/index';
 import rootSaga from '../saga/saga_deribit';
 
 const history = createHashHistory();
+const appReducer = createRootReducer(history);
 
-const rootReducer = createRootReducer(history);
+const rootReducer = (state, action) => {
+  if (action.type === 'LOGOUT_USER') {
+    state = undefined
+  }
+  return appReducer(state, action)
+};
 
 const configureStore = (initialState) => {
   // Redux Configuration

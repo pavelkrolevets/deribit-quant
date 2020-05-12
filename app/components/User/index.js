@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-const Store = require('electron-store');
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Avatar from '@material-ui/core/Avatar';
@@ -12,6 +11,27 @@ import { parseJSON } from '../../utils/misc';
 import axios from 'axios';
 import FormData from 'form-data'
 import { get_api_keys, update_api_keys} from '../../utils/http_functions';
+import { start_saga_ws, stop_saga_ws } from '../../redux/actions/saga_ws';
+import { storeDeribitAccount } from '../../redux/actions/auth';
+import { connect } from "react-redux";
+
+const Store = require('electron-store');
+const schema = {
+  token: {
+    type: 'string'
+  },
+  email: {
+    type: 'string'
+  },
+  api_pubkey: {
+    type: 'string'
+  },
+  api_privkey: {
+    type: 'string'
+  }
+};
+const store = new Store({ schema });
+
 
 const styles = theme => ({
   root: {
@@ -79,6 +99,26 @@ const styles = theme => ({
 });
 
 
+
+
+function mapStateToProps(state) {
+  return {
+    email: state.auth.userName,
+    user: state.auth,
+    isAuthenticated: state.auth.isAuthenticated,
+    sagas_channel_run: state.sagas.sagas_channel_run,
+  };
+}
+
+const mapDispatchToProps = dispatch => ({
+  start_saga_ws: () => dispatch(start_saga_ws()),
+  stop_saga_ws: () => dispatch(stop_saga_ws()),
+  storeDeribitAccount: (pub_key, priv_key)=> dispatch(storeDeribitAccount(pub_key, priv_key))
+});
+
+@connect(
+  mapStateToProps,
+  mapDispatchToProps)
 class Profile extends Component { // eslint-disable-line react/prefer-stateless-function
 
   constructor(props) {
@@ -92,11 +132,33 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
   };
 
   async componentWillMount() {
-    get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({data: result.data});
-        this.forceUpdate();
-      });
+    try{
+      get_api_keys(this.props.user.token, this.props.email)
+        .then(response=> {
+          console.log('Deribit Api Keys', response);
+          if (response.status === 200) {
+            if(response.data.api_pubkey!==null&&response.data.api_privkey!==null){
+              // this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+              // store.set('api_pubkey', response.data.api_pubkey);
+              // store.set('api_privkey', response.data.api_privkey);
+              // if (this.props.sagas_channel_run){
+              //   this.props.stop_saga_ws();
+              // } else if (!this.props.sagas_channel_run){
+              //   this.props.start_saga_ws();
+              // }
+              this.setState({data: response.data});
+              this.forceUpdate();
+            } else if (response.data.api_pubkey === null || response.data.api_privkey === null){
+              alert("Keys are empty on the server, please enter");
+              this.props.stop_saga_ws();
+            }
+          }
+        });
+    }
+    catch (e) {
+      alert(e)
+    }
+
   }
 
   handleChange = name => event => {
@@ -104,15 +166,59 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
   };
 
   async updateUserKeys(){
-    await update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey)
-      .then(result=> {console.log(result);
-      });
-    get_api_keys(this.props.user.token, this.props.email)
-      .then(result=> {console.log(result);
-        this.setState({data: result.data});
-        this.forceUpdate();
-      });
+    try{ await update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey)
+      .then(response=> {
+        console.log(response);
+        if (response.status === 200) {
+          alert("Keys successfully updated on the server");
+          this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+          store.set('api_pubkey', response.data.api_pubkey);
+          store.set('api_privkey', response.data.api_privkey);
+          if (this.props.sagas_channel_run){
+            this.props.stop_saga_ws();
+          } else if (!this.props.sagas_channel_run){
+            this.props.start_saga_ws();
+          }
+          this.setState({data: response.data});
+          this.forceUpdate();
+        }
+
+      })}
+      catch (e) {
+        alert("Keys already exist under another account, please provide another");
+        this.props.stop_saga_ws();
+        console.log(e);
+      }
+
+    // await get_api_keys(this.props.user.token, this.props.email)
+    //   .then(response=> {console.log(response);
+    //     console.log('Deribit Api Keys', response);
+    //     if (response.status === 200) {
+    //       if(response.data.api_pubkey!==null&&response.data.api_privkey!==null){
+    //         dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
+    //         store.set('api_pubkey', response.data.api_pubkey);
+    //         store.set('api_privkey', response.data.api_privkey);
+    //         if (this.props.sagas_channel_run){
+    //           this.props.stop_saga_ws();
+    //         } else if (!this.props.sagas_channel_run){
+    //           this.props.start_saga_ws();
+    //         }
+    //         this.setState({data: response.data});
+    //         this.forceUpdate();
+    //       } else if (response.data.api_pubkey === null || response.data.api_privkey === null){
+    //         alert("Please provide Deribit keys API to continue ");
+    //         this.props.stop_saga_ws();
+    //       }
+    //     } else if (response.status === 500) {
+    //       alert("Keys already exist under another account, please provide another");
+    //       this.props.stop_saga_ws();
+    //     }
+    //
+    //
+    //   });
   }
+
+
 
 
   render() {
@@ -121,15 +227,15 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
       <div className={classes.root}>
 
         <h1 className={classes.title}>Profile</h1>
-        <Typography variant="body1" gutterBottom color='#FFF'>
+        <Typography variant="body1" gutterBottom>
           {this.props.email} </Typography>
         <h4 className={classes.mainText}>Api keys</h4>
 
 
           <div className={classes.inputGroup}>
-          <Typography variant="body1" gutterBottom color='#FFF'>
+          <Typography variant="body1" gutterBottom>
             Pub: {this.state.data.api_pubkey} </Typography>
-          <Typography variant="body1" gutterBottom color='#FFF'>
+          <Typography variant="body1" gutterBottom>
             Secret: {this.state.data.api_privkey}</Typography>
           </div>
 
@@ -181,7 +287,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
           <Button
             className={classes.button}
             onClick={()=>this.updateUserKeys()}
-            variant="filled"
+            variant="contained"
             // color="primary"
           >Update</Button>
         </div>

@@ -414,7 +414,7 @@ class DeribitDeltaHedger extends Component {
         <Button
           className={classes.start_button}
           onClick={()=>this.start_hedger()}
-          variant="filled"
+          variant="contained"
           // color="primary"
         >Start</Button>
         </div>
