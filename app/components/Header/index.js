@@ -322,7 +322,7 @@ class Header extends Component {
               color="inherit"
               noWrap
             >
-              R2D2
+              Periscope
             </Typography>
             <div className={classes.search}>
               <div className={classes.searchIcon}>

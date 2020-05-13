@@ -92,9 +92,12 @@ function * initializeWebSocketsChannel() {
       // close the channel
       ws_channel.close();
       // close the WebSocket connection
-      ws.close()
+      ws.close();
     } else {
       yield put(WS_live.ws_error('WebSocket disconnected, reconnecting...' ));
+      // close the channel
+      yield delay(2000);
+      ws_channel.start();
     }
   }
 
