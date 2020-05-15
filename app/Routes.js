@@ -11,6 +11,7 @@ import LoginView from './components/Login'
 import RegisterView from './components/Register'
 import Main from './components/Main';
 import Stat from './containers/Statistics'
+import Robo from './containers/Robo'
 import { requireAuthentication } from './components/Auth/AuthenticatedComponent';
 import { requireNoAuthentication } from './components/Auth/notAuthenticatedComponent';
 
@@ -28,6 +29,7 @@ export default () => (
       <Route path="/profile" component={requireAuthentication(Profile)} />
       <Route path="/simulate" component={requireAuthentication(Simulate)} />
       <Route path="/analyze" component={requireAuthentication(Analize)} />
+      <Route path="/robo" component={requireAuthentication(Robo)} />
       <Route path="/" component={requireNoAuthentication(Main)} />
     </Switch>
   </App>

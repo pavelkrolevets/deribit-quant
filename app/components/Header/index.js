@@ -289,12 +289,17 @@ class Header extends Component {
           </div>
           {!this.props.isAuthenticated || !this.props.deribit_auth ? (
             <div>
-              <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/')}>
+                Home
+              </MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/vola')}>
+                Vola
+              </MenuItem>
             </div>
           ) : (
             <div>
               <div>
-                <MenuItem onClick={this.handleMenuClose('/')}>Home</MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/robo')}>Robo</MenuItem>
               </div>
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
@@ -302,7 +307,9 @@ class Header extends Component {
               <MenuItem onClick={this.handleMenuClose('/options')}>
                 Position
               </MenuItem>
-              <MenuItem onClick={this.handleMenuClose('/vola')}>Vola</MenuItem>
+              <MenuItem onClick={this.handleMenuClose('/vola')}>
+                Vola
+              </MenuItem>
             </div>
           )}
         </Drawer>
