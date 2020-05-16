@@ -4,7 +4,7 @@ import { withStyles } from "@material-ui/core/styles/index";
 import { get_task_state, kill_task } from '../../../utils/http_functions';
 import TextField from "@material-ui/core/TextField";
 import MenuItem from "@material-ui/core/MenuItem";
-
+// import { createChart } from 'lightweight-charts';
 
 
 const styles = theme => ({
@@ -95,7 +95,9 @@ const styles = theme => ({
 
 });
 
+
 class Robo extends React.Component {
+
 
   constructor(props) {
     super(props);
@@ -112,10 +114,30 @@ class Robo extends React.Component {
       instrument: "None",
       instrument_list: [],
       currency: "BTC",
+      exchange_list: ["Binance", "Bitmex"],
+      exchange: "Deribit",
+      timeframe_list: [1,
+        3,
+        5,
+        10,
+        15,
+        30,
+        60,
+        120,
+        180,
+        360,
+        720,
+        "1D"],
+      timeframe: 1,
     };
     this.update_interval = null;
   }
 
+  static defaultProps = {
+    containerId: 'lightweight_chart_container',
+  };
+
+  chart = null;
   async componentWillMount(){
     this.update_interval = setInterval(() => {
       // console.log("Tick...");
@@ -126,7 +148,37 @@ class Robo extends React.Component {
   componentWillUnmount() {
     // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
+    if (this.chart !== null) {
+      this.chart.remove();
+      this.chart = null;
+    }
   }
+
+  // componentDidMount() {
+  //   let lightweightCharts = require('lightweight-charts');
+  //   const { createChart } = lightweightCharts;
+  //
+  //   const chart = createChart(this.props.containerId, { width: 800, height: 600 });
+  //   this.chart = chart;
+  //
+  //   const lineSeries = chart.addLineSeries();
+  //
+  //   lineSeries.setData([
+  //     { time: '2019-04-10', value: 60.01 },
+  //     { time: '2019-04-11', value: 80.01 },
+  //   ]);
+  //
+  //   const barSeries = chart.addBarSeries({
+  //     thinBars: false,
+  //   });
+  //
+  //   // set the data
+  //   barSeries.setData([
+  //     { time: "2019-04-10", open: 141.77, high: 170.39, low: 120.25, close: 145.72 },
+  //     { time: "2019-04-11", open: 145.72, high: 147.99, low: 100.11, close: 108.19 },
+  //   ]);
+  // }
+
 
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
@@ -178,6 +230,41 @@ class Robo extends React.Component {
         </h1>
 
         <div className={classes.inputGroup}>
+          <TextField
+            value={this.state.exchange}
+            label="Exchange"
+            className={classes.textField}
+            onChange={this.handleChange('exchange')}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select hedging instrument"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem value="Deribit">
+              <em>Deribit</em>
+            </MenuItem>
+            {this.state.exchange_list.map((item, i) => {
+              return (
+                <MenuItem value={item} key={i}>
+                  {item}
+                </MenuItem>
+              );
+            })}
+          </TextField>
+
 
           <TextField
             value={this.state.currency}
@@ -241,6 +328,10 @@ class Robo extends React.Component {
             })}
           </TextField>
         </div>
+        {/*<div*/}
+        {/*  id={ this.props.containerId }*/}
+        {/*  // className={ 'LightweightChart' }*/}
+        {/*/>*/}
 
       </div>
     );

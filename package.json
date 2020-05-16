@@ -274,6 +274,7 @@
     "fs": "^0.0.1-security",
     "history": "^4.7.2",
     "jwt-decode": "^2.2.0",
+    "lightweight-charts": "^2.0.0",
     "material-table": "^1.52.0",
     "node-gyp": "^5.0.2",
     "prop-types": "^15.7.2",

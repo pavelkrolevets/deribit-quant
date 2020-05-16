@@ -20,7 +20,8 @@ import {
   DERIBIT_ETH_ALL_INSTRUMENTS,
   DERIBIT_ETH_INDEX,
   DERIBIT_ETH_OPEN_POSITIONS,
-  DERIBIT_AUTH_ERROR
+  DERIBIT_AUTH_ERROR,
+  DERIBIT_TRADINGVIEW_DATA,
 } from '../reducers/saga_ws';
 import { LOGIN_USER_REQUEST } from '../constants';
 
@@ -117,6 +118,14 @@ export function updateMarketData(data) {
     // console.log("Deribit BTC all instruments", data.result);
     return {
       type: DERIBIT_BTC_ALL_INSTRUMENTS,
+      data
+    };
+  }
+
+  if (data.id === 3001) {
+    console.log("Deribit Tradeview chart data", data);
+    return {
+      type: DERIBIT_TRADINGVIEW_DATA,
       data
     };
   }

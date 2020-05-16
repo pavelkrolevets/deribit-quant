@@ -1,4 +1,4 @@
-export function deribit_api(currency, method, id) {
+export function deribit_api(currency, method, id, params) {
   let request = {
     index: {
       jsonrpc: '2.0',
@@ -56,7 +56,49 @@ export function deribit_api(currency, method, id) {
         currency: currency,
         expired: false
       }
-    }
+    },
+
+    get_tradingview_chart_data: {
+      "jsonrpc": "2.0",
+      "id": id,
+      "method": "public/get_tradingview_chart_data",
+      "params": params,
+    },
+
+    public_data_subscribe: {
+      jsonrpc: "2.0",
+      method: "public/subscribe",
+      id: id,
+      params: {
+        "channels": [params]
+      }
+    },
+
+    public_data_unsubscribe: {
+      jsonrpc: "2.0",
+      method: "public/unsubscribe",
+      id: id,
+      params: {
+        "channels": [params]
+      }
+    },
+    private_data_subscribe: {
+      jsonrpc: "2.0",
+      method: "public/subscribe",
+      id: id,
+      params: {
+        "channels": [params]
+      }
+    },
+
+    private_data_unsubscribe: {
+      jsonrpc: "2.0",
+      method: "public/unsubscribe",
+      id: id,
+      params: {
+        "channels": [params]
+      }
+    },
   };
 
   return request[method]

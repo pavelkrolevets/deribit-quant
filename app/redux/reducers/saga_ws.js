@@ -18,6 +18,8 @@ export const DERIBIT_ETH_INDEX = 'DERIBIT_ETH_INDEX';
 export const DERIBIT_ETH_ACCOUNT_STATE = 'DERIBIT_ETH_ACCOUNT_STATE';
 export const DERIBIT_ETH_OPEN_POSITIONS = 'DERIBIT_ETH_OPEN_POSITIONS';
 export const DERIBIT_ETH_ALL_INSTRUMENTS = 'DERIBIT_ETH_ALL_INSTRUMENTS';
+export const DERIBIT_TRADINGVIEW_DATA = 'DERIBIT_TRADINGVIEW_DATA';
+export const DERIBIT_TRADINGVIEW_DATA_RESOLUTION = 'DERIBIT_TRADINGVIEW_DATA_RESOLUTION';
 
 export const DERIBIT_API_TESTNET = 'DERIBIT_API_TESTNET';
 export const DERIBIT_API_REALNET = 'DERIBIT_API_REALNET';
@@ -45,7 +47,13 @@ const initialState = {
   deribit_ETH_index: 0,
   deribit_ETH_account_state: [],
   deribit_ETH_open_pos: [],
-  deribit_ETH_all_instruments: []
+  deribit_ETH_all_instruments: [],
+
+  derbit_tradingview_data: [],
+  derbit_tradingview_resolution: "30",
+  derbit_tradingview_instrument_name: "BTC-26JUN20",
+  derbit_tradingview_start_timestamp: 1554373800000,
+  derbit_tradingview_end_timestamp: 1554373800000,
 };
 
 export default function saga(state = initialState, action) {
@@ -180,6 +188,12 @@ export default function saga(state = initialState, action) {
       return {
         ...state,
         deribit_ETH_all_instruments: action.data.result
+      };
+
+    case DERIBIT_TRADINGVIEW_DATA:
+      return {
+        ...state,
+        derbit_tradingview_data: action.data.result
       };
 
     default:

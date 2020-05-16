@@ -79,6 +79,7 @@ function * initializeWebSocketsChannel() {
     yield put(WS_live.connectionSuccess());
     yield call(authDeribitWs, ws, state );
     yield fork(startDeribitSync, ws);
+    yield fork(startTradingViewChartData, ws);
 
     while (true) {
         const { data } = yield take(ws_channel);
@@ -173,7 +174,7 @@ export function * startStopChannel() {
 }
 
 
-function* deribitMsgSync(ws) {
+function * deribitMsgSync(ws) {
   try {
     while (true) {
       yield put(WS_live.start_deribit_priv_sync());
@@ -187,16 +188,84 @@ function* deribitMsgSync(ws) {
   }
 }
 
-function* startDeribitSync(ws) {
+function getChartData(ws, state){
+  /// send request
+  console.log("State", state.sagas.derbit_tradingview_instrument_name,);
+  let params ={
+    instrument_name : state.sagas.derbit_tradingview_instrument_name,
+    start_timestamp : state.sagas.derbit_tradingview_start_timestamp,
+    // end_timestamp : state.sagas.derbit_tradingview_end_timestamp,
+    end_timestamp : new Date().getTime(),
+    resolution : state.sagas.derbit_tradingview_resolution,
+  };
+  let get_tradingview_chart_data = deribit_api('BTC', 'get_tradingview_chart_data', 3001, params);
+  console.log("request", get_tradingview_chart_data);
+  ws.send(JSON.stringify(get_tradingview_chart_data));
+}
+
+
+// Get tradingview data
+function * getTradingViewData(ws){
+  try {
+    while (true) {
+      let state = yield select();
+      yield call(getChartData, ws, state);
+      yield delay(1000)
+    }
+  } finally {
+    if (yield cancelled())
+      console.log('Trading view chart data cancelled!');
+  }
+}
+
+
+
+function * startDeribitSync(ws) {
   while ( yield take(DERIBIT_AUTH) ) {
     // starts the task in the background
-    const WsMsgTask = yield call(deribitMsgSync, ws);
+    const wsMsgTask = yield call(deribitMsgSync, ws);
     // wait for the user stop action
     yield take(STOP_CHANNEL);
     // user clicked stop. cancel the background task
-    yield cancel(WsMsgTask)
+    yield cancel(wsMsgTask);
   }
 }
+
+function * startTradingViewChartData(ws){
+  while ( yield take(DERIBIT_AUTH) ) {
+    // starts the task in the background
+    const tradingviewData = yield call(getTradingViewData, ws);
+    // wait for the user stop action
+    yield take(STOP_CHANNEL);
+    // user clicked stop. cancel the background task
+    yield cancel(tradingviewData)
+  }
+}
+
+// function * startDeribitSubscribe(ws) {
+//   while ( yield take(DERIBIT_AUTH) ) {
+//     // starts the task in the background
+//     const SubscribeTask = yield call(deribitSubscribe, ws);
+//     // wait for the user stop action
+//     yield take(STOP_CHANNEL);
+//     // user clicked stop. cancel the background task
+//     yield cancel(SubscribeTask)
+//   }
+// }
+//
+// function* deribitSubscribe(ws) {
+//   try {
+//     while (true) {
+//       yield put(WS_live.start_deribit_priv_sync());
+//       yield call(wsDeribitMessages, ws);
+//       yield delay(5000)
+//     }
+//   } finally {
+//     if (yield cancelled())
+//       console.log('Sync cancelled!');
+//     yield put(WS_live.stop_deribit_priv_sync())
+//   }
+// }
 
 ///// ROOT SAGA
 export default function* rootSaga() {
