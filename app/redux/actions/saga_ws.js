@@ -123,7 +123,7 @@ export function updateMarketData(data) {
   }
 
   if (data.id === 3001) {
-    console.log("Deribit Tradeview chart data", data);
+    // console.log("Deribit Tradeview chart data", data);
     return {
       type: DERIBIT_TRADINGVIEW_DATA,
       data

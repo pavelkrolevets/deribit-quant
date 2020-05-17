@@ -22,7 +22,9 @@ function mapStateToProps(state) {
     deribit_ETH_index: state.sagas.deribit_ETH_index,
     deribit_ETH_account_state: state.sagas.deribit_ETH_account_state,
     deribit_ETH_open_pos: state.sagas.deribit_ETH_open_pos,
-    deribit_ETH_all_instruments: state.sagas.deribit_ETH_all_instruments
+    deribit_ETH_all_instruments: state.sagas.deribit_ETH_all_instruments,
+
+    derbit_tradingview_data: state.sagas.derbit_tradingview_data
   };
 }
 

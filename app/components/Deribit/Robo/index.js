@@ -141,6 +141,21 @@ class Robo extends React.Component {
   async componentWillMount(){
   }
 
+  componentWillReceiveProps(nextProps: Readonly<P>, nextContext: any): void {
+
+  }
+
+  parseData(data){
+    var arrayLength = data.ticks.length;
+    let parsed_data = [];
+    for (var i = 0; i < arrayLength; i++) {
+      let date = new Date(data.ticks[i]);
+      parsed_data.push({date: date, open: data.open[i], high: data.high[i], low: data.low[i], close: data.close[i], volume: data.volume[i] })
+    }
+    console.log("Parsed data", parsed_data);
+    this.setState({db_data: parsed_data})
+  }
+
   componentWillUnmount() {
     // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
@@ -151,7 +166,13 @@ class Robo extends React.Component {
     this.update_interval = setInterval(() => {
       // console.log("Tick...");
       this.get_instrument_list(this.state.currency);
-    }, 1000);
+
+      if (this.props.derbit_tradingview_data.ticks !== undefined){
+        // console.log("Chart data", this.props.derbit_tradingview_data);
+        this.parseData(this.props.derbit_tradingview_data)
+      }
+
+    }, 5000);
 
     getData().then(data => {
       console.log("MSFT data", data);
@@ -203,8 +224,8 @@ class Robo extends React.Component {
 
   render() {
     const {classes} = this.props;
-    let { data } = this.state;
-    if (data == null || typeof data == 'undefined') {
+    let { db_data } = this.state;
+    if (db_data == null || typeof db_data == 'undefined') {
       return <div className={classes.root}>
         <h1  className={classes.mainText}>
         Loading...
@@ -320,7 +341,7 @@ class Robo extends React.Component {
 
 
 
-          <Chart data={this.state.data} width={window.innerWidth * 0.9}/>
+          <Chart data={this.state.db_data} width={window.innerWidth * 0.9}/>
 
 
       </div>
@@ -349,6 +370,8 @@ Robo.propTypes = {
   deribit_ETH_account_state: PropTypes.array,
   deribit_ETH_open_pos: PropTypes.array,
   deribit_ETH_all_instruments: PropTypes.array,
+
+  derbit_tradingview_data: PropTypes.object,
 };
 
 export default withStyles(styles)(Robo);

@@ -49,7 +49,7 @@ const initialState = {
   deribit_ETH_open_pos: [],
   deribit_ETH_all_instruments: [],
 
-  derbit_tradingview_data: [],
+  derbit_tradingview_data: {},
   derbit_tradingview_resolution: "30",
   derbit_tradingview_instrument_name: "BTC-26JUN20",
   derbit_tradingview_start_timestamp: 1554373800000,
