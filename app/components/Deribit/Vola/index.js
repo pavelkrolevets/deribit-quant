@@ -300,7 +300,7 @@ class Vola extends Component {
 
           <TextField
             value={this.props.hist_vola_timeframe}
-            label="Currency"
+            label="Timeframe"
             className={classes.textField}
             onChange={this.handleTimeframeChange('timeframe')}
             variant="filled"

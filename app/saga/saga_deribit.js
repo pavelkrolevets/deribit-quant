@@ -16,7 +16,7 @@ import { deribit_api } from '../components/Deribit/OptionsPos/requests';
 const WebSocket = require('ws');
 
 
-function createEventChannel(ws, state) {
+function createEventChannel(ws) {
   return eventChannel(emit => {
 
     ws.onerror = error => {
@@ -31,15 +31,15 @@ function createEventChannel(ws, state) {
       if (e.code === 1005) {
         console.log("WebSocket: safely closed");
       } else {
-        console.log('Socket is closed Unexpectedly. Reconnect in 5 second.', e.reason);
+        alert('Socket is closed unexpectedly.');
         return emit(END)
       }
     };
-    const unsubscribe = () => {
-      ws.onmessage = null;
-    };
 
-    return unsubscribe
+    return () => {
+      console.log("Closing Websocket");
+      ws.close();
+    };
   });
 }
 
@@ -75,7 +75,7 @@ function * initializeWebSocketsChannel() {
     state = yield select();
     socket = yield call(createWebSocketConnection);
     ws = yield (socket);
-    ws_channel = yield call(createEventChannel, ws, state);
+    ws_channel = yield call(createEventChannel, ws);
     yield put(WS_live.connectionSuccess());
     yield call(authDeribitWs, ws, state );
     yield fork(startDeribitSync, ws);
@@ -87,7 +87,7 @@ function * initializeWebSocketsChannel() {
     }
 
   } catch (error) {
-    yield put(WS_live.ws_error(error.message));
+    yield put(WS_live.ws_error("Connection error..." + error.message));
   } finally {
     if (yield cancelled()) {
       // close the channel
@@ -95,10 +95,9 @@ function * initializeWebSocketsChannel() {
       // close the WebSocket connection
       ws.close();
     } else {
-      yield put(WS_live.ws_error('WebSocket disconnected, reconnecting...' ));
-      // close the channel
-      yield delay(2000);
-      ws_channel.start();
+      yield put(WS_live.ws_error('WebSocket disconnected, reconnecting...'));
+      yield delay(5000);
+      yield call(initializeWebSocketsChannel)
     }
   }
 

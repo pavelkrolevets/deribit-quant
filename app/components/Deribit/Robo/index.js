@@ -4,8 +4,9 @@ import { withStyles } from "@material-ui/core/styles/index";
 import { get_task_state, kill_task } from '../../../utils/http_functions';
 import TextField from "@material-ui/core/TextField";
 import MenuItem from "@material-ui/core/MenuItem";
-// import { createChart } from 'lightweight-charts';
-
+import { TypeChooser } from "react-stockcharts/lib/helper";
+import Chart from './Chart';
+import { getData } from "./utils"
 
 const styles = theme => ({
   root: {
@@ -23,6 +24,11 @@ const styles = theme => ({
     marginRight: 20,
   },
   chart:{
+    width: window.innerWidth * 0.7,
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    flexDirection: 'row'
   },
   formControl: {
     margin: 10,
@@ -132,52 +138,26 @@ class Robo extends React.Component {
     };
     this.update_interval = null;
   }
-
-  static defaultProps = {
-    containerId: 'lightweight_chart_container',
-  };
-
-  chart = null;
   async componentWillMount(){
-    this.update_interval = setInterval(() => {
-      // console.log("Tick...");
-      this.get_instrument_list(this.state.currency);
-    }, 1000);
   }
 
   componentWillUnmount() {
     // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
-    if (this.chart !== null) {
-      this.chart.remove();
-      this.chart = null;
-    }
+
   }
 
-  // componentDidMount() {
-  //   let lightweightCharts = require('lightweight-charts');
-  //   const { createChart } = lightweightCharts;
-  //
-  //   const chart = createChart(this.props.containerId, { width: 800, height: 600 });
-  //   this.chart = chart;
-  //
-  //   const lineSeries = chart.addLineSeries();
-  //
-  //   lineSeries.setData([
-  //     { time: '2019-04-10', value: 60.01 },
-  //     { time: '2019-04-11', value: 80.01 },
-  //   ]);
-  //
-  //   const barSeries = chart.addBarSeries({
-  //     thinBars: false,
-  //   });
-  //
-  //   // set the data
-  //   barSeries.setData([
-  //     { time: "2019-04-10", open: 141.77, high: 170.39, low: 120.25, close: 145.72 },
-  //     { time: "2019-04-11", open: 145.72, high: 147.99, low: 100.11, close: 108.19 },
-  //   ]);
-  // }
+  componentDidMount() {
+    this.update_interval = setInterval(() => {
+      // console.log("Tick...");
+      this.get_instrument_list(this.state.currency);
+    }, 1000);
+
+    getData().then(data => {
+      console.log("MSFT data", data);
+      this.setState({ data })
+    })
+  }
 
 
   handleChange = name => event => {
@@ -223,6 +203,14 @@ class Robo extends React.Component {
 
   render() {
     const {classes} = this.props;
+    let { data } = this.state;
+    if (data == null || typeof data == 'undefined') {
+      return <div className={classes.root}>
+        <h1  className={classes.mainText}>
+        Loading...
+      </h1>
+      </div>
+    }
     return (
       <div className={classes.root}>
         <h1  className={classes.mainText}>
@@ -328,10 +316,12 @@ class Robo extends React.Component {
             })}
           </TextField>
         </div>
-        {/*<div*/}
-        {/*  id={ this.props.containerId }*/}
-        {/*  // className={ 'LightweightChart' }*/}
-        {/*/>*/}
+
+
+
+
+          <Chart data={this.state.data} width={window.innerWidth * 0.9}/>
+
 
       </div>
     );
