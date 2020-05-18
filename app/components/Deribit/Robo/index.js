@@ -15,6 +15,8 @@ const styles = theme => ({
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
+    width: window.innerWidth,
+    height: window.innerHeight,
   },
   grow: {
     flexGrow: 1,
@@ -117,8 +119,7 @@ class Robo extends React.Component {
       stopped_tasks: [],
       selected:[],
       setSelected:[],
-      instrument: "None",
-      instrument_list: [],
+      instrument: "BTC-PERPETUAL",
       currency: "BTC",
       exchange_list: ["Binance", "Bitmex"],
       exchange: "Deribit",
@@ -127,16 +128,16 @@ class Robo extends React.Component {
         5,
         10,
         15,
-        30,
         60,
         120,
         180,
         360,
         720,
         "1D"],
-      timeframe: 1,
+      timeframe: 30,
     };
     this.update_interval = null;
+    this.chart_update_interval = null;
   }
   async componentWillMount(){
   }
@@ -152,40 +153,57 @@ class Robo extends React.Component {
       let date = new Date(data.ticks[i]);
       parsed_data.push({date: date, open: data.open[i], high: data.high[i], low: data.low[i], close: data.close[i], volume: data.volume[i] })
     }
-    console.log("Parsed data", parsed_data);
+    // console.log("Parsed data", parsed_data);
     this.setState({db_data: parsed_data})
   }
 
   componentWillUnmount() {
     // console.log('Component unmounting...');
     if (this.update_interval) clearInterval(this.update_interval);
-
+    if (this.chart_update_interval) clearInterval(this.chart_update_interval);
   }
 
   componentDidMount() {
     this.update_interval = setInterval(() => {
       // console.log("Tick...");
-      this.get_instrument_list(this.state.currency);
-
-      if (this.props.derbit_tradingview_data.ticks !== undefined){
-        // console.log("Chart data", this.props.derbit_tradingview_data);
-        this.parseData(this.props.derbit_tradingview_data)
+      if (typeof this.state.instrument_list === 'undefined'){
+        console.log("Updating instrument ...");
+        this.get_instrument_list(this.state.currency);
       }
-
+      if (typeof this.state.db_data === 'undefined'){
+        console.log("Updating chart data ...");
+        this.updateChartData();
+      }
     }, 5000);
 
-    getData().then(data => {
-      console.log("MSFT data", data);
-      this.setState({ data })
-    })
+    // this.chart_update_interval = setInterval(() =>{
+    //   // update chart with historical data
+    //   this.updateChartData()
+    // }, 30000);
+
   }
 
+  updateChartData(){
+    if (this.props.derbit_tradingview_data !== null) {
+      // console.log("Chart data", this.props.derbit_tradingview_data);
+      console.log("Updating chart data ...");
+      this.parseData(this.props.derbit_tradingview_data)
+    }
+  }
 
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
     // update instruemnt list depends on the currency
     if (name === 'currency'){
       this.get_instrument_list(event.target.value)
+    }
+    if (name === 'instrument'){
+      this.props.derbit_tradingview_instrument_name(event.target.value);
+      this.updateChartData();
+    }
+    if (name === 'timeframe'){
+      this.props.derbit_tradingview_resolution(event.target.value);
+      this.updateChartData();
     }
   };
 
@@ -224,8 +242,8 @@ class Robo extends React.Component {
 
   render() {
     const {classes} = this.props;
-    let { db_data } = this.state;
-    if (db_data == null || typeof db_data == 'undefined') {
+    let { db_data, instrument_list } = this.state;
+    if (db_data === null || typeof db_data === 'undefined' || typeof instrument_list === 'undefined') {
       return <div className={classes.root}>
         <h1  className={classes.mainText}>
         Loading...
@@ -325,10 +343,44 @@ class Robo extends React.Component {
               },
             }}
           >
-            <MenuItem value="None">
-              <em>None</em>
-            </MenuItem>
+            {/*<MenuItem value="None">*/}
+            {/*  <em>None</em>*/}
+            {/*</MenuItem>*/}
             {this.state.instrument_list.map((item, i) => {
+              return (
+                <MenuItem value={item} key={i}>
+                  {item}
+                </MenuItem>
+              );
+            })}
+          </TextField>
+          <TextField
+            value={this.state.timeframe}
+            label="Timeframe"
+            className={classes.textField}
+            onChange={this.handleChange('timeframe')}
+            variant="filled"
+            margin="normal"
+            select
+            helperText="Please select timeframe"
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          >
+            <MenuItem value={30}>
+              <em>30</em>
+            </MenuItem>
+            {this.state.timeframe_list.map((item, i) => {
               return (
                 <MenuItem value={item} key={i}>
                   {item}
@@ -372,6 +424,8 @@ Robo.propTypes = {
   deribit_ETH_all_instruments: PropTypes.array,
 
   derbit_tradingview_data: PropTypes.object,
+  derbit_tradingview_instrument_name: PropTypes.func,
+  derbit_tradingview_resolution: PropTypes.func
 };
 
 export default withStyles(styles)(Robo);

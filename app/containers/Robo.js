@@ -1,6 +1,11 @@
 import { connect } from 'react-redux';
 import Robo from '../components/Deribit/Robo/index';
-import { start_saga_ws, stop_saga_ws } from '../redux/actions/saga_ws';
+import {
+  start_saga_ws,
+  stop_saga_ws,
+  derbit_tradingview_instrument_name,
+  derbit_tradingview_resolution
+} from '../redux/actions/saga_ws';
 
 function mapStateToProps(state) {
   return {
@@ -30,7 +35,9 @@ function mapStateToProps(state) {
 
 const mapDispatchToProps = dispatch => ({
   start_saga_ws: () => dispatch(start_saga_ws()),
-  stop_saga_ws: () => dispatch(stop_saga_ws())
+  stop_saga_ws: () => dispatch(stop_saga_ws()),
+  derbit_tradingview_instrument_name: (data) => dispatch(derbit_tradingview_instrument_name(data)),
+  derbit_tradingview_resolution: (data) => dispatch(derbit_tradingview_resolution(data))
 });
 
 export default connect(

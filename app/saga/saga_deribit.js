@@ -189,17 +189,15 @@ function * deribitMsgSync(ws) {
 
 function getChartData(ws, state){
   /// send request
-  console.log("State", state.sagas.derbit_tradingview_instrument_name,);
-  let params ={
-    instrument_name : state.sagas.derbit_tradingview_instrument_name,
-    start_timestamp : state.sagas.derbit_tradingview_start_timestamp,
-    // end_timestamp : state.sagas.derbit_tradingview_end_timestamp,
-    end_timestamp : new Date().getTime(),
-    resolution : state.sagas.derbit_tradingview_resolution,
-  };
-  let get_tradingview_chart_data = deribit_api('BTC', 'get_tradingview_chart_data', 3001, params);
-  console.log("request", get_tradingview_chart_data);
-  ws.send(JSON.stringify(get_tradingview_chart_data));
+    let params ={
+      instrument_name : state.sagas.derbit_tradingview_instrument_name,
+      start_timestamp : state.sagas.derbit_tradingview_start_timestamp,
+      end_timestamp : new Date().getTime(),
+      resolution : state.sagas.derbit_tradingview_resolution,
+    };
+    let get_tradingview_chart_data = deribit_api('BTC', 'get_tradingview_chart_data', 3001, params);
+    console.log("request", get_tradingview_chart_data);
+    ws.send(JSON.stringify(get_tradingview_chart_data));
 }
 
 
@@ -209,7 +207,7 @@ function * getTradingViewData(ws){
     while (true) {
       let state = yield select();
       yield call(getChartData, ws, state);
-      yield delay(1000)
+      yield delay(5000)
     }
   } finally {
     if (yield cancelled())

@@ -22,6 +22,8 @@ import {
   DERIBIT_ETH_OPEN_POSITIONS,
   DERIBIT_AUTH_ERROR,
   DERIBIT_TRADINGVIEW_DATA,
+  DERIBIT_TRADINGVIEW_DATA_INSTRUMENT, DERIBIT_TRADINGVIEW_DATA_RESOLUTION
+
 } from '../reducers/saga_ws';
 import { LOGIN_USER_REQUEST } from '../constants';
 
@@ -192,6 +194,22 @@ export function loginDeribitError() {
     type: DERIBIT_AUTH_ERROR
   };
 }
+
+export function derbit_tradingview_instrument_name(data) {
+  return {
+    type: DERIBIT_TRADINGVIEW_DATA_INSTRUMENT,
+    data
+  };
+}
+export function derbit_tradingview_resolution(data) {
+  return {
+    type: DERIBIT_TRADINGVIEW_DATA_RESOLUTION,
+    data
+  };
+}
+
+
+
 // export function send_to_profile(history) {
 //   return {
 //     history.push('/');
