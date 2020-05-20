@@ -83,7 +83,10 @@ app.on('ready', async () => {
     width: 1024,
     height: 728,
     resizable: false,
-    backgroundColor: '#000'
+    backgroundColor: '#000',
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);

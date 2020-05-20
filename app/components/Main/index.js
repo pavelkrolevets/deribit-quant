@@ -22,7 +22,7 @@ const styles = theme => ({
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
-    width: window.innerWidth,
+    // width: window.innerWidth,
     height: window.innerHeight,
   },
 

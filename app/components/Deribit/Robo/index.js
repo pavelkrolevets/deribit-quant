@@ -15,7 +15,7 @@ const styles = theme => ({
     alignItems:'center',
     flexDirection: 'column',
     backgroundColor: 'black',
-    width: window.innerWidth,
+    // width: window.innerWidth,
     height: window.innerHeight,
   },
   grow: {
@@ -166,15 +166,14 @@ class Robo extends React.Component {
   componentDidMount() {
     this.update_interval = setInterval(() => {
       // console.log("Tick...");
-      if (typeof this.state.instrument_list === 'undefined'){
-        console.log("Updating instrument ...");
-        this.get_instrument_list(this.state.currency);
-      }
+      this.get_instrument_list(this.state.currency);
+
       if (typeof this.state.db_data === 'undefined'){
         console.log("Updating chart data ...");
         this.updateChartData();
       }
-    }, 5000);
+      // this.updateChartData();
+    }, 1000);
 
     // this.chart_update_interval = setInterval(() =>{
     //   // update chart with historical data
@@ -184,7 +183,7 @@ class Robo extends React.Component {
   }
 
   updateChartData(){
-    if (this.props.derbit_tradingview_data !== null) {
+    if (this.props.derbit_tradingview_data !== null && typeof this.props.derbit_tradingview_data !== 'undefined') {
       // console.log("Chart data", this.props.derbit_tradingview_data);
       console.log("Updating chart data ...");
       this.parseData(this.props.derbit_tradingview_data)
@@ -197,14 +196,12 @@ class Robo extends React.Component {
     if (name === 'currency'){
       this.get_instrument_list(event.target.value)
     }
-    if (name === 'instrument'){
-      this.props.derbit_tradingview_instrument_name(event.target.value);
-      this.updateChartData();
-    }
-    if (name === 'timeframe'){
-      this.props.derbit_tradingview_resolution(event.target.value);
-      this.updateChartData();
-    }
+    // if (name === 'instrument'){
+    //   this.props.derbit_tradingview_instrument_name(event.target.value);
+    // }
+    // if (name === 'timeframe'){
+    //   this.props.derbit_tradingview_resolution(event.target.value);
+    // }
   };
 
   async handleClick(event, name) {
@@ -226,7 +223,7 @@ class Robo extends React.Component {
         }
       }
       this.setState({instrument_list: futures_list});
-      // console.log("Instrument list: ", futures_list);
+      console.log("Instrument list: ", futures_list);
     }
     if (currency === "ETH") {
       // console.log("All instruments: ", this.props.deribit_ETH_all_instruments);
@@ -236,14 +233,14 @@ class Robo extends React.Component {
         }
       }
       this.setState({instrument_list: futures_list});
-      // console.log("Instrument list: ", futures_list);
+      console.log("Instrument list: ", futures_list);
     }
   }
 
   render() {
     const {classes} = this.props;
     let { db_data, instrument_list } = this.state;
-    if (db_data === null || typeof db_data === 'undefined' || typeof instrument_list === 'undefined') {
+    if (db_data === null || typeof db_data === 'undefined' || instrument_list === undefined) {
       return <div className={classes.root}>
         <h1  className={classes.mainText}>
         Loading...
@@ -253,7 +250,7 @@ class Robo extends React.Component {
     return (
       <div className={classes.root}>
         <h1  className={classes.mainText}>
-          Robo to serve you, sir.
+          Robo
         </h1>
 
         <div className={classes.inputGroup}>
