@@ -5,7 +5,7 @@ import { get_task_state, kill_task } from '../../../utils/http_functions';
 import TextField from "@material-ui/core/TextField";
 import MenuItem from "@material-ui/core/MenuItem";
 import { TypeChooser } from "react-stockcharts/lib/helper";
-import Chart from './Chart';
+import Chart from './chart';
 import { getData } from "./utils"
 
 const styles = theme => ({
@@ -250,7 +250,7 @@ class Robo extends React.Component {
     return (
       <div className={classes.root}>
         <h1  className={classes.mainText}>
-          Robo
+          Chart
         </h1>
 
         <div className={classes.inputGroup}>

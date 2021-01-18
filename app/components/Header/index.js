@@ -299,7 +299,7 @@ class Header extends Component {
           ) : (
             <div>
               <div>
-                <MenuItem onClick={this.handleMenuClose('/robo')}>Robo</MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/robo')}>Chart</MenuItem>
               </div>
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
