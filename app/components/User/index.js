@@ -6,6 +6,7 @@ import Typography from '@material-ui/core/Typography';
 import Avatar from '@material-ui/core/Avatar';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import Modal from '@material-ui/core/Modal';
 import { get_tasks, update_eth_account, upload_file } from '../../utils/http_functions';
 import { parseJSON } from '../../utils/misc';
 import axios from 'axios';
@@ -14,6 +15,7 @@ import { get_api_keys, update_api_keys} from '../../utils/http_functions';
 import { start_saga_ws, stop_saga_ws } from '../../redux/actions/saga_ws';
 import { storeDeribitAccount } from '../../redux/actions/auth';
 import { connect } from "react-redux";
+import { keys } from '@material-ui/core/styles/createBreakpoints';
 
 const Store = require('electron-store');
 const schema = {
@@ -96,6 +98,19 @@ const styles = theme => ({
     alignItems:'flex-start',
     flexDirection: 'column'
   },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modal_paper: {
+    position: 'center',
+    width: 300,
+    backgroundColor: '#000',
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+  },
 });
 
 
@@ -128,35 +143,31 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
   state = {
     api_pubkey:'',
     api_privkey:'',
-    data:''
+    data:'',
+    showModal: false,
+    api_keys_password: '',
+    message:''
   };
+  
+  getFromStore(value){
+    if(store.get(value)){
+      let item = store.get(value);
+      return Promise.resolve(item)
+    } else {
+      return Promise.reject(new Error('No value found'))
+    }
+  }
 
   async componentWillMount() {
-    try{
-      get_api_keys(this.props.user.token, this.props.email)
-        .then(response=> {
-          console.log('Deribit Api Keys', response);
-          if (response.status === 200) {
-            if(response.data.api_pubkey!==null&&response.data.api_privkey!==null){
-              // this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
-              // store.set('api_pubkey', response.data.api_pubkey);
-              // store.set('api_privkey', response.data.api_privkey);
-              // if (this.props.sagas_channel_run){
-              //   this.props.stop_saga_ws();
-              // } else if (!this.props.sagas_channel_run){
-              //   this.props.start_saga_ws();
-              // }
-              this.setState({data: response.data});
-              this.forceUpdate();
-            } else if (response.data.api_pubkey === null || response.data.api_privkey === null){
-              alert("Keys are empty on the server, please enter");
-              this.props.stop_saga_ws();
-            }
-          }
-        });
+    try {
+      let keys = {}
+      keys.api_pubkey = await this.getFromStore('api_pubkey');
+      keys.api_privkey = await this.getFromStore('api_privkey');
+      this.setState({data: keys});
+      this.forceUpdate();
     }
     catch (e) {
-      alert(e)
+      this.setState({showGetModal: true});
     }
 
   }
@@ -165,12 +176,12 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
     this.setState({ [name]: event.target.value });
   };
 
-  async updateUserKeys(){
-    try{ await update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey)
-      .then(response=> {
-        console.log(response);
-        if (response.status === 200) {
-          alert("Keys successfully updated on the server");
+  getUserKeys(){
+    get_api_keys(this.props.user.token, this.props.email, this.state.api_keys_password)
+    .then(response=> {
+      console.log('Deribit Api Keys', response);
+      if (response.status === 200) {
+        if(response.data.api_pubkey && response.data.api_privkey){
           this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
           store.set('api_pubkey', response.data.api_pubkey);
           store.set('api_privkey', response.data.api_privkey);
@@ -180,12 +191,56 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             this.props.start_saga_ws();
           }
           this.setState({data: response.data});
-          this.forceUpdate();
+          return (setTimeout(()=>{
+            this.forceUpdate();
+            return this.setState({showGetModal: false});
+          }, 2000));
+        } else if (!response.data.api_pubkey || !response.data.api_privkey){
+          alert("Keys are empty on the server, please update");
+          this.setState({showGetModal: false});
+          this.setState({showUpdateModal: true})
+          this.props.stop_saga_ws();
         }
+      }
+    })
+    .catch((e)=> {
+      this.setState({message: e.message});
+      return (setTimeout(()=>{
+        this.setState({message: null});
+      }, 2000));
+    })
+  }
 
-      })}
-      catch (e) {
-        alert("Keys already exist under another account, please provide another");
+  updateUserKeys(){
+    try { 
+      update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey, this.state.api_keys_password)
+      .then(response=> {
+        console.log(response);
+        if (response.status === 200) {
+          this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+          store.set('api_pubkey', response.data.api_pubkey);
+          store.set('api_privkey', response.data.api_privkey);
+          if (this.props.sagas_channel_run){
+            this.props.stop_saga_ws();
+          } else if (!this.props.sagas_channel_run){
+            this.props.start_saga_ws();
+          }
+          this.setState({data: response.data});
+          this.setState({message: "Keys successfully updated on the server"});
+          return (setTimeout(()=>{
+            this.forceUpdate();
+            return this.setState({showUpdateModal: false});
+          }, 2000));
+        }
+      })
+      .catch((e)=> {
+        this.setState({message: e.message});
+        return (setTimeout(()=>{
+          this.setState({message: null});
+        }, 2000));
+      })
+    } catch (e) {
+        alert(e.message);
         this.props.stop_saga_ws();
         console.log(e);
       }
@@ -223,24 +278,10 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
   render() {
     const { classes } = this.props;
-    return (
-      <div className={classes.root}>
-
-        <h1 className={classes.title}>Profile</h1>
-        <Typography variant="body1" gutterBottom>
-          {this.props.email} </Typography>
-        <h4 className={classes.mainText}>Api keys</h4>
-
-
-          <div className={classes.inputGroup}>
-          <Typography variant="body1" gutterBottom>
-            Pub: {this.state.data.api_pubkey} </Typography>
-          <Typography variant="body1" gutterBottom>
-            Secret: {this.state.data.api_privkey}</Typography>
-          </div>
-
-        <div >
-          <TextField
+    // const [showModal, setOpen] = React.useState(false);
+    const modalUpdateBody = (
+      <div className={classes.modal_paper}>
+        <TextField
             id="input-api_pub_key"
             label="Api key"
             className="input-key"
@@ -284,9 +325,108 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
               },
             }}
           />
+        <h4 id="simple-modal-title">Please enter password</h4>
+            <TextField
+            id="input-api_keys_password"
+            label="Password"
+            className="input-key"
+            onChange={this.handleChange('api_keys_password')}
+            margin="normal"
+            variant="filled"
+            fullWidth
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          />
           <Button
             className={classes.button}
             onClick={()=>this.updateUserKeys()}
+            variant="contained"
+            // color="primary"
+          >Ok</Button>
+           <Button
+            className={classes.button}
+            onClick={()=>this.setState({showUpdateModal: false})}
+            variant="contained"
+            // color="primary"
+          >Calcel</Button>
+          <h4 id="simple-modal-title">{this.state.message}</h4>
+          </div>
+    );
+
+    const modalGetBody = (
+      <div className={classes.modal_paper}>
+        <h4 id="simple-modal-title">No Deribit api keys are found</h4>
+        <h4 id="simple-modal-title">Please enter password</h4>
+            <TextField
+            id="input-api_keys_password"
+            label="Password"
+            className="input-key"
+            onChange={this.handleChange('api_keys_password')}
+            margin="normal"
+            variant="filled"
+            fullWidth
+            InputProps={{
+              classes: {
+                root: classes.filledRoot,
+                input: classes.input,
+                focused: classes.focused
+              },
+            }}
+            InputLabelProps={{
+              classes: {
+                root: classes.filledLabelRoot,
+                focused: classes.focused
+              },
+            }}
+          />
+          <Button
+            className={classes.button}
+            onClick={()=>this.getUserKeys()}
+            variant="contained"
+            // color="primary"
+          >Ok</Button>
+           <Button
+            className={classes.button}
+            onClick={()=>this.setState({showGetModal: false})}
+            variant="contained"
+            // color="primary"
+          >Calcel</Button>
+          <h4 id="simple-modal-title">{this.state.message}</h4>
+          </div>
+    );
+
+
+    return (
+      <div className={classes.root}>
+
+        <h1 className={classes.title}>Profile</h1>
+        <Typography variant="body1" gutterBottom>
+          {this.props.email} </Typography>
+        <h4 className={classes.mainText}>Api keys</h4>
+
+
+          <div className={classes.inputGroup}>
+          <Typography variant="body1" gutterBottom>
+            Pub: {this.state.data.api_pubkey} </Typography>
+          <Typography variant="body1" gutterBottom>
+            Secret: {this.state.data.api_privkey}</Typography>
+          </div>
+
+        <div >
+          <Button
+            className={classes.button}
+            onClick={()=>this.setState({showUpdateModal: true})}
             variant="contained"
             // color="primary"
           >Update</Button>
@@ -294,7 +434,25 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
         {/*<div>*/}
         {/*  <h4 className={classes.mainText}>NOTE: Due to security concerns, API keys are stored only locally. </h4>*/}
         {/*</div>*/}
-
+        <Modal
+        className={classes.modal}
+        open={this.state.showUpdateModal}
+        // onClose={()=>this.updateUserKeys()}
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        {modalUpdateBody}
+      </Modal>
+      
+      <Modal
+        className={classes.modal}
+        open={this.state.showGetModal}
+        // onClose={()=>this.updateUserKeys()}
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        {modalGetBody}
+      </Modal>
 
       </div>
     );

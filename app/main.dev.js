@@ -88,6 +88,7 @@ app.on('ready', async () => {
       nodeIntegration: true
     }
   });
+  mainWindow.setMenuBarVisibility(false)
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 

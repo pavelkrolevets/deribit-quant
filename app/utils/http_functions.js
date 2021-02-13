@@ -2,8 +2,8 @@
 
 import axios from 'axios';
 
-// let backend = 'http://localhost:5002';
-let backend = 'http://209.250.239.91:5000';
+let backend = 'http://localhost:5002';
+// let backend = 'http://209.250.239.91:5000';
 // let backend = 'https://0xbtc.me:5000';
 
 export function validate_token(token) {
@@ -116,19 +116,21 @@ export function kill_task(token, email, pid) {
   });
 }
 
-export function update_api_keys(token, email, api_pubkey, api_privkey) {
+export function update_api_keys(token, email, api_pubkey, api_privkey, password) {
   return axios.post(backend + '/api/update_api_keys', {
     token,
     email,
     api_pubkey,
-    api_privkey
+    api_privkey,
+    password
   });
 }
 
-export function get_api_keys(token, email) {
+export function get_api_keys(token, email, password) {
   return axios.post(backend + '/api/get_api_keys', {
     token,
-    email
+    email,
+    password
   });
 }
 
