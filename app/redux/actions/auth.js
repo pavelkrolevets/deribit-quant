@@ -36,37 +36,14 @@ const store = new Store({ schema });
 //TODO: TEST login and key storage, handle the errors right way
 
 export function loginUserSuccess(token) {
-  store.set('token', token);
-  return function (dispatch)  {
-    dispatch({
+  return {
     type: LOGIN_USER_SUCCESS,
     payload: {
       token
-    }});
-
-  return get_api_keys(token, jwtDecode(token).email)
-    .then(
-      response => {
-        console.log('Deribit Api Keys', response);
-        if (response.status === 200) {
-          if(response.data.api_pubkey!==null && response.data.api_privkey!==null){
-            dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
-            store.set('api_pubkey', response.data.api_pubkey);
-            store.set('api_privkey', response.data.api_privkey);
-            dispatch(start_saga_ws())
-          } else if (response.data.api_pubkey === null || response.data.api_privkey === null){
-            alert("Please provide Deribit keys API to continue ");
-            dispatch(stop_saga_ws())
-          }
-        } else {
-          alert("Please provide working Deribit api keys");
-          dispatch(stop_saga_ws())
-        }
-      },
-      // error => console.log('An error occurred.', error)
-    )
-  }
+    }
+  };
 }
+
 
 export function loginUserFailure(error) {
   // store.delete('token');
@@ -108,39 +85,46 @@ export function redirectToRoute(route) {
   };
 }
 
-export function loginUser(email, password, history) {
+export function  loginUser(email, password, history) {
   return function(dispatch) {
     dispatch(loginUserRequest());
-    return get_token(email, password)
+    get_token(email, password)
       .then(parseJSON)
-      .then(response => {
-        try {
-          dispatch(loginUserSuccess(response.token, history));
-          // console.log('Login success!!');
-          history.push('/');
-        } catch (e) {
-          alert(e);
-          dispatch(
-            loginUserFailure({
-              response: {
-                status: 403,
-                statusText: 'Invalid token'
-              }
-            })
-          );
-        }
+      .then(response=> {
+        store.set('token', response.token);
+        dispatch(loginUserSuccess(response.token));
+        return history.push('/');
+        // get_api_keys(response.token, jwtDecode(response.token).email, password)
+        //     .then(response => {
+        //         console.log('Deribit Api Keys', response);
+        //           dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
+        //           store.set('api_pubkey', response.data.api_pubkey);
+        //           store.set('api_privkey', response.data.api_privkey);
+        //           dispatch(start_saga_ws());
+                  
+        //       })
+        //       .catch((e)=>{
+        //         dispatch(
+        //           loginUserFailure({
+        //             response: {
+        //               status: e.response.status,
+        //               statusText: e.response.data.message
+        //             }
+        //           })
+        //       );
+        //       dispatch(stop_saga_ws());
+        //       })
       })
-      .catch(error => {
-        dispatch(
-          loginUserFailure({
+    .catch((e) => {
+        dispatch(loginUserFailure({
             response: {
-              status: 403,
-              statusText: 'Invalid username or password'
+              status: e.response.status,
+              statusText: e.response.data.message
             }
           })
-        );
-      });
-  };
+          );
+});
+}
 }
 
 export function registerUserRequest() {
@@ -175,29 +159,18 @@ export function registerUserFailure(error) {
 export function registerUser(email, password, history) {
   return function(dispatch) {
     dispatch(registerUserRequest());
-    return create_user(email, password)
+    create_user(email, password)
       .then(parseJSON)
       .then(response => {
-        try {
           dispatch(registerUserSuccess(response.token));
           history.push('/');
-        } catch (e) {
-          dispatch(
-            registerUserFailure({
-              response: {
-                status: 403,
-                statusText: 'Invalid token'
-              }
-            })
-          );
-        }
       })
-      .catch(error => {
+      .catch(e => {
         dispatch(
           registerUserFailure({
             response: {
-              status: 403,
-              statusText: 'User with that email already exists'
+              status: e.response.status,
+              statusText: e.response.data.message
             }
           })
         );

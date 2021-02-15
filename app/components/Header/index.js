@@ -287,16 +287,39 @@ class Header extends Component {
               )}
             </IconButton>
           </div>
-          {!this.props.isAuthenticated || !this.props.deribit_auth ? (
-            <div>
-              <MenuItem onClick={this.handleMenuClose('/')}>
-                Home
-              </MenuItem>
-              <MenuItem onClick={this.handleMenuClose('/vola')}>
-                Vola
-              </MenuItem>
-            </div>
-          ) : (
+          {!this.props.isAuthenticated ? (
+
+          
+                <div>
+                <MenuItem onClick={this.handleMenuClose('/login')}>
+                  Login
+                </MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/register')}>
+                  Register
+                </MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/vola')}>
+                  Vola
+                </MenuItem>
+              </div>
+              
+            
+
+           
+          ) : ( 
+
+            
+              !this.props.deribit_auth ? (
+                <div>
+                <MenuItem onClick={this.handleMenuClose('/profile')}>
+                  Profile
+                </MenuItem>
+                <MenuItem onClick={this.handleMenuClose('/vola')}>
+                  Vola
+                </MenuItem>
+              </div>
+              
+              ) : (
+
             <div>
               <div>
                 <MenuItem onClick={this.handleMenuClose('/robo')}>Chart</MenuItem>
@@ -311,6 +334,7 @@ class Header extends Component {
                 Vola
               </MenuItem>
             </div>
+            )
           )}
         </Drawer>
         <AppBar position="static" className={classes.gradientAppBar}>

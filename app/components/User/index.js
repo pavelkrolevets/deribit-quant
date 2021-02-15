@@ -180,70 +180,67 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
     get_api_keys(this.props.user.token, this.props.email, this.state.api_keys_password)
     .then(response=> {
       console.log('Deribit Api Keys', response);
-      if (response.status === 200) {
-        if(response.data.api_pubkey && response.data.api_privkey){
-          this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
-          store.set('api_pubkey', response.data.api_pubkey);
-          store.set('api_privkey', response.data.api_privkey);
-          if (this.props.sagas_channel_run){
-            this.props.stop_saga_ws();
-          } else if (!this.props.sagas_channel_run){
-            this.props.start_saga_ws();
-          }
-          this.setState({data: response.data});
-          return (setTimeout(()=>{
-            this.forceUpdate();
-            return this.setState({showGetModal: false});
-          }, 2000));
-        } else if (!response.data.api_pubkey || !response.data.api_privkey){
-          alert("Keys are empty on the server, please update");
-          this.setState({showGetModal: false});
-          this.setState({showUpdateModal: true})
+        this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+        store.set('api_pubkey', response.data.api_pubkey);
+        store.set('api_privkey', response.data.api_privkey);
+        if (this.props.sagas_channel_run){
           this.props.stop_saga_ws();
+        } else if (!this.props.sagas_channel_run){
+          this.props.start_saga_ws();
         }
-      }
+        this.setState({data: response.data});
+        return (setTimeout(()=>{
+          this.forceUpdate();
+          return this.setState({showGetModal: false});
+        }, 2000));
     })
     .catch((e)=> {
-      this.setState({message: e.message});
+      this.setState({message: e.response.status + " " + e.response.data.message});
+      
       return (setTimeout(()=>{
+        this.setState({showGetModal: false});
+        this.setState({showUpdateModal: true})
+        this.props.stop_saga_ws();
         this.setState({message: null});
       }, 2000));
+      
     })
   }
 
   updateUserKeys(){
-    try { 
+    // try { 
       update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey, this.state.api_keys_password)
       .then(response=> {
         console.log(response);
-        if (response.status === 200) {
-          this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
-          store.set('api_pubkey', response.data.api_pubkey);
-          store.set('api_privkey', response.data.api_privkey);
-          if (this.props.sagas_channel_run){
-            this.props.stop_saga_ws();
-          } else if (!this.props.sagas_channel_run){
-            this.props.start_saga_ws();
-          }
-          this.setState({data: response.data});
-          this.setState({message: "Keys successfully updated on the server"});
-          return (setTimeout(()=>{
-            this.forceUpdate();
-            return this.setState({showUpdateModal: false});
-          }, 2000));
+        
+        this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+        store.set('api_pubkey', response.data.api_pubkey);
+        store.set('api_privkey', response.data.api_privkey);
+        if (this.props.sagas_channel_run){
+          this.props.stop_saga_ws();
+        } else if (!this.props.sagas_channel_run){
+          this.props.start_saga_ws();
         }
+        this.setState({data: response.data});
+        this.setState({message: "Keys successfully updated on the server"});
+        return (setTimeout(()=>{
+          this.forceUpdate();
+          return this.setState({showUpdateModal: false});
+        }, 2000));
+        
       })
       .catch((e)=> {
-        this.setState({message: e.message});
+        this.setState({message: e.response.status + " " + e.response.data.message});
         return (setTimeout(()=>{
           this.setState({message: null});
+          this.props.stop_saga_ws();
         }, 2000));
       })
-    } catch (e) {
-        alert(e.message);
-        this.props.stop_saga_ws();
-        console.log(e);
-      }
+    // } catch (e) {
+    //     alert(e.message);
+    //     this.props.stop_saga_ws();
+    //     console.log(e);
+    //   }
 
     // await get_api_keys(this.props.user.token, this.props.email)
     //   .then(response=> {console.log(response);
@@ -333,6 +330,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             onChange={this.handleChange('api_keys_password')}
             margin="normal"
             variant="filled"
+            type="password"
             fullWidth
             InputProps={{
               classes: {
@@ -366,8 +364,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
     const modalGetBody = (
       <div className={classes.modal_paper}>
-        <h4 id="simple-modal-title">No Deribit api keys are found</h4>
-        <h4 id="simple-modal-title">Please enter password</h4>
+        <h4 id="simple-modal-title">Please enter keys password</h4>
             <TextField
             id="input-api_keys_password"
             label="Password"
@@ -375,6 +372,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
             onChange={this.handleChange('api_keys_password')}
             margin="normal"
             variant="filled"
+            type="password"
             fullWidth
             InputProps={{
               classes: {
@@ -461,6 +459,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
 Profile.propTypes = {
   classes: PropTypes.object.isRequired,
+  deribit_auth: PropTypes.bool
 };
 
 export default withStyles(styles)(Profile);
