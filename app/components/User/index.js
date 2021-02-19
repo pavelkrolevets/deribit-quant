@@ -163,7 +163,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
       let keys = {}
       keys.api_pubkey = await this.getFromStore('api_pubkey');
       keys.api_privkey = await this.getFromStore('api_privkey');
-      this.setState({data: keys});
+      this.setState({data: keys})
       this.forceUpdate();
     }
     catch (e) {
@@ -223,11 +223,9 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
         }
         this.setState({data: response.data});
         this.setState({message: "Keys successfully updated on the server"});
-        return (setTimeout(()=>{
-          this.forceUpdate();
+        setTimeout(()=>{
           return this.setState({showUpdateModal: false});
-        }, 2000));
-        
+        }, 2000);
       })
       .catch((e)=> {
         this.setState({message: e.response.status + " " + e.response.data.message});
@@ -364,7 +362,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
     const modalGetBody = (
       <div className={classes.modal_paper}>
-        <h4 id="simple-modal-title">Please enter keys password</h4>
+        <h4 id="simple-modal-title">Load keys</h4>
             <TextField
             id="input-api_keys_password"
             label="Password"

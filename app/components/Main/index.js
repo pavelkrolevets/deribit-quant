@@ -91,88 +91,84 @@ const mapDispatchToProps = dispatch => ({
   storeDeribitAccount: (pub_key, priv_key)=> dispatch(storeDeribitAccount(pub_key, priv_key))
 });
 
-@connect(
-  mapStateToProps,
-  mapDispatchToProps)
+@connect(mapStateToProps, mapDispatchToProps)
 class Main extends React.Component {
   constructor(props) {
     super(props);
   }
 
   state = {
-    api_pubkey:'',
-    api_privkey:'',
-    data:'',
+    api_pubkey: '',
+    api_privkey: '',
+    data: '',
     showModal: false,
     api_keys_password: '',
-    message:''
+    message: ''
   };
 
-  getFromStore(value){
-    if(store.get(value)){
+  getFromStore(value) {
+    if (store.get(value)) {
       let item = store.get(value);
-      return Promise.resolve(item)
+      return Promise.resolve(item);
     } else {
-      return Promise.reject(new Error('No value found'))
+      return Promise.reject(new Error('No value found'));
     }
   }
 
   async componentWillMount() {
     try {
-      let keys = {}
+      let keys = {};
       keys.api_pubkey = await this.getFromStore('api_pubkey');
       keys.api_privkey = await this.getFromStore('api_privkey');
-      this.setState({data: keys});
+      this.setState({ data: keys });
       this.forceUpdate();
+    } catch (e) {
+      this.setState({ showGetModal: true });
     }
-    catch (e) {
-      this.setState({showGetModal: true});
-    }
-
   }
 
   render() {
-    const {classes} = this.props;
+    const { classes } = this.props;
 
     const modalGetBody = (
       <div className={classes.modal_paper}>
-        <h4 id="simple-modal-title">There is no API keys are present. Please update at "Profile"</h4>
-          <Button
-            className={classes.button}
-            onClick={()=>{ 
-              this.setState({showGetModal: false});
-              this.props.history.push("/profile");
+        <h4 id="simple-modal-title">
+          There is no API keys are present. Please update at "Profile"
+        </h4>
+        <Button
+          className={classes.button}
+          onClick={() => {
+            this.setState({ showGetModal: false });
+            this.props.history.push('/profile');
           }}
-            variant="contained"
-            // color="primary"
-          >Ok</Button>
-          <h4 id="simple-modal-title">{this.state.message}</h4>
-          </div>
+          variant="contained"
+          // color="primary"
+        >
+          Ok
+        </Button>
+        <h4 id="simple-modal-title">{this.state.message}</h4>
+      </div>
     );
 
     return (
       <div className={classes.root}>
-        
-            <div>
-              <h1>
-                Welcome {this.props.userName}!
-              </h1>
-              <br/>
-              <br/>
-              <h4  className={classes.mainText}>
-                Please provide testnet Deribit API keys on Profile page.
-              </h4>
-            </div>
-            <Modal
-        className={classes.modal}
-        open={this.state.showGetModal}
-        // onClose={()=>this.updateUserKeys()}
-        aria-labelledby="simple-modal-title"
-        aria-describedby="simple-modal-description"
-      >
-        {modalGetBody}
-      </Modal>
-        
+        <div>
+          <h1>Welcome {this.props.userName}!</h1>
+          <br />
+          <br />
+          <h4 className={classes.mainText}>
+            Please provide testnet Deribit API keys on Profile page.
+          </h4>
+        </div>
+        <Modal
+          className={classes.modal}
+          open={this.state.showGetModal}
+          // onClose={()=>this.updateUserKeys()}
+          aria-labelledby="simple-modal-title"
+          aria-describedby="simple-modal-description"
+        >
+          {modalGetBody}
+        </Modal>
       </div>
     );
   }

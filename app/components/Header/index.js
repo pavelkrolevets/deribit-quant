@@ -135,6 +135,11 @@ class Header extends Component {
   }
 
   componentDidMount() {
+    // setInterval(()=>{
+    //   if (!this.props.deribit_auth){
+    //     this.props.history.push("/profile");
+    //   }
+    // }, 5000)
     // console.log(this.props.socket.connected);
   }
 

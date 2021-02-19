@@ -28,14 +28,14 @@ import {
 import { LOGIN_USER_REQUEST } from '../constants';
 
 export function updateMarketData(data) {
-  if (data.id === 777 && data.error === undefined) {
+  if (data.id === 777 && !data.error ) {
     console.log('Data auth', data);
     return {
       type: DERIBIT_AUTH
     };
   }
 
-  if (data.id === 777 && data.error !== undefined) {
+  if (data.id === 777 && !data.error) {
     console.log('Data auth', data);
     return dispatch => {
       alert('Please provide working Deribit API keys');

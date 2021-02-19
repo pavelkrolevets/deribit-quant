@@ -6,7 +6,8 @@ import Profile from '../components/User';
 function mapStateToProps(state) {
   return {
     email: state.auth.userName,
-    user: state.auth
+    user: state.auth,
+    deribit_auth: state.sagas.deribit_auth
   };
 }
 
