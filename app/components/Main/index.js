@@ -10,7 +10,8 @@ import Avatar from '@material-ui/core/Avatar';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Modal from '@material-ui/core/Modal';
-import { get_api_keys } from '../../utils/http_functions';
+import { get_api_keys, verify_api_keys } from '../../utils/http_functions';
+import { start_saga_ws, stop_saga_ws } from '../../redux/actions/saga_ws';
 
 const styles = theme => ({
   root: {
@@ -120,8 +121,12 @@ class Main extends React.Component {
       let keys = {};
       keys.api_pubkey = await this.getFromStore('api_pubkey');
       keys.api_privkey = await this.getFromStore('api_privkey');
-      this.setState({ data: keys });
+      await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
+      this.setState({data: keys})
       this.forceUpdate();
+      if (!this.props.sagas_channel_run){
+        this.props.start_saga_ws();
+      }
     } catch (e) {
       this.setState({ showGetModal: true });
     }
@@ -133,7 +138,7 @@ class Main extends React.Component {
     const modalGetBody = (
       <div className={classes.modal_paper}>
         <h4 id="simple-modal-title">
-          There is no API keys are present. Please update at "Profile"
+          There is no API keys are present locally. Please retrieve/update at "Profile"
         </h4>
         <Button
           className={classes.button}
@@ -154,11 +159,6 @@ class Main extends React.Component {
       <div className={classes.root}>
         <div>
           <h1>Welcome {this.props.userName}!</h1>
-          <br />
-          <br />
-          <h4 className={classes.mainText}>
-            Please provide testnet Deribit API keys on Profile page.
-          </h4>
         </div>
         <Modal
           className={classes.modal}

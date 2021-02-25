@@ -93,7 +93,7 @@ export function  loginUser(email, password, history) {
       .then(response=> {
         store.set('token', response.token);
         dispatch(loginUserSuccess(response.token));
-        return history.push('/');
+        return history.push('/profile');
         // get_api_keys(response.token, jwtDecode(response.token).email, password)
         //     .then(response => {
         //         console.log('Deribit Api Keys', response);

@@ -87,7 +87,8 @@ export function start_delta_hedger(
   interval_max,
   time_period,
   currency,
-  instrument
+  instrument,
+  password
 ) {
   return axios.post(backend + '/api/start_delta_hedger', {
     token,
@@ -96,7 +97,8 @@ export function start_delta_hedger(
     interval_max,
     time_period,
     currency,
-    instrument
+    instrument,
+    password
   });
 }
 
@@ -203,5 +205,13 @@ export function get_btc_contango(token) {
 export function get_eth_contango(token) {
   return axios.post(backend + '/api/get_eth_contango', {
     token
+  });
+}
+
+export function verify_api_keys(token, api_pubkey, api_privkey) {
+  return axios.post(backend + '/api/verify_api_keys', {
+    token,
+    api_pubkey,
+    api_privkey
   });
 }

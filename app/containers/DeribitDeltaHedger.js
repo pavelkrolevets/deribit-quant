@@ -29,7 +29,8 @@ function mapStateToProps(state) {
 
 const mapDispatchToProps = dispatch => ({
   start_saga_ws: () => dispatch(start_saga_ws()),
-  stop_saga_ws: () => dispatch(stop_saga_ws())
+  stop_saga_ws: () => dispatch(stop_saga_ws()),
+  storeDeribitAccount: (pub_key, priv_key)=> dispatch(storeDeribitAccount(pub_key, priv_key))
 });
 
 export default connect(
