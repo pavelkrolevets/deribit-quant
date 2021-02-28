@@ -190,31 +190,9 @@ class DeribitDeltaHedger extends Component {
         -0.3,
         -0.2,
         -0.1,
-        -0.01,
-        0.01,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8,
-        0.9,
-        1
+        -0.01
       ],
       max_delta_list: [
-        -1,
-        -0.9,
-        -0.8,
-        -0.7,
-        -0.6,
-        -0.5,
-        -0.4,
-        -0.3,
-        -0.2,
-        -0.1,
-        -0.01,
         0.01,
         0.1,
         0.2,
@@ -247,14 +225,15 @@ class DeribitDeltaHedger extends Component {
       if (!this.props.sagas_channel_run){
         this.props.start_saga_ws();
       }
-      var update_interval = setInterval(() => {
-        console.log("Get instruments and positions");
-       this.get_delta_hedger_tasks();
+      this.update_instrument_list_interval = setInterval(() => {
        this.get_instrument_list(this.state.currency);
-       if (this.state.instrument_list.length && this.state.running_tasks.length) {
-         clearInterval(update_interval);
+       if (this.state.instrument_list.length) {
+         clearInterval(this.update_interval);
        }
      }, 1000);
+     this.update_deltahedger_tasks_interval = setInterval(() => {
+     this.get_delta_hedger_tasks();
+   }, 5000);
     } catch (e) {
       this.setState({ showKeysErrModal: true });
       this.setState({message: e});
@@ -268,7 +247,8 @@ class DeribitDeltaHedger extends Component {
 
   componentWillUnmount() {
     // console.log('Component unmounting...');
-    if (this.update_interval) clearInterval(this.update_interval);
+    if (this.update_instrument_list_interval) clearInterval(this.update_instrument_list_interval);
+    if (this.update_deltahedger_tasks_interval) clearInterval(this.update_deltahedger_tasks_interval);
     // this.props.stop_saga_ws();
   }
   getFromStore(value) {
@@ -321,8 +301,7 @@ class DeribitDeltaHedger extends Component {
         return this.setState({ showErrModal: false });
       }, 2000);
     } else if (
-      !this.state.min_delta ||
-      !this.state.max_delta
+      !this.state.target_delta
     ) {
       this.setState({ message: 'Please set delta interval' });
       this.setState({ showErrModal: true });
@@ -347,8 +326,7 @@ class DeribitDeltaHedger extends Component {
     start_delta_hedger(
       this.props.user.token,
       this.props.email,
-      this.state.min_delta,
-      this.state.max_delta,
+      this.state.target_delta,
       this.state.time_interval,
       this.state.currency,
       this.state.instrument,
@@ -397,11 +375,7 @@ class DeribitDeltaHedger extends Component {
   }
 
   async getTaskState(event, name) {
-    await get_task_state(this.props.user.token, this.props.email, name).then(
-      result => {
-        // console.log(result);
-      }
-    );
+    await get_task_state(this.props.user.token, this.props.email, name)
   }
 
   render() {
@@ -547,10 +521,10 @@ class DeribitDeltaHedger extends Component {
           </TextField>
         </div>
 
-        <h4 className={classes.mainText}>Select delta bands</h4>
+        <h4 className={classes.mainText}>Select delta</h4>
 
         <div className={classes.inputGroup}>
-          <TextField
+          {/* <TextField
             value={this.state.min_delta}
             label="Min delta"
             className={classes.textField}
@@ -582,7 +556,7 @@ class DeribitDeltaHedger extends Component {
                 </MenuItem>
               );
             })}
-          </TextField>
+          </TextField> */}
 
           <div className={classes.inputGroup}>
             <TextField
@@ -611,13 +585,12 @@ class DeribitDeltaHedger extends Component {
           </div>
 
           <TextField
-            value={this.state.max_delta}
-            label="Max delta"
+            type="number"
+            label="Delta"
             className={classes.textField}
-            onChange={this.handleChange('max_delta')}
+            onChange={this.handleChange('target_delta')}
             variant="filled"
             margin="normal"
-            select
             InputProps={{
               classes: {
                 root: classes.filledRoot,
@@ -632,7 +605,7 @@ class DeribitDeltaHedger extends Component {
               }
             }}
           >
-            <MenuItem value="None">
+            {/* <MenuItem value="None">
               <em>None</em>
             </MenuItem>
             {this.state.max_delta_list.map((item, i) => {
@@ -641,7 +614,7 @@ class DeribitDeltaHedger extends Component {
                   {item}
                 </MenuItem>
               );
-            })}
+            })} */}
           </TextField>
         </div>
 
@@ -671,10 +644,7 @@ class DeribitDeltaHedger extends Component {
                   Interval
                 </TableCell>
                 <TableCell align="center" style={{ color: '#FFF' }}>
-                  Dmin
-                </TableCell>
-                <TableCell align="center" style={{ color: '#FFF' }}>
-                  Dmax
+                  Delta
                 </TableCell>
                 <TableCell align="center" style={{ color: '#FFF' }}>
                   is_running
@@ -710,10 +680,7 @@ class DeribitDeltaHedger extends Component {
                     {row.timeinterval}
                   </TableCell>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
-                    {row.delta_min}
-                  </TableCell>
-                  <TableCell align="center" style={{ color: '#dc6b02' }}>
-                    {row.delta_max}
+                    {row.target_delta}
                   </TableCell>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
                     {row.is_run.toString()}
@@ -744,10 +711,7 @@ class DeribitDeltaHedger extends Component {
                   Interval
                 </TableCell>
                 <TableCell align="center" style={{ color: '#FFF' }}>
-                  Dmin
-                </TableCell>
-                <TableCell align="center" style={{ color: '#FFF' }}>
-                  Dmax
+                  Delta
                 </TableCell>
                 <TableCell align="center" style={{ color: '#FFF' }}>
                   is_running
@@ -771,10 +735,7 @@ class DeribitDeltaHedger extends Component {
                     {row.timeinterval}
                   </TableCell>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
-                    {row.delta_min}
-                  </TableCell>
-                  <TableCell align="center" style={{ color: '#dc6b02' }}>
-                    {row.delta_max}
+                    {row.target_delta}
                   </TableCell>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
                     {row.is_run.toString()}
