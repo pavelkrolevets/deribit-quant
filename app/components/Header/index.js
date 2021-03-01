@@ -302,9 +302,6 @@ class Header extends Component {
                 <MenuItem onClick={this.handleMenuClose('/register')}>
                   Register
                 </MenuItem>
-                <MenuItem onClick={this.handleMenuClose('/vola')}>
-                  Vola
-                </MenuItem>
               </div>
               
             
@@ -318,23 +315,21 @@ class Header extends Component {
                 <MenuItem onClick={this.handleMenuClose('/profile')}>
                   Profile
                 </MenuItem>
-                <MenuItem onClick={this.handleMenuClose('/vola')}>
-                  Vola
-                </MenuItem>
               </div>
               
               ) : (
 
             <div>
-              <div>
+               <MenuItem onClick={this.handleMenuClose('/options')}>
+                Position
+              </MenuItem>
+              {/* <div>
                 <MenuItem onClick={this.handleMenuClose('/robo')}>Chart</MenuItem>
-              </div>
+              </div> */}
               <MenuItem onClick={this.handleMenuClose('/deltahedger')}>
                 DeltaHedger
               </MenuItem>
-              <MenuItem onClick={this.handleMenuClose('/options')}>
-                Position
-              </MenuItem>
+             
               <MenuItem onClick={this.handleMenuClose('/vola')}>
                 Vola
               </MenuItem>
