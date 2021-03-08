@@ -36,7 +36,8 @@ import {
 import {
   compute_bsm,
   get_api_keys,
-  compute_pnl
+  compute_pnl,
+  verify_api_keys
 } from '../../../utils/http_functions';
 
 const styles = theme => ({
@@ -77,6 +78,23 @@ function TabContainer(props) {
 TabContainer.propTypes = {
   children: PropTypes.node.isRequired
 };
+
+const Store = require('electron-store');
+const schema = {
+  token: {
+    type: 'string'
+  },
+  email: {
+    type: 'string'
+  },
+  api_pubkey: {
+    type: 'string'
+  },
+  api_privkey: {
+    type: 'string'
+  }
+};
+const store = new Store({ schema });
 
 class DeribitOptionPos extends Component {
   constructor(props) {
@@ -171,6 +189,7 @@ class DeribitOptionPos extends Component {
       keys.api_privkey = await this.getFromStore('api_privkey');
       await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
     } catch (e) {
+      console.log("Error", e)
       this.setState({message: e});
           return (setTimeout(()=>{
             this.setState({showKeysErrModal: false});
@@ -187,93 +206,16 @@ class DeribitOptionPos extends Component {
       this.setState({ time: new Date().toLocaleTimeString() });
     }, 2000);
 
-    // let auth = {
-    //   jsonrpc: '2.0',
-    //   id: 9929,
-    //   method: 'public/auth',
-    //   params: {
-    //     grant_type: 'client_credentials',
-    //     client_id: this.props.api_pubkey,
-    //     client_secret: this.props.api_privkey
-    //   }
-    // };
-    //
-
-
-    // ws.onopen = function() {
-    //   ws.send(JSON.stringify(auth));
-    //   // await ws.send(JSON.stringify(get_index))
-    // };
-    //
-    // ws.onmessage = e => {
-    //   this.eventHandler(JSON.parse(e.data));
-    // };
-
-    // this.update_interval = setInterval(() => {
-    //   console.log('Start timer');
-    //   this.getData();
-    // }, 2000);
   }
 
-  // async getData() {
-  //   let get_index = await deribit_api(this.state.currency, 'index', 42);
-  //   let fut_positions = await deribit_api(
-  //     this.state.currency,
-  //     'fut_positions',
-  //     2236
-  //   );
-  //   let opt_positions = await deribit_api(
-  //     this.state.currency,
-  //     'opt_positions',
-  //     2237
-  //   );
-  //   let account = await deribit_api(this.state.currency, 'account', 2515);
-  //   let positions = await deribit_api(this.state.currency, 'positions', 2238);
-  //   let all_instruments = await deribit_api(
-  //     this.state.currency,
-  //     'all_instruments',
-  //     7617
-  //   );
-
-    // ws.send(JSON.stringify(get_index));
-    // ws.send(JSON.stringify(fut_positions));
-    // ws.send(JSON.stringify(opt_positions));
-    // ws.send(JSON.stringify(account));
-    // ws.send(JSON.stringify(positions));
-    // ws.send(JSON.stringify(all_instruments));
-
-    // Update time
-    // this.setState({ time: new Date().toLocaleTimeString() });
-  // }
-
-  // eventHandler(msg) {
-  //   console.log('received from server : ', msg);
-  //   if (msg.id === 42) {
-  //     this.setState({ index: msg.result.edp });
-  //     console.log('Index : ', msg.result.edp);
-  //   }
-  //   if (msg.id === 2236) {
-  //     this.setState({ fut_positions: msg.result });
-  //     console.log('Fut_pos : ', msg.result);
-  //   }
-  //   if (msg.id === 2237) {
-  //     this.setState({ opt_positions: msg.result });
-  //     console.log('Opt_pos : ', msg.result);
-  //   }
-  //   if (msg.id === 2238) {
-  //     this.setState({ positions: msg.result });
-  //     console.log('Positions : ', msg.result);
-  //   }
-  //   if (msg.id === 2515) {
-  //     this.setState({ account: [msg.result] });
-  //     console.log('Account : ', msg.result);
-  //   }
-  //   if (msg.id === 7617) {
-  //     this.setState({ all_instruments: msg.result });
-  //     console.log('Instruments : ', msg.result);
-  //   }
-  // }
-
+  getFromStore(value) {
+    if (store.get(value)) {
+      let item = store.get(value);
+      return Promise.resolve(item);
+    } else {
+      return Promise.reject(new Error('No value found'));
+    }
+  }
   computeyDomain(array){
     let yDomain =[];
     let ySeries = [];
