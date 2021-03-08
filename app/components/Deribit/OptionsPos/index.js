@@ -165,6 +165,20 @@ class DeribitOptionPos extends Component {
   // }
 
   async componentWillMount() {
+    try {
+      let keys = {};
+      keys.api_pubkey = await this.getFromStore('api_pubkey');
+      keys.api_privkey = await this.getFromStore('api_privkey');
+      await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
+    } catch (e) {
+      this.setState({message: e});
+          return (setTimeout(()=>{
+            this.setState({showKeysErrModal: false});
+            this.props.stop_saga_ws();
+            this.setState({message: null});
+            this.props.history.push('/profile');
+          }, 2000));
+    }
     // this.props.start_saga_ws();
     this.update_interval = setInterval(() => {
       this.prepareClientPositions_btc();

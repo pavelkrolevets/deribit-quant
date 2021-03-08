@@ -118,32 +118,34 @@ class Main extends React.Component {
 
   async componentWillMount() {
     try {
-      let keys = {};
-      keys.api_pubkey = await this.getFromStore('api_pubkey');
-      keys.api_privkey = await this.getFromStore('api_privkey');
-      await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
-      this.setState({data: keys})
-      this.forceUpdate();
+      // let keys = {};
+      // keys.api_pubkey = await this.getFromStore('api_pubkey');
+      // keys.api_privkey = await this.getFromStore('api_privkey');
+      // await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
+      // this.setState({data: keys})
+      // this.forceUpdate();
       if (!this.props.sagas_channel_run){
         this.props.start_saga_ws();
       }
     } catch (e) {
-      this.setState({ showGetModal: true });
+      // this.setState({message: e.response.status + " " + e.response.data.message});
+      // this.setState({ showWarnModal: true });
     }
   }
 
   render() {
     const { classes } = this.props;
 
-    const modalGetBody = (
+    const modalWarnBody = (
       <div className={classes.modal_paper}>
         <h4 id="simple-modal-title">
-          There is no API keys are present locally. Please retrieve/update at "Profile"
+          Error:
         </h4>
+        <h4 id="simple-modal-title">{this.state.message}</h4>
         <Button
           className={classes.button}
           onClick={() => {
-            this.setState({ showGetModal: false });
+            this.setState({ showWarnModal: false });
             this.props.history.push('/profile');
           }}
           variant="contained"
@@ -151,7 +153,6 @@ class Main extends React.Component {
         >
           Ok
         </Button>
-        <h4 id="simple-modal-title">{this.state.message}</h4>
       </div>
     );
 
@@ -162,12 +163,12 @@ class Main extends React.Component {
         </div>
         <Modal
           className={classes.modal}
-          open={this.state.showGetModal}
+          open={this.state.showWarnModal}
           // onClose={()=>this.updateUserKeys()}
           aria-labelledby="simple-modal-title"
           aria-describedby="simple-modal-description"
         >
-          {modalGetBody}
+          {modalWarnBody}
         </Modal>
       </div>
     );

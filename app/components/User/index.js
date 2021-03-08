@@ -12,8 +12,6 @@ import { parseJSON } from '../../utils/misc';
 import axios from 'axios';
 import FormData from 'form-data'
 import { get_api_keys, update_api_keys, verify_api_keys} from '../../utils/http_functions';
-import { start_saga_ws, stop_saga_ws } from '../../redux/actions/saga_ws';
-import { storeDeribitAccount } from '../../redux/actions/auth';
 import { connect } from "react-redux";
 import { keys } from '@material-ui/core/styles/createBreakpoints';
 
@@ -114,26 +112,6 @@ const styles = theme => ({
 });
 
 
-
-
-function mapStateToProps(state) {
-  return {
-    email: state.auth.userName,
-    user: state.auth,
-    isAuthenticated: state.auth.isAuthenticated,
-    sagas_channel_run: state.sagas.sagas_channel_run,
-  };
-}
-
-const mapDispatchToProps = dispatch => ({
-  start_saga_ws: () => dispatch(start_saga_ws()),
-  stop_saga_ws: () => dispatch(stop_saga_ws()),
-  storeDeribitAccount: (pub_key, priv_key)=> dispatch(storeDeribitAccount(pub_key, priv_key))
-});
-
-@connect(
-  mapStateToProps,
-  mapDispatchToProps)
 class Profile extends Component { // eslint-disable-line react/prefer-stateless-function
 
   constructor(props) {
@@ -171,9 +149,17 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
       }
     }
     catch (e) {
-      this.setState({showGetModal: true});
+      this.setState({showUpdateModal: true});
     }
 
+  }
+
+  logout(e) {
+    e.preventDefault();
+    this.props.logoutAndRedirect(this.props.history);
+    this.setState({
+      open: false
+    });
   }
 
   handleChange = name => event => {
@@ -230,22 +216,24 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
     // try { 
       console.log("Outcoming API keys", this.state.api_pubkey, this.state.api_privkey);
       update_api_keys(this.props.user.token, this.props.email, this.state.api_pubkey, this.state.api_privkey, this.state.api_keys_password)
+      .then(parseJSON)
       .then(response=> {
-        console.log(response);
+        console.log("Update response", response);
         
-        this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
-        store.set('api_pubkey', response.data.api_pubkey);
-        store.set('api_privkey', response.data.api_privkey);
+        this.props.storeDeribitAccount(response.api_pubkey, response.api_privkey);
+        store.set('api_pubkey', response.api_pubkey);
+        store.set('api_privkey', response.api_privkey);
         if (!this.props.sagas_channel_run){
           this.props.start_saga_ws();
         }
-        this.setState({data: response.data});
+        this.setState({data: response});
         this.setState({message: "Keys successfully updated on the server"});
         setTimeout(()=>{
           return this.setState({showUpdateModal: false});
         }, 1000);
       })
       .catch((e)=> {
+        console.log("Error", e)
         this.setState({message: e.response.status + " " + e.response.data.message});
         return (setTimeout(()=>{
           this.setState({message: null});
@@ -383,7 +371,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
           >Ok</Button>
            <Button
             className={classes.button}
-            onClick={()=>this.setState({showUpdateModal: false})}
+            onClick={e => this.logout(e)}
             variant="contained"
             // color="primary"
           >Calcel</Button>
@@ -488,7 +476,8 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
 
 Profile.propTypes = {
   classes: PropTypes.object.isRequired,
-  deribit_auth: PropTypes.bool
+  deribit_auth: PropTypes.bool,
+  logoutAndRedirect: PropTypes.func,
 };
 
 export default withStyles(styles)(Profile);

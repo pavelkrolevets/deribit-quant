@@ -11,7 +11,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
-// import QuestionAnswer from '@material-ui/icons/QuestionAnswer';
+import QuestionAnswer from '@material-ui/icons/QuestionAnswer';
+import Help from '@material-ui/icons/Help';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -21,7 +22,7 @@ import Typography from '@material-ui/core/Typography';
 import Avatar from '@material-ui/core/Avatar';
 import Modal from '@material-ui/core/Modal';
 
-import { start_delta_hedger, get_runnign_tasks, kill_task, get_task_state, verify_api_keys} from '../../../utils/http_functions';
+import { start_delta_hedger, get_runnign_tasks, kill_task, get_task_state, verify_api_keys, get_worker_state} from '../../../utils/http_functions';
 
 
 
@@ -177,34 +178,6 @@ class DeribitDeltaHedger extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      min_delta: '',
-      max_delta: '',
-      min_delta_list: [
-        -1,
-        -0.9,
-        -0.8,
-        -0.7,
-        -0.6,
-        -0.5,
-        -0.4,
-        -0.3,
-        -0.2,
-        -0.1,
-        -0.01
-      ],
-      max_delta_list: [
-        0.01,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8,
-        0.9,
-        1
-      ],
       time_interval: '',
       running_tasks: [],
       stopped_tasks: [],
@@ -222,18 +195,19 @@ class DeribitDeltaHedger extends Component {
       keys.api_pubkey = await this.getFromStore('api_pubkey');
       keys.api_privkey = await this.getFromStore('api_privkey');
       await verify_api_keys(this.props.user.token, keys.api_pubkey, keys.api_privkey);
+      this.get_delta_hedger_tasks();
       if (!this.props.sagas_channel_run){
         this.props.start_saga_ws();
       }
       this.update_instrument_list_interval = setInterval(() => {
        this.get_instrument_list(this.state.currency);
        if (this.state.instrument_list.length) {
-         clearInterval(this.update_interval);
+         clearInterval(this.update_instrument_list_interval);
        }
      }, 1000);
-     this.update_deltahedger_tasks_interval = setInterval(() => {
-     this.get_delta_hedger_tasks();
-   }, 5000);
+        this.update_deltahedger_tasks_interval = setInterval(() => {
+        this.get_delta_hedger_tasks();
+      }, 5000);
     } catch (e) {
       this.setState({ showKeysErrModal: true });
       this.setState({message: e});
@@ -299,7 +273,7 @@ class DeribitDeltaHedger extends Component {
       return setTimeout(() => {
         this.setState({ message: null });
         return this.setState({ showErrModal: false });
-      }, 2000);
+      }, 3000);
     } else if (
       !this.state.target_delta
     ) {
@@ -308,14 +282,14 @@ class DeribitDeltaHedger extends Component {
       return setTimeout(() => {
         this.setState({ message: null });
         return this.setState({ showErrModal: false });
-      }, 2000);
+      }, 3000);
     } else if (!this.state.time_interval) {
       this.setState({ message: 'Please set time interval' });
       this.setState({ showErrModal: true });
       return setTimeout(() => {
         this.setState({ message: null });
         return this.setState({ showErrModal: false });
-      }, 2000);
+      }, 3000);
     } else {
       return this.setState({ showGetModal: true });
     }
@@ -342,9 +316,9 @@ class DeribitDeltaHedger extends Component {
           message: e.response.status + ' ' + e.response.data.message
         });
         return setTimeout(() => {
-          this.setState({ showGetModal: false });
+          // this.setState({ showGetModal: false });
           this.setState({ message: null });
-        }, 2000);
+        }, 3000);
       });
   }
   async get_delta_hedger_tasks() {
@@ -434,7 +408,7 @@ class DeribitDeltaHedger extends Component {
     const modalKeysErr = (
       <div className={classes.modal_paper}>
         <h4 id="simple-modal-title">
-          There is no API keys are present locally. Please retrieve/update at "Profile"
+          There is no API keys error. Please update keys at "Profile"
         </h4>
         <Button
           className={classes.button}
@@ -669,9 +643,12 @@ class DeribitDeltaHedger extends Component {
                     >
                       <DeleteIcon color="secondary" />
                     </IconButton>
-                    {/*<IconButton onClick={()=>this.getTaskState(event, row.pid)}>*/}
-                    {/*  <QuestionAnswer color="primary" />*/}
-                    {/*</IconButton>*/}
+                    <IconButton onClick={()=>this.getTaskState(event, row.pid)}>*/}
+                     <Help color="primary" />
+                    </IconButton>
+                    {/* <IconButton onClick={()=> get_worker_state(this.props.user.token)}>
+                     <Help color="primary" />
+                    </IconButton> */}
                   </TableCell>
                   <TableCell align="center" style={{ color: '#dc6b02' }}>
                     {row.instrument}

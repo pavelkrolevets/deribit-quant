@@ -1,5 +1,4 @@
 import { withRouter } from 'react-router-dom';
-import { get_api_keys } from '../../utils/http_functions';
 import {start_saga_ws, stop_saga_ws} from './saga_ws'
 
 import {
@@ -13,7 +12,7 @@ import {
   STORE_DERIBIT_KEYS} from '../constants';
 
 import { parseJSON } from '../../utils/misc';
-import { get_token, create_user } from '../../utils/http_functions';
+import { get_token, create_user, get_api_keys } from '../../utils/http_functions';
 import jwtDecode from "jwt-decode";
 const Store = require('electron-store');
 
@@ -88,32 +87,24 @@ export function redirectToRoute(route) {
 export function  loginUser(email, password, history) {
   return function(dispatch) {
     dispatch(loginUserRequest());
-    get_token(email, password)
+    return get_token(email, password)
       .then(parseJSON)
       .then(response=> {
         store.set('token', response.token);
         dispatch(loginUserSuccess(response.token));
-        return history.push('/profile');
-        // get_api_keys(response.token, jwtDecode(response.token).email, password)
-        //     .then(response => {
-        //         console.log('Deribit Api Keys', response);
-        //           dispatch(storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey));
-        //           store.set('api_pubkey', response.data.api_pubkey);
-        //           store.set('api_privkey', response.data.api_privkey);
-        //           dispatch(start_saga_ws());
-                  
-        //       })
-        //       .catch((e)=>{
-        //         dispatch(
-        //           loginUserFailure({
-        //             response: {
-        //               status: e.response.status,
-        //               statusText: e.response.data.message
-        //             }
-        //           })
-        //       );
-        //       dispatch(stop_saga_ws());
-        //       })
+        return get_api_keys(response.token, email, password)
+        .then(parseJSON)
+        .then((resp)=>{
+          console.log("get api keys", resp)
+          store.set('api_pubkey', resp.api_pubkey);
+          store.set('api_privkey', resp.api_privkey);
+          dispatch(storeDeribitAccount(resp.api_pubkey, resp.api_privkey));
+          return history.push('/');
+        })
+        .catch((e)=>{
+          console.log("Exceprion", e)
+          return history.push('/profile');
+        })
       })
     .catch((e) => {
         dispatch(loginUserFailure({

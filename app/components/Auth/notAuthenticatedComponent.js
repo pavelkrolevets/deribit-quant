@@ -45,13 +45,13 @@ export function requireNoAuthentication(Component) {
                 // console.log("Response", res);
                 if (res.status === 200) {
                   this.props.loginUserSuccess(token);
-                  this.props.history.push('/');
+                  // this.props.history.push('/');
                 }
 
               })
               .catch(error => {
                 // console.log("Error of token validation ", error.response);
-                // this.props.history.push('/login');
+                this.props.history.push('/login');
               });
           }
         }

@@ -8,6 +8,8 @@ import {
     REGISTER_USER_FAILURE,
     REGISTER_USER_REQUEST,
     REGISTER_USER_SUCCESS,
+    GET_API_KEYS_SUCCESS,
+    GET_API_KEYS_FALURE,
     STORE_DERIBIT_KEYS} from '../constants';
 
 const initialState = {

@@ -2,9 +2,11 @@
 
 import axios from 'axios';
 
-let backend = 'http://localhost:5002';
+// let backend = 'http://localhost:5002';
 // let backend = 'http://209.250.239.91:5000';
-// let backend = 'https://0xbtc.me:5000';
+let backend = 'http://0xbtc.ru:5002';
+// let backend = 'http://134.0.104.2:5002';
+
 
 export function validate_token(token) {
   return axios.post(backend + '/api/is_token_valid', {
@@ -139,6 +141,12 @@ export function get_task_state(token, email, pid) {
     token,
     email,
     pid
+  });
+}
+
+export function get_worker_state(token) {
+  return axios.post(backend + '/api/get_worker_state', {
+    token
   });
 }
 
