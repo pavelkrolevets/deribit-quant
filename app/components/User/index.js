@@ -166,51 +166,51 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
     this.setState({ [name]: event.target.value });
   };
 
-  getUserKeys(){
-    console.log("Getting api keys")
-    get_api_keys(this.props.user.token, this.props.email, this.state.api_keys_password)
-    .then(response=> {
-      console.log('Deribit Api Keys', response);
-        this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
-        store.set('api_pubkey', response.data.api_pubkey);
-        store.set('api_privkey', response.data.api_privkey);
-        if (!this.props.sagas_channel_run){
-          this.props.start_saga_ws();
-        }
-        this.setState({data: response.data});
-        return (setTimeout(()=>{
-          this.forceUpdate();
-          return this.setState({showGetModal: false});
-        }, 1000));
-    })
-    .catch((e)=> {
-      console.log("error", e.response.status)
-      switch (e.response.status) {
-        case 403:
-          this.setState({message: e.response.status + " " + e.response.data.message});
-          setTimeout(()=>{
-              this.setState({message: null});
-            }, 2000);
-          break;
-        case 409:
-          this.setState({message: e.response.status + " " + e.response.data.message});
-          return (setTimeout(()=>{
-            this.setState({showGetModal: false});
-            this.setState({showUpdateModal: true})
-            this.props.stop_saga_ws();
-            this.setState({message: null});
-          }, 2000));
-        case 500:
-          this.setState({message: e.response.status + " " + e.response.data.message});
-          return (setTimeout(()=>{
-            this.setState({showGetModal: false});
-            this.setState({showUpdateModal: true})
-            this.props.stop_saga_ws();
-            this.setState({message: null});
-          }, 2000));
-      }
-    })
-  }
+  // getUserKeys(){
+  //   console.log("Getting api keys")
+  //   get_api_keys(this.props.user.token, this.props.email, this.state.api_keys_password)
+  //   .then(response=> {
+  //     console.log('Deribit Api Keys', response);
+  //       this.props.storeDeribitAccount(response.data.api_pubkey, response.data.api_privkey);
+  //       store.set('api_pubkey', response.data.api_pubkey);
+  //       store.set('api_privkey', response.data.api_privkey);
+  //       if (!this.props.sagas_channel_run){
+  //         this.props.start_saga_ws();
+  //       }
+  //       this.setState({data: response.data});
+  //       return (setTimeout(()=>{
+  //         this.forceUpdate();
+  //         return this.setState({showGetModal: false});
+  //       }, 1000));
+  //   })
+  //   .catch((e)=> {
+  //     console.log("error", e.response.status)
+  //     switch (e.response.status) {
+  //       case 403:
+  //         this.setState({message: e.response.status + " " + e.response.data.message});
+  //         setTimeout(()=>{
+  //             this.setState({message: null});
+  //           }, 2000);
+  //         break;
+  //       case 409:
+  //         this.setState({message: e.response.status + " " + e.response.data.message});
+  //         return (setTimeout(()=>{
+  //           this.setState({showGetModal: false});
+  //           this.setState({showUpdateModal: true})
+  //           this.props.stop_saga_ws();
+  //           this.setState({message: null});
+  //         }, 2000));
+  //       case 500:
+  //         this.setState({message: e.response.status + " " + e.response.data.message});
+  //         return (setTimeout(()=>{
+  //           this.setState({showGetModal: false});
+  //           this.setState({showUpdateModal: true})
+  //           this.props.stop_saga_ws();
+  //           this.setState({message: null});
+  //         }, 2000));
+  //     }
+  //   })
+  // }
 
   updateUserKeys(){
     // try { 
@@ -238,7 +238,7 @@ class Profile extends Component { // eslint-disable-line react/prefer-stateless-
         return (setTimeout(()=>{
           this.setState({message: null});
           this.props.stop_saga_ws();
-        }, 1000));
+        }, 3000));
       })
     // } catch (e) {
     //     alert(e.message);

@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // let backend = 'http://localhost:5002';
 // let backend = 'http://209.250.239.91:5000';
-let backend = 'http://0xbtc.ru:5002';
+let backend = 'https://www.0xbtc.ru';
 // let backend = 'http://134.0.104.2:5002';
 
 

@@ -111,9 +111,9 @@ class DeribitOptionPos extends Component {
       yDomain_eth: [-10000, 10000],
 
       xDomain_btc_start: 1000,
-      xDomain_btc_stop: 50000,
+      xDomain_btc_stop: 100000,
       xDomain_eth_start: 20,
-      xDomain_eth_stop: 2500,
+      xDomain_eth_stop: 5000,
 
       keys: {},
       positions: [],

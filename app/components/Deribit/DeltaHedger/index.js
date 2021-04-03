@@ -23,6 +23,7 @@ import Avatar from '@material-ui/core/Avatar';
 import Modal from '@material-ui/core/Modal';
 
 import { start_delta_hedger, get_runnign_tasks, kill_task, get_task_state, verify_api_keys, get_worker_state} from '../../../utils/http_functions';
+import { response } from 'express';
 
 
 
@@ -349,7 +350,15 @@ class DeribitDeltaHedger extends Component {
   }
 
   async getTaskState(event, name) {
-    await get_task_state(this.props.user.token, this.props.email, name)
+    try{
+      let response = await get_task_state(this.props.user.token, this.props.email, name);
+      if (response){
+        console.log(response)
+        alert(response.data.task_state)
+      }
+    } catch (e){
+      alert(e.message);
+    }
   }
 
   render() {
@@ -643,10 +652,10 @@ class DeribitDeltaHedger extends Component {
                     >
                       <DeleteIcon color="secondary" />
                     </IconButton>
-                    <IconButton onClick={()=>this.getTaskState(event, row.pid)}>*/}
+                    <IconButton onClick={()=>this.getTaskState(event, row.pid)}>
                      <Help color="primary" />
                     </IconButton>
-                    {/* <IconButton onClick={()=> get_worker_state(this.props.user.token)}>
+                    {/* <IconButton onClick={()=> get_worker_state(this.props.user.token).then((result)=>console.log("Result waorker state", result))}>
                      <Help color="primary" />
                     </IconButton> */}
                   </TableCell>

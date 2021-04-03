@@ -1,7 +1,7 @@
 {
   "name": "periscope",
   "productName": "Cryptocurrency terminal",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Cryptocurrency analytical and algo-trading terminal with robots on the remote server",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
